@@ -53,14 +53,15 @@ def apply_theme():
             color-scheme: dark;
         }}
 
-        /* 1. BACKGROUND (DARK AURORA EFFECT - PURE BLACK/GRAY) */
+        /* 1. BACKGROUND (PURE DARK MODE - NO BLUE) */
+        /* Lacivert tonlar tamamen temizlendi. Sidebar (#0b0f19) ile uyumlu */
         @keyframes aurora {{
             0% {{ background-position: 0% 50%; }}
             50% {{ background-position: 100% 50%; }}
             100% {{ background-position: 0% 50%; }}
         }}
         [data-testid="stAppViewContainer"] {{
-            background: linear-gradient(-45deg, #0b0f19, #000000, #111111, #0b0f19);
+            background: linear-gradient(-45deg, #0b0f19, #000000, #18181b, #0b0f19);
             background-size: 400% 400%;
             animation: aurora 20s ease infinite;
             font-family: 'Inter', sans-serif !important;
@@ -72,7 +73,7 @@ def apply_theme():
             color: #f1f5f9 !important;
         }}
 
-        /* 2. CUSTOM SCROLLBAR (PREMIUM LOOK) - EKLENDİ */
+        /* 2. CUSTOM SCROLLBAR (PREMIUM LOOK) */
         ::-webkit-scrollbar {{
             width: 8px;
             height: 8px;
@@ -88,7 +89,7 @@ def apply_theme():
             background: #475569; 
         }}
 
-        /* 3. TABLO BAŞLIKLARI (DATA EDITOR) - EKLENDİ */
+        /* 3. TABLO BAŞLIKLARI (DATA EDITOR) */
         [data-testid="stDataFrame"] th {{
             background-color: #0b0f19 !important;
             color: #94a3b8 !important;
@@ -885,8 +886,9 @@ def dashboard_modu():
                     if is_pdf:
                         fig.update_layout(template="plotly_white", font=dict(family="Arial", size=14, color="black"))
                     else:
-                        # FINTECH STYLE AREA CHART ADDED
-                        fig.update_traces(fill='tozeroy', line=dict(width=3))
+                        # HATA DUZELTME: Sunburst fill ozelligini desteklemez.
+                        # Bu yuzden global update_traces yerine sadece layout yapiyoruz.
+                        # Eger cizgi grafigi varsa ozel olarak ayarlanmali, ancak su anki kodda Sunburst patliyor.
                         fig.update_layout(
                             template="plotly_dark", # UI için dark mode
                             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
