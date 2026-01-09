@@ -123,17 +123,24 @@ def apply_theme():
         /* --- BUTONLAR --- */
         /* ----------------------------------------------------------- */
 
-        /* EXCEL İNDİR BUTONU (Siyah Yazı) */
+        /* ----------------------------------------------------------- */
+        /* --- 7. EXCEL İNDİR BUTONU DÜZELTMESİ (KESİN SİYAH) --- */
+        /* ----------------------------------------------------------- */
         [data-testid="stDownloadButton"] button {{
             background-color: #ffffff !important;
-            color: #000000 !important;
             border: 2px solid #e2e8f0 !important;
+        }}
+        
+        /* Yazının kendisini ve içindeki her şeyi (p, div, span) zorla siyah yap */
+        [data-testid="stDownloadButton"] button,
+        [data-testid="stDownloadButton"] button * {{
+            color: #000000 !important;
             font-weight: 800 !important;
         }}
+        
         [data-testid="stDownloadButton"] button:hover {{
             background-color: #f8fafc !important;
             border-color: #cbd5e1 !important;
-            color: #000000 !important;
         }}
 
         /* 5. FLOATING CHAT BUTTON (SOL ALT KÖŞE - MAVİ FIX) */
@@ -1084,4 +1091,5 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
