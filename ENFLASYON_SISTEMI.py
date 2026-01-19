@@ -32,6 +32,7 @@ st.set_page_config(
 )
 
 # --- CSS MOTORU ---
+# --- CSS MOTORU (YÜKSEK KONTRAST & NEON MODU) ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
@@ -53,173 +54,130 @@ def apply_theme():
             color: #f1f5f9;
         }}
 
-        /* SELECTBOX DÜZELTMELERİ */
-        ul[data-baseweb="menu"] {{
-            background-color: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-        }}
-        li[role="option"] {{
-            color: #000000 !important;
-            background-color: #ffffff !important;
-        }}
-        li[role="option"] div, li[role="option"] span {{
-             color: #000000 !important;
-        }}
-        li[role="option"]:hover, li[role="option"][aria-selected="true"] {{
-            background-color: #f1f5f9 !important;
-            color: #000000 !important;
-        }}
-        div[data-baseweb="select"] > div {{
-            background-color: #111827; 
-            color: #f8fafc;
-            border-color: #374151;
-        }}
-        
-        /* POPOVER DÜZELTMELERİ */
-        div[data-testid="stPopoverBody"] {{
-            background-color: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-        }}
-        div[data-testid="stPopoverBody"] * {{
-            color: #000000 !important;
-        }}
-        div[data-testid="stPopoverBody"] div[data-baseweb="select"] > div {{
-            background-color: #ffffff !important;
-            color: #000000 !important;
-            border: 1px solid #94a3b8 !important;
-        }}
-        div[data-testid="stPopoverBody"] div[data-baseweb="select"] svg {{
-            fill: #000000 !important;
-        }}
-
-        /* BUTONLAR */
-        [data-testid="stDownloadButton"] button {{
-            background-color: #ffffff !important;
-            border: 2px solid #e2e8f0 !important;
-        }}
-        [data-testid="stDownloadButton"] button,
-        [data-testid="stDownloadButton"] button * {{
-            color: #000000 !important;
-            font-weight: 800 !important;
-        }}
-        [data-testid="stDownloadButton"] button:hover {{
-            background-color: #f8fafc !important;
-            border-color: #cbd5e1 !important;
-        }}
-
-        /* FLOATING CHAT BUTTON */
-        [data-testid="stPopover"] {{ 
-            position: fixed !important; bottom: 30px !important; left: 30px !important; right: auto !important;
-            z-index: 999999 !important; background-color: transparent !important; border: none !important;
-            width: auto !important; height: auto !important;
-        }}
-        [data-testid="stPopover"] button {{
-            width: 65px !important; height: 65px !important; border-radius: 50% !important;
-            background-color: #3b82f6 !important;
-            color: white !important;
-            border: 2px solid rgba(255,255,255,0.2) !important; 
-            box-shadow: 0 0 25px rgba(59, 130, 246, 0.8) !important;
-            font-size: 28px !important; display: flex; justify-content: center; align-items: center;
-        }}
-        [data-testid="stPopover"] button:hover {{ 
-            background-color: #2563eb !important;
-            transform: scale(1.1); 
-            box-shadow: 0 0 40px rgba(59, 130, 246, 1) !important; 
-        }}
-
-        /* Ticker */
-        .ticker-wrap {{
-            width: 100%; overflow: hidden; background-color: #000000;
-            border-top: 1px solid #334155; border-bottom: 1px solid #334155;
-            padding: 12px 0; margin-bottom: 20px; white-space: nowrap;
-        }}
-        .ticker-move {{ display: inline-block; padding-left: 100%; animation: marquee 40s linear infinite; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; }}
-        @keyframes marquee {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
-
-        /* KPI Cards */
-        .kpi-card {{
-            background: rgba(10, 10, 12, 0.95); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px; padding: 24px; position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: transform 0.3s ease;
-        }}
-        .kpi-card:hover {{ transform: translateY(-5px); border-color: rgba(255,255,255,0.3); }}
-        .kpi-title {{ font-size: 11px; font-weight: 800; color: #94a3b8 !important; text-transform: uppercase; margin-bottom: 5px; }}
-        .kpi-value {{ font-size: 42px; font-weight: 900; color: #ffffff !important; letter-spacing: -1px; }}
-        .kpi-sub   {{ font-size: 12px; font-weight: 600; opacity: 0.7; margin-top: 5px; color: #cbd5e1 !important; }}
-
-        /* Product Cards */
-        .pg-card {{
-            background: #0a0a0c; border: 1px solid #27272a; border-radius: 14px;
-            padding: 16px; height: 190px;
-            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-            text-align: center; position: relative; transition: all 0.3s;
-        }}
-        .pg-card:hover {{ border-color: #52525b; transform: scale(1.03); background: #121214; z-index:10; }}
-        .pg-name {{ font-size: 13px; font-weight: 600; color: #cbd5e1 !important; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }}
-        .pg-price {{ font-size: 22px; font-weight: 800; color: #ffffff !important; letter-spacing: -0.5px; }}
-        
-        .status-tag {{ position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; z-index: 5; letter-spacing: 0.5px; }}
-        .tag-peak {{ background-color: #ffffff !important; color: #000000 !important; }}
-        .tag-dip {{ background-color: #3b82f6 !important; color: #ffffff !important; }}
-        .pg-badge {{ padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; width: 100%; }}
-        .pg-red {{ background: rgba(220, 38, 38, 0.2); color: #f87171 !important; border: 1px solid rgba(220, 38, 38, 0.4); }}
-        .pg-green {{ background: rgba(22, 163, 74, 0.2); color: #4ade80 !important; border: 1px solid rgba(22, 163, 74, 0.4); }}
-        .pg-gray {{ background: #27272a; color: #a1a1aa !important; }}
-
-        /* Sidebar & Others */
-        section[data-testid="stSidebar"] {{ background-color: #000000 !important; border-right: 1px solid #1f2937; }}
-        div.stButton > button {{ width: 100%; border-radius: 10px; font-weight: 700; background: #111827; color: #fff; border: 1px solid #374151; }}
-        div.stButton > button:hover {{ border-color: #fff; background: #000; }}
-        [data-testid="stDataFrame"] th {{ background-color: #111827 !important; color: #9ca3af !important; }}
-        header[data-testid="stHeader"], [data-testid="stToolbar"] {{ display: none !important; }}
-
-        /* --- SİNYAL MERKEZİ & TERMİNAL STİLİ --- */
+        /* --- SİNYAL MERKEZİ & TERMİNAL STİLİ (DÜZELTİLDİ) --- */
         .terminal-wrapper {{
-            background-color: #000000;
+            background-color: #050505 !important; /* Tam siyah yerine çok koyu gri */
             border: 1px solid #333;
             border-radius: 8px;
             padding: 15px;
             font-family: 'JetBrains Mono', monospace;
             position: relative;
             overflow: hidden;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,1);
         }}
+        
+        /* Arka plan ızgara efekti */
         .terminal-wrapper::before {{
             content: " ";
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
+            z-index: 0;
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
         }}
+
+        /* Terminal Başlığı */
         .terminal-header {{
-            color: #ffffff;
+            color: #a1a1aa !important; /* Gri başlık */
             font-size: 10px;
             letter-spacing: 2px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #000000;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
             padding-bottom: 5px;
             display: flex; justify-content: space-between;
+            position: relative; z-index: 1;
         }}
+
+        /* Komut Satırı */
         .cmd-line {{
-            color: #ffffff;
+            color: #fbbf24 !important; /* Sarı komut satırı */
             font-size: 12px;
-            margin-bottom: 8px;
+            margin-bottom: 15px;
+            position: relative; z-index: 1;
         }}
+
+        /* Genel Cevap Metni */
         .cmd-response {{
-            color: #ffffff;
+            color: #e2e8f0 !important; /* Parlak beyaz/gri metin */
             font-size: 13px;
-            line-height: 1.5;
-            text-shadow: 0 0 5px rgba(74, 222, 128, 0.3);
+            line-height: 1.6;
+            position: relative; z-index: 1;
         }}
-        .highlight-val {{ color: #fff; font-weight: bold; background: rgba(255,255,255,0.1); padding: 0 4px; border-radius: 3px; }}
-        .trend-up {{ color: #ff0000 !important; font-weight: bold; }}
-        .trend-down {{ color: #00ff5d !important; font-weight: bold; }}
-        .mini-table {{ width: 100%; font-size: 11px; border-collapse: collapse; margin-top: 8px; z-index: 5; position: relative; }}
-        .mini-table td {{ padding: 4px; border-bottom: 1px solid #333; color: #ffffff; }}
-        .mini-table th {{ text-align: left; color: #ffffff; padding-bottom: 4px; }}
+
+        /* --- TABLO DÜZELTMELERİ (EN ÖNEMLİ KISIM) --- */
+        .mini-table {{ 
+            width: 100%; 
+            font-size: 12px; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            position: relative; 
+            z-index: 5; 
+        }}
+        
+        .mini-table th {{ 
+            text-align: left; 
+            color: #94a3b8 !important; /* Başlıklar Soluk Mavi/Gri */
+            border-bottom: 1px solid #52525b; 
+            padding-bottom: 8px;
+            font-weight: 700;
+        }}
+        
+        .mini-table td {{ 
+            padding: 8px 4px; 
+            border-bottom: 1px solid #27272a; 
+            color: #ffffff !important; /* Hücre Yazıları BEMBEYAZ */
+            font-weight: 500;
+        }}
+
+        /* --- RENKLENDİRME SINIFLARI (NEON) --- */
+        .highlight-val {{ 
+            color: #ffffff !important; 
+            font-weight: bold; 
+            background: rgba(255,255,255,0.15); 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+        }}
+        
+        .trend-up {{ 
+            color: #f87171 !important; /* Parlak Kırmızı */
+            font-weight: 800; 
+            text-shadow: 0 0 10px rgba(248, 113, 113, 0.4);
+        }}
+        
+        .trend-down {{ 
+            color: #4ade80 !important; /* Parlak Neon Yeşil */
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+        }}
+
+        /* Diğer Bileşen Stilleri (Değişmedi) */
+        ul[data-baseweb="menu"] {{ background-color: #ffffff !important; border: 1px solid #e2e8f0 !important; }}
+        li[role="option"] {{ color: #000000 !important; background-color: #ffffff !important; }}
+        div[data-baseweb="select"] > div {{ background-color: #111827; color: #f8fafc; border-color: #374151; }}
+        
+        .kpi-card {{ background: rgba(10, 10, 12, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; }}
+        .kpi-title {{ font-size: 11px; font-weight: 800; color: #94a3b8 !important; }}
+        .kpi-value {{ font-size: 42px; font-weight: 900; color: #ffffff !important; }}
+        
+        .pg-card {{ background: #0a0a0c; border: 1px solid #27272a; border-radius: 14px; padding: 16px; height: 190px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; }}
+        .pg-name {{ font-size: 13px; font-weight: 600; color: #cbd5e1 !important; }}
+        .pg-price {{ font-size: 22px; font-weight: 800; color: #ffffff !important; }}
+        
+        .pg-badge {{ padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; width: 100%; }}
+        .pg-red {{ background: rgba(220, 38, 38, 0.2); color: #f87171 !important; border: 1px solid rgba(220, 38, 38, 0.4); }}
+        .pg-green {{ background: rgba(22, 163, 74, 0.2); color: #4ade80 !important; border: 1px solid rgba(22, 163, 74, 0.4); }}
+        .pg-gray {{ background: #27272a; color: #a1a1aa !important; }}
+
+        /* Ticker */
+        .ticker-wrap {{ width: 100%; overflow: hidden; background-color: #000000; border-top: 1px solid #334155; border-bottom: 1px solid #334155; padding: 12px 0; margin-bottom: 20px; white-space: nowrap; }}
+        .ticker-move {{ display: inline-block; padding-left: 100%; animation: marquee 40s linear infinite; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; }}
+        @keyframes marquee {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
+
+        /* Popover Button */
+        [data-testid="stPopover"] {{ position: fixed !important; bottom: 30px !important; left: 30px !important; z-index: 999999 !important; }}
+        [data-testid="stPopover"] button {{ width: 65px !important; height: 65px !important; border-radius: 50% !important; background-color: #3b82f6 !important; color: white !important; font-size: 28px !important; box-shadow: 0 0 25px rgba(59, 130, 246, 0.8) !important; }}
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -1219,3 +1177,4 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
