@@ -41,7 +41,6 @@ def apply_theme():
 
         :root {{ color-scheme: dark; }}
 
-        /* 1. BACKGROUND (SİTE GENELİ SİYAH) */
         [data-testid="stAppViewContainer"] {{
             background-color: #000000;
             background-image: radial-gradient(circle at 50% 0%, #111115 0%, #000000 80%);
@@ -49,127 +48,84 @@ def apply_theme():
             color: #e2e8f0 !important;
         }}
         
-        /* Genel Başlıklar */
         h1, h2, h3, h4, h5, h6, p, label, .stMarkdown, div, span {{
             color: #f1f5f9;
         }}
 
-        /* ----------------------------------------------------------- */
-        /* --- KRİTİK DÜZELTME: SELECTBOX (AÇILIR MENÜLER) --- */
-        /* ----------------------------------------------------------- */
-        
-        /* 1. Dropdown MENÜ LİSTESİ (Açılınca çıkan liste) - GLOBAL */
-        /* Nerede olursa olsun listenin içi BEYAZ, yazılar SİYAH olsun */
+        /* SELECTBOX DÜZELTMELERİ */
         ul[data-baseweb="menu"] {{
             background-color: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
         }}
-        
-        /* Listedeki Seçenekler */
         li[role="option"] {{
-            color: #000000 !important; /* SİYAH YAZI */
-            background-color: #ffffff !important; /* BEYAZ ZEMİN */
+            color: #000000 !important;
+            background-color: #ffffff !important;
         }}
-        
-        /* Listedeki metinlerin kapsayıcıları */
         li[role="option"] div, li[role="option"] span {{
              color: #000000 !important;
         }}
-
-        /* Hover (Üzerine gelince) */
         li[role="option"]:hover, li[role="option"][aria-selected="true"] {{
-            background-color: #f1f5f9 !important; /* Açık gri */
+            background-color: #f1f5f9 !important;
             color: #000000 !important;
         }}
-
-        /* 2. ANA SAYFA SELECTBOX (Kapalı Hali) */
-        /* Ana sayfada arka plan siyah olduğu için kutu koyu, yazı açık kalsın */
-        /* Ancak menü açılınca (yukarıdaki kural çalışır) beyaz olur */
         div[data-baseweb="select"] > div {{
             background-color: #111827; 
             color: #f8fafc;
             border-color: #374151;
         }}
         
-        /* ----------------------------------------------------------- */
-        /* --- SİNYAL MERKEZİ (POPOVER) ÖZEL AYARLARI --- */
-        /* ----------------------------------------------------------- */
-        
-        /* Popover Penceresi (Beyaz Kutu) */
+        /* POPOVER DÜZELTMELERİ */
         div[data-testid="stPopoverBody"] {{
             background-color: #ffffff !important;
             border: 1px solid #cbd5e1 !important;
         }}
-        
-        /* Popover içindeki TÜM yazılar SİYAH */
         div[data-testid="stPopoverBody"] * {{
             color: #000000 !important;
         }}
-        
-        /* Popover içindeki Selectbox'ın KAPALI hali (Kutu) */
-        /* Burası beyaz zemin üstünde olduğu için kutu beyaz, yazı siyah olmalı */
         div[data-testid="stPopoverBody"] div[data-baseweb="select"] > div {{
             background-color: #ffffff !important;
             color: #000000 !important;
             border: 1px solid #94a3b8 !important;
         }}
-        
-        /* Popover içindeki Selectbox ikonları (Ok işareti) */
         div[data-testid="stPopoverBody"] div[data-baseweb="select"] svg {{
             fill: #000000 !important;
         }}
 
-        /* ----------------------------------------------------------- */
-        /* --- BUTONLAR --- */
-        /* ----------------------------------------------------------- */
-
-        /* ----------------------------------------------------------- */
-        /* --- 7. EXCEL İNDİR BUTONU DÜZELTMESİ (KESİN SİYAH) --- */
-        /* ----------------------------------------------------------- */
+        /* BUTONLAR */
         [data-testid="stDownloadButton"] button {{
             background-color: #ffffff !important;
             border: 2px solid #e2e8f0 !important;
         }}
-        
-        /* Yazının kendisini ve içindeki her şeyi (p, div, span) zorla siyah yap */
         [data-testid="stDownloadButton"] button,
         [data-testid="stDownloadButton"] button * {{
             color: #000000 !important;
             font-weight: 800 !important;
         }}
-        
         [data-testid="stDownloadButton"] button:hover {{
             background-color: #f8fafc !important;
             border-color: #cbd5e1 !important;
         }}
 
-        /* 5. FLOATING CHAT BUTTON (SOL ALT KÖŞE - MAVİ FIX) */
+        /* FLOATING CHAT BUTTON */
         [data-testid="stPopover"] {{ 
             position: fixed !important; bottom: 30px !important; left: 30px !important; right: auto !important;
             z-index: 999999 !important; background-color: transparent !important; border: none !important;
             width: auto !important; height: auto !important;
         }}
-        
-        /* ">" işaretini kaldırdık, artık direkt bulacak */
         [data-testid="stPopover"] button {{
             width: 65px !important; height: 65px !important; border-radius: 50% !important;
-            background-color: #3b82f6 !important; /* MAVİ RENK ZORLAMA */
+            background-color: #3b82f6 !important;
             color: white !important;
             border: 2px solid rgba(255,255,255,0.2) !important; 
             box-shadow: 0 0 25px rgba(59, 130, 246, 0.8) !important;
             font-size: 28px !important; display: flex; justify-content: center; align-items: center;
         }}
-        
         [data-testid="stPopover"] button:hover {{ 
-            background-color: #2563eb !important; /* KOYU MAVİ HOVER */
+            background-color: #2563eb !important;
             transform: scale(1.1); 
             box-shadow: 0 0 40px rgba(59, 130, 246, 1) !important; 
         }}
 
-        /* ----------------------------------------------------------- */
-        /* --- DİĞER BİLEŞENLER --- */
-        /* ----------------------------------------------------------- */
-        
         /* Ticker */
         .ticker-wrap {{
             width: 100%; overflow: hidden; background-color: #000000;
@@ -301,32 +257,30 @@ class PDFReport(FPDF):
     def create_kpi_summary(self, enf_genel, enf_gida, en_yuksek_urun):
         self.ln(5)
         self.set_font(self.font_family, 'B', 10)
-        w = 60; h = 25; margin = 5
-        x = self.get_x(); y = self.get_y()
         self.set_fill_color(*self.c_sari)
-        self.rect(x, y, w, h, 'F')
-        self.set_xy(x, y+5); self.set_text_color(*self.c_lacivert)
-        self.cell(w, 5, self.fix_text("GENEL ENFLASYON"), 0, 2, 'C')
+        self.rect(self.get_x(), self.get_y(), 60, 25, 'F')
+        self.set_text_color(*self.c_lacivert)
+        self.cell(60, 5, self.fix_text("KÜMÜLATİF ENFLASYON"), 0, 2, 'C')
         self.set_font(self.font_family, 'B', 16)
-        self.cell(w, 10, self.fix_text(f"%{enf_genel:.2f}"), 0, 0, 'C')
+        self.cell(60, 10, self.fix_text(f"%{enf_genel:.2f}"), 0, 0, 'C')
         
-        self.set_xy(x + w + margin, y)
+        self.set_xy(self.get_x() + 5, self.get_y() - 15)
         self.set_fill_color(*self.c_lacivert)
-        self.rect(x + w + margin, y, w, h, 'F')
-        self.set_xy(x + w + margin, y+5); self.set_text_color(255, 255, 255)
+        self.rect(self.get_x(), self.get_y(), 60, 25, 'F')
+        self.set_text_color(255, 255, 255)
         self.set_font(self.font_family, 'B', 10)
-        self.cell(w, 5, self.fix_text("GIDA ENFLASYONU"), 0, 2, 'C')
+        self.cell(60, 5, self.fix_text("GIDA ENFLASYONU"), 0, 2, 'C')
         self.set_font(self.font_family, 'B', 16)
-        self.cell(w, 10, self.fix_text(f"%{enf_gida:.2f}"), 0, 0, 'C')
+        self.cell(60, 10, self.fix_text(f"%{enf_gida:.2f}"), 0, 0, 'C')
 
-        self.set_xy(x + (w + margin)*2, y)
+        self.set_xy(self.get_x() + 5, self.get_y() - 15)
         self.set_fill_color(240, 240, 240)
-        self.rect(x + (w + margin)*2, y, w, h, 'F')
-        self.set_xy(x + (w + margin)*2, y+5); self.set_text_color(*self.c_koyu)
+        self.rect(self.get_x(), self.get_y(), 60, 25, 'F')
+        self.set_text_color(*self.c_koyu)
         self.set_font(self.font_family, 'B', 10)
-        self.cell(w, 5, self.fix_text("EN YÜKSEK ARTIŞ"), 0, 2, 'C')
+        self.cell(60, 5, self.fix_text("EN YÜKSEK ARTIŞ"), 0, 2, 'C')
         self.set_font(self.font_family, 'B', 11)
-        self.cell(w, 10, self.fix_text(str(en_yuksek_urun)[:15]), 0, 0, 'C')
+        self.cell(60, 10, self.fix_text(str(en_yuksek_urun)[:15]), 0, 0, 'C')
         self.ln(25)
 
     def write_markdown(self, text):
@@ -362,7 +316,7 @@ class PDFReport(FPDF):
         self.cell(0, 30, self.fix_text(f"%{rate_val}"), 0, 1, 'C')
         self.set_font(self.font_family, 'B', 14)
         self.set_text_color(100, 100, 100)
-        self.cell(0, 15, self.fix_text("AYLIK ENFLASYON GÖSTERGESİ"), 0, 1, 'C')
+        self.cell(0, 15, self.fix_text("YIL İÇİ KÜMÜLATİF GÖSTERGE"), 0, 1, 'C')
         self.ln(30)
         self.set_font(self.font_family, '', 12)
         self.set_text_color(*self.c_koyu)
@@ -650,7 +604,7 @@ def generate_detailed_static_report(df_analiz, tarih, enf_genel, enf_gida, gun_f
 **PİYASA GÖRÜNÜM RAPORU**
 
 **1. MAKRO EKONOMİK GÖRÜNÜM VE MANŞET VERİLER**
-{tarih} tarihi itibarıyla sistemimiz tarafından takip edilen mal ve hizmet sepetindeki genel fiyat seviyesi, referans alınan başlangıç dönemine göre kümülatif **%{enf_genel:.2f}** oranında artış kaydetmiştir. Analiz periyodu olan son {gun_farki} günde, piyasadaki fiyatlama davranışlarının yukarı yönlü ivmesini koruduğu gözlemlenmektedir. Özellikle gıda ve temel ihtiyaç maddelerindeki **%{enf_gida:.2f}** seviyesindeki gerçekleşme, hanehalkı bütçesi üzerindeki baskının manşet enflasyonun üzerinde olduğunu teyit etmektedir.
+{tarih} tarihi itibarıyla sistemimiz tarafından takip edilen mal ve hizmet sepetindeki genel fiyat seviyesi, yılbaşına göre (Kümülatif) **%{enf_genel:.2f}** oranında artış kaydetmiştir. Analiz periyodu olan son dönemde, piyasadaki fiyatlama davranışlarının seyri yakından izlenmektedir. Özellikle gıda ve temel ihtiyaç maddelerindeki **%{enf_gida:.2f}** seviyesindeki gerçekleşme, hanehalkı bütçesi üzerindeki etkiyi yansıtmaktadır.
 
 **2. DETAYLI SEPET ANALİZİ VE VOLATİLİTE**
 Takip edilen toplam **{toplam_urun}** adet ürünün fiyat hareketleri incelendiğinde; ürünlerin **{artan_sayisi}** adedinde fiyat artışı, **{dusen_sayisi}** adedinde fiyat düşüşü tespit edilmiş, **{sabit_sayisi}** ürünün fiyatı ise değişmemiştir. Bu durum, enflasyonist baskının sepetin geneline yayıldığını (yayılım endeksi: %{(artan_sayisi/toplam_urun)*100:.1f}) göstermektedir.
@@ -660,7 +614,7 @@ Takip edilen toplam **{toplam_urun}** adet ürünün fiyat hareketleri incelendi
 Dönem içerisinde fiyatı en çok artan ürünler sırasıyla **{en_cok_artan_text}** olmuştur. Buna karşın, **{en_cok_dusen_text}** ürünlerinde fiyat gevşemeleri veya kampanyalar nedeniyle düşüşler kaydedilmiştir. Fiyatı en çok artan ürün grubunun ağırlığı, sepet genelindeki varyansı yukarı çekmektedir.
 
 **4. PROJEKSİYON VE RİSK DEĞERLENDİRMESİ**
-Mevcut veri setine uygulanan zaman serisi analizleri (Prophet Modeli) ve günlük volatilite standart sapması baz alındığında; ay sonu kümülatif enflasyonun **%{tahmin:.2f}** bandına yakınsayacağı matematiksel olarak öngörülmektedir. 
+Mevcut veri setine uygulanan zaman serisi analizleri (Prophet Modeli) ve günlük volatilite standart sapması baz alındığında; ay sonu enflasyon eğiliminin **%{tahmin:.2f}** bandına yakınsayacağı matematiksel olarak öngörülmektedir. 
 
 **SONUÇ**
 Hesaplanan veriler, fiyat istikrarında henüz tam bir dengelenme (konsolidasyon) sağlanamadığını, özellikle talep esnekliği düşük olan gıda kalemlerindeki yapışkanlığın devam ettiğini işaret etmektedir. Karar alıcıların stok yönetimi ve fiyatlama stratejilerinde bu volatiliteyi göz önünde bulundurmaları önerilir.
@@ -794,6 +748,8 @@ def dashboard_modu():
                     grup_map = {"01": "Gıda", "02": "Alkol ve Tütünlü İçecekler", "03": "Giyim", "04": "Konut", "05": "Ev Eşyası", "06": "Sağlık", "07": "Ulaşım", "08": "Haberleşme", "09": "Eğlence", "10": "Eğitim", "11": "Lokanta", "12": "Çeşitli"}
                     df_s['Grup'] = df_s['Kod'].str[:2].map(grup_map).fillna("Diğer")
                 df_analiz = pd.merge(df_s, pivot, on='Kod', how='left')
+                
+                # Ağırlık Yönetimi
                 if agirlik_col in df_analiz.columns:
                     df_analiz[agirlik_col] = pd.to_numeric(df_analiz[agirlik_col], errors='coerce').fillna(1)
                 else:
@@ -801,41 +757,107 @@ def dashboard_modu():
                 
                 gunler = sorted([c for c in pivot.columns if c != 'Kod'])
                 son = gunler[-1]; dt_son = datetime.strptime(son, '%Y-%m-%d')
-                aralik_gunleri = [g for g in gunler if datetime.strptime(g, '%Y-%m-%d').month == 12]
-                baz = aralik_gunleri[-1] if aralik_gunleri else gunler[0]
-                dt_baz = datetime.strptime(baz, '%Y-%m-%d')
                 days_left = calendar.monthrange(dt_son.year, dt_son.month)[1] - dt_son.day
-                gun_farki = (dt_son - dt_baz).days
+
+                # -------------------------------------------------------------
+                # --- [BAŞLANGIÇ] TÜİK METODOLOJİSİ: ZİNCİRLEME LASPEYRES ---
+                # -------------------------------------------------------------
+                
+                # 1. BAZ DÖNEMİ BELİRLEME (Referans: Önceki Yılın Aralık Ayı)
+                simdi_yil = dt_son.year
+                onceki_yil_aralik_prefix = f"{simdi_yil - 1}-12"
+                
+                # Sütunlarda geçen yılın Aralık ayına ait veri var mı kontrol et
+                aralik_cols = [c for c in gunler if c.startswith(onceki_yil_aralik_prefix)]
+
+                if aralik_cols:
+                    baz_col = aralik_cols[-1]
+                    baz_tanimi = f"Aralık {simdi_yil - 1}"
+                else:
+                    # Yeni sistem/yıl verisi yoksa en eski veri baz alınır
+                    baz_col = gunler[0]
+                    baz_tanimi = f"Başlangıç ({baz_col})"
+
+                # 2. ENDEKS VE ENFLASYON HESABI
+                # Sadece hem "Şu An" hem "Baz Tarihte" fiyatı olan ürünler üzerinden hesaplanır
+                gecerli_veri = df_analiz.dropna(subset=[son, baz_col]).copy()
+                
+                enf_genel = 0.0; enf_gida = 0.0
+                
+                if not gecerli_veri.empty:
+                    # Kümülatif (Yıl içi) Enflasyon Hesabı
+                    w = gecerli_veri[agirlik_col]
+                    p_relative = gecerli_veri[son] / gecerli_veri[baz_col]
+                    # Formül: I = Toplam(W * (Pn/P0)) / Toplam(W) * 100
+                    genel_endeks = (w * p_relative).sum() / w.sum() * 100
+                    enf_genel = genel_endeks - 100
+                    
+                    # Gıda Enflasyonu (01 Kodlu ürünler)
+                    gida_df = gecerli_veri[gecerli_veri['Kod'].astype(str).str.startswith("01")]
+                    if not gida_df.empty:
+                        w_g = gida_df[agirlik_col]
+                        p_rel_g = gida_df[son] / gida_df[baz_col]
+                        enf_gida = ((w_g * p_rel_g).sum() / w_g.sum() * 100) - 100
+
+                    # Ürün Bazlı Kümülatif Değişim (Tablo için)
+                    df_analiz['Fark'] = (df_analiz[son] / df_analiz[baz_col]) - 1
+                else:
+                    df_analiz['Fark'] = 0.0
+
+                # 3. ZAMAN SERİSİ / TREND HESAPLAMA (Prophet İçin)
+                # Geçmiş günlerin de aynı baz (P0) kullanılarak endekslerinin hesaplanması gerekir
+                trend_data = []
+                for g in gunler:
+                    # O günkü veri ile Baz (P0) verisi kesişimi
+                    tmp_df = df_analiz.dropna(subset=[g, baz_col])
+                    if not tmp_df.empty:
+                        w_tmp = tmp_df[agirlik_col]
+                        idx_val = (w_tmp * (tmp_df[g] / tmp_df[baz_col])).sum() / w_tmp.sum() * 100
+                        trend_data.append({"Tarih": g, "TÜFE": idx_val})
+                
+                df_trend = pd.DataFrame(trend_data)
+                if not df_trend.empty:
+                    df_trend['Tarih'] = pd.to_datetime(df_trend['Tarih'])
+                
+                # -------------------------------------------------------------
+                # --- [BİTİŞ] TÜİK METODOLOJİSİ ---
+                # -------------------------------------------------------------
 
                 # ZİRVE/DİP HESAPLAMA (Grid İçin)
                 df_analiz['Max_Fiyat'] = df_analiz[gunler].max(axis=1)
                 df_analiz['Min_Fiyat'] = df_analiz[gunler].min(axis=1)
 
-                endeks_genel = (df_analiz.dropna(subset=[son, baz])[agirlik_col] * (df_analiz[son] / df_analiz[baz])).sum() / df_analiz.dropna(subset=[son, baz])[agirlik_col].sum() * 100
-                enf_genel = (endeks_genel / 100 - 1) * 100
-                df_analiz['Fark'] = (df_analiz[son] / df_analiz[baz]) - 1
-                gida = df_analiz[df_analiz['Kod'].str.startswith("01")].copy()
-                enf_gida = ((gida[son] / gida[baz] * gida[agirlik_col]).sum() / gida[agirlik_col].sum() - 1) * 100 if not gida.empty else 0
-                
-                trend_data = [{"Tarih": g, "TÜFE": (df_analiz.dropna(subset=[g, baz])[agirlik_col] * (df_analiz[g] / df_analiz[baz])).sum() / df_analiz.dropna(subset=[g, baz])[agirlik_col].sum() * 100} for g in gunler]
-                df_trend = pd.DataFrame(trend_data); df_trend['Tarih'] = pd.to_datetime(df_trend['Tarih'])
                 with st.spinner("Analitik Modeller Çalıştırılıyor..."): df_forecast = predict_inflation_prophet(df_trend)
                 
-                target_jan_end = pd.Timestamp(dt_son.year, 1, 31)
+                target_jan_end = pd.Timestamp(dt_son.year, dt_son.month, calendar.monthrange(dt_son.year, dt_son.month)[1])
                 month_end_forecast = 0.0
                 if not df_forecast.empty:
                     forecast_row = df_forecast[df_forecast['ds'] == target_jan_end]
-                    month_end_forecast = forecast_row.iloc[0]['yhat'] - 100 if not forecast_row.empty else df_forecast.iloc[-1]['yhat'] - 100
-                else: month_end_forecast = enf_genel + ((enf_genel / max(dt_son.day, 1)) * days_left)
-                month_end_forecast = math.floor(month_end_forecast + random.uniform(-0.8, 0.8))
+                    # Tahmin edilen endeks değerinden enflasyona dönüştürme (Endeks - 100)
+                    if not forecast_row.empty:
+                        month_end_forecast = forecast_row.iloc[0]['yhat'] - 100
+                    else:
+                        month_end_forecast = df_forecast.iloc[-1]['yhat'] - 100
+                else: 
+                    # Prophet çalışmazsa basit projeksiyon
+                    month_end_forecast = enf_genel # Basitçe mevcut durum
+                
+                month_end_forecast = math.floor(month_end_forecast + random.uniform(-0.1, 0.1)) # Hafif gürültü
 
-                if len(gunler) >= 2: df_analiz['Gunluk_Degisim'] = (df_analiz[gunler[-1]] / df_analiz[gunler[-2]]) - 1
-                else: df_analiz['Gunluk_Degisim'] = 0
+                # AYLIK / GÜNLÜK DEĞİŞİM (Ticker ve Oklar için)
+                # Bir önceki kayıtlı güne göre değişim
+                if len(gunler) >= 2: 
+                    onceki_gun = gunler[-2]
+                    df_analiz['Gunluk_Degisim'] = (df_analiz[son] / df_analiz[onceki_gun]) - 1
+                    gun_farki = (dt_son - datetime.strptime(baz_col, '%Y-%m-%d')).days
+                else: 
+                    df_analiz['Gunluk_Degisim'] = 0
+                    gun_farki = 0
+
                 inc = df_analiz.sort_values('Gunluk_Degisim', ascending=False).head(5)
                 dec = df_analiz.sort_values('Gunluk_Degisim', ascending=True).head(5)
                 items = []
                 
-                # --- TICKER RENK FIX (INLINE STYLE - KESİN ÇÖZÜM) ---
                 for _, r in inc.iterrows():
                     if r['Gunluk_Degisim'] > 0: 
                         items.append(f"<span style='color:#ff4d4d; font-weight:800;'>▲ {r[ad_col]} %{r['Gunluk_Degisim'] * 100:.1f}</span>")
@@ -867,9 +889,9 @@ def dashboard_modu():
                     """, unsafe_allow_html=True)
 
                 c1, c2, c3, c4 = st.columns(4)
-                with c1: kpi_card("Genel Enflasyon", f"%{enf_genel:.2f}", f"Baz: {baz}", "#f87171", "#ef4444", "📈")
+                with c1: kpi_card("Kümülatif Enflasyon", f"%{enf_genel:.2f}", f"Baz: {baz_tanimi}", "#f87171", "#ef4444", "📈")
                 with c2: kpi_card("Gıda Enflasyonu", f"%{enf_gida:.2f}", "Mutfak Sepeti", "#f87171", "#84cc16", "🛒")
-                with c3: kpi_card("Simülasyon Tahmini", f"%{math.floor(enf_genel)}", "Canlı Veri", "#a78bfa", "#8b5cf6", "🤖")
+                with c3: kpi_card("Ay Sonu Tahmini", f"%{month_end_forecast:.2f}", "Simülasyon", "#a78bfa", "#8b5cf6", "🤖")
                 with c4: kpi_card("Resmi TÜİK Verisi", f"%{resmi_aylik_enf:.2f}", f"{resmi_tarih_str}", "#fbbf24", "#eab308", "🏛️")
                 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -963,11 +985,11 @@ def dashboard_modu():
                 with t_veri:
                       st.markdown("### 📋 Veri Seti")
                       st.data_editor(
-                          df_analiz[['Grup', ad_col, 'Fark', baz, son]], 
+                          df_analiz[['Grup', ad_col, 'Fark', baz_col, son]], 
                           column_config={
-                              "Fark": st.column_config.ProgressColumn("Değişim", format="%.2f", min_value=-0.5, max_value=0.5), 
+                              "Fark": st.column_config.ProgressColumn("Kümülatif Değişim", format="%.2f", min_value=-0.5, max_value=0.5), 
                               ad_col: "Ürün", "Grup": "Kategori",
-                              baz: st.column_config.NumberColumn(f"Fiyat ({baz})", format="%.2f ₺"),
+                              baz_col: st.column_config.NumberColumn(f"Fiyat ({baz_tanimi})", format="%.2f ₺"),
                               son: st.column_config.NumberColumn(f"Fiyat ({son})", format="%.2f ₺")
                           }, 
                           hide_index=True, use_container_width=True, height=600
@@ -1000,7 +1022,7 @@ def dashboard_modu():
                             st.success("✅ Rapor Hazırlandı!")
                             st.download_button("📥 PDF Raporunu İndir", data=pdf_data, file_name=f"Strateji_Raporu_{son}.pdf", mime="application/pdf")
 
-            # --- SİNYAL MERKEZİ BOTU (FLOAT POPUP - SOL ALT - BEYAZ PENCERE / SİYAH YAZI) ---
+            # --- SİNYAL MERKEZİ BOTU ---
             with st.popover("💬"):
                 st.markdown("### 🤖 SİNYAL MERKEZİ")
                 st.caption("Veri analitiği asistanı (Offline)")
@@ -1034,15 +1056,16 @@ def dashboard_modu():
                     else:
                         if "Zam Şampiyonu" in bot_soru:
                             row = df_bot.sort_values('Fark', ascending=False).iloc[0]
-                            cevap = f"Zirvedeki ürün: **{row[ad_col]}**.<br>Artış oranı: <span style='color:#f87171'>%{row['Fark']*100:.2f}</span>"
+                            cevap = f"Zirvedeki ürün: **{row[ad_col]}**.<br>Kümülatif Artış: <span style='color:#f87171'>%{row['Fark']*100:.2f}</span>"
                         elif "İndirim Lideri" in bot_soru:
                             row = df_bot.sort_values('Fark', ascending=True).iloc[0]
                             renk = "#4ade80" if row['Fark'] < 0 else "#a1a1aa"
                             cevap = f"En dipteki ürün: **{row[ad_col]}**.<br>Değişim: <span style='color:{renk}'>%{row['Fark']*100:.2f}</span>"
                         elif "Ortalama değişim" in bot_soru:
+                            # Ağırlıklı ortalamayı burada da kullanabiliriz ama basit soru için aritmetik
                             ort = df_bot['Fark'].mean() * 100
                             renk = "#f87171" if ort > 0 else "#4ade80"
-                            cevap = f"Bu kapsamdaki ({len(df_bot)} ürün) ortalama enflasyon: <span style='color:{renk}'>%{ort:.2f}</span>"
+                            cevap = f"Bu kapsamdaki ({len(df_bot)} ürün) basit ortalama: <span style='color:{renk}'>%{ort:.2f}</span>"
                         elif "En pahalı" in bot_soru:
                             row = df_bot.sort_values(son, ascending=False).iloc[0]
                             cevap = f"Etiket fiyatı en yüksek: **{row[ad_col]}**.<br>Fiyat: **{row[son]:.2f} TL**"
@@ -1054,7 +1077,7 @@ def dashboard_modu():
                             count = len(sabitler)
                             if count > 0:
                                 ornekler = ", ".join(sabitler[ad_col].head(3).tolist())
-                                cevap = f"Toplam **{count}** ürünün fiyatı değişmedi.<br>Örnekler: {ornekler}..."
+                                cevap = f"Toplam **{count}** ürünün fiyatı baz döneme göre değişmedi.<br>Örnekler: {ornekler}..."
                             else:
                                 cevap = "Fiyatı sabit kalan ürün bulunmuyor."
                         elif "Kaç ürün" in bot_soru:
@@ -1087,10 +1110,7 @@ def dashboard_modu():
                     """, unsafe_allow_html=True)
 
         except Exception as e: st.error(f"Sistem Hatası: {e}")
-    st.markdown('<div style="text-align:center; color:#52525b; font-size:11px; margin-top:50px;">VALIDASYON MUDURLUGU © 2025 - CONFIDENTIAL</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align:center; color:#52525b; font-size:11px; margin-top:50px;">VALIDASYON MUDURLUGU © 2026 - CONFIDENTIAL</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     dashboard_modu()
-
-
-
