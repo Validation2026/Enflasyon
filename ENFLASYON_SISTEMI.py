@@ -49,6 +49,27 @@ def apply_theme():
             --neon-red: #ef4444;
         }}
 
+        /* --- 1. HEADER VE TOOLBAR'I YOK ETME (Gizlilik Modu) --- */
+        [data-testid="stHeader"] {{
+            visibility: hidden;
+            height: 0px;
+        }}
+        [data-testid="stToolbar"] {{
+            display: none !important;
+            visibility: hidden !important;
+        }}
+        [data-testid="stDecoration"] {{
+            display: none !important;
+        }}
+        [data-testid="stStatusWidget"] {{
+            display: none !important;
+        }}
+        /* İçerik yukarı kaymasın diye padding ayarı */
+        .main .block-container {{
+            padding-top: 2rem !important; 
+        }}
+        
+        /* --- 2. GENEL ARKA PLAN --- */
         [data-testid="stAppViewContainer"] {{
             background-color: var(--bg-color);
             background-image: 
@@ -57,31 +78,49 @@ def apply_theme():
             font-family: 'Inter', sans-serif !important;
             color: #e4e4e7 !important;
         }}
-        
-        /* Modern Scrollbar */
-        ::-webkit-scrollbar {{ width: 6px; height: 6px; }}
-        ::-webkit-scrollbar-track {{ background: transparent; }}
-        ::-webkit-scrollbar-thumb {{ background: #3f3f46; border-radius: 3px; }}
-        ::-webkit-scrollbar-thumb:hover {{ background: #52525b; }}
 
-        /* --- YENİ EKLENEN: TAB (SEKME) İSİMLERİ BEYAZ --- */
-        button[data-baseweb="tab"] {{
+        /* --- 3. TABLO (DATAFRAME) STİLİ - CYBERPUNK --- */
+        [data-testid="stDataFrame"] {{
+            background-color: transparent !important;
+            border: 1px solid #27272a !important;
+        }}
+        [data-testid="stDataFrame"] div[role="grid"] {{
             background-color: transparent !important;
         }}
+        /* Tablo Başlıkları */
+        [data-testid="stDataFrame"] th {{
+            background-color: #18181b !important;
+            color: #a1a1aa !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 700 !important;
+            border-bottom: 1px solid #3f3f46 !important;
+        }}
+        /* Tablo Hücreleri */
+        [data-testid="stDataFrame"] td {{
+            background-color: rgba(24, 24, 27, 0.4) !important;
+            color: #e4e4e7 !important;
+            font-family: 'JetBrains Mono', monospace !important; /* Kod fontu */
+            font-size: 12px !important;
+        }}
+        /* Tablo Hover Efekti */
+        [data-testid="stDataFrame"] [role="row"]:hover > div {{
+            background-color: rgba(59, 130, 246, 0.1) !important; /* Mavi hover */
+        }}
+
+        /* --- 4. SEKME VE BUTONLAR --- */
+        /* Sekme İsimleri Beyaz */
+        button[data-baseweb="tab"] {{ background-color: transparent !important; }}
         button[data-baseweb="tab"] div[data-testid="stMarkdownContainer"] p {{
-            color: #ffffff !important; /* Yazı rengi bembeyaz */
+            color: #ffffff !important;
             font-weight: 700 !important;
             font-size: 14px !important;
         }}
-        /* Aktif sekme alt çizgi rengi */
-        button[data-baseweb="tab"][aria-selected="true"] {{
-            border-bottom-color: #3b82f6 !important;
-        }}
+        button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom-color: #3b82f6 !important; }}
 
-        /* --- YENİ EKLENEN: EXCEL İNDİR BUTONU SİYAH --- */
+        /* Excel İndir Butonu Siyah */
         [data-testid="stDownloadButton"] button {{
-            background-color: #000000 !important; /* Tam siyah */
-            color: #ffffff !important; /* Beyaz yazı */
+            background-color: #000000 !important;
+            color: #ffffff !important;
             border: 1px solid #3f3f46 !important;
             font-weight: 800 !important;
             text-transform: uppercase !important;
@@ -89,12 +128,18 @@ def apply_theme():
             transition: all 0.3s ease !important;
         }}
         [data-testid="stDownloadButton"] button:hover {{
-            background-color: #18181b !important; /* Hoverda hafif grileşsin */
+            background-color: #18181b !important;
             border-color: #ffffff !important;
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.1) !important;
         }}
 
-        /* KPI Kartları - Glassmorphism */
+        /* Scrollbar */
+        ::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+        ::-webkit-scrollbar-track {{ background: transparent; }}
+        ::-webkit-scrollbar-thumb {{ background: #3f3f46; border-radius: 3px; }}
+        ::-webkit-scrollbar-thumb:hover {{ background: #52525b; }}
+
+        /* --- 5. KARTLAR VE TICKER --- */
         .kpi-card {{
             background: var(--card-bg);
             backdrop-filter: blur(12px);
@@ -115,22 +160,12 @@ def apply_theme():
         .kpi-value {{ font-size: 38px; font-weight: 800; color: #ffffff !important; letter-spacing: -1.5px; text-shadow: 0 0 20px rgba(255,255,255,0.1); }}
         .kpi-sub {{ font-size: 12px; font-weight: 500; margin-top: 8px; color: #d4d4d8 !important; display: flex; align-items: center; gap: 5px; }}
 
-        /* Ürün Kartları - Sleek Tiles */
         .pg-card {{
-            background: rgba(39, 39, 42, 0.4);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            height: 180px;
-            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+            background: rgba(39, 39, 42, 0.4); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 16px; height: 180px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;
             text-align: center; position: relative; transition: all 0.3s ease;
         }}
-        .pg-card:hover {{ 
-            background: rgba(63, 63, 70, 0.6); 
-            border-color: rgba(255,255,255,0.2); 
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-        }}
+        .pg-card:hover {{ background: rgba(63, 63, 70, 0.6); border-color: rgba(255,255,255,0.2); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }}
         .pg-name {{ font-size: 13px; font-weight: 600; color: #e4e4e7 !important; line-height: 1.4; opacity: 0.9; }}
         .pg-price {{ font-size: 24px; font-weight: 900; color: #ffffff !important; letter-spacing: -0.5px; margin: 10px 0; }}
         
@@ -139,38 +174,18 @@ def apply_theme():
         .pg-green {{ background: rgba(34, 197, 94, 0.15); color: #86efac !important; border: 1px solid rgba(34, 197, 94, 0.2); box-shadow: 0 0 10px rgba(34, 197, 94, 0.1); }}
         .pg-gray {{ background: #27272a; color: #a1a1aa !important; }}
 
-        /* Status Etiketleri */
         .status-tag {{ position: absolute; top: -8px; right: -8px; font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; z-index: 5; letter-spacing: 0.5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }}
         .tag-peak {{ background: #ffffff !important; color: #000000 !important; border: 2px solid #000; }}
         .tag-dip {{ background: #3b82f6 !important; color: #ffffff !important; border: 2px solid #1e3a8a; }}
 
-        /* Ticker - Daha İnce */
-        .ticker-wrap {{
-            width: 100%; overflow: hidden; background-color: rgba(0,0,0,0.3);
-            border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
-            padding: 8px 0; margin-bottom: 25px; backdrop-filter: blur(5px);
-            white-space: nowrap; 
-        }}
-        .ticker-move {{
-            display: inline-block;
-            padding-left: 100%; 
-            animation: marquee 60s linear infinite; 
-            font-family: 'JetBrains Mono', monospace; 
-            font-size: 13px; font-weight: 600; letter-spacing: -0.5px;
-        }}
+        .ticker-wrap {{ width: 100%; overflow: hidden; background-color: rgba(0,0,0,0.3); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 8px 0; margin-bottom: 25px; backdrop-filter: blur(5px); white-space: nowrap; }}
+        .ticker-move {{ display: inline-block; padding-left: 100%; animation: marquee 60s linear infinite; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: -0.5px; }}
         .ticker-move:hover {{ animation-play-state: paused; }}
         @keyframes marquee {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
 
-        /* Streamlit Elementleri İyileştirme */
         section[data-testid="stSidebar"] {{ background-color: #000000 !important; border-right: 1px solid #27272a; }}
-        div.stButton > button {{ 
-            width: 100%; border-radius: 8px; font-weight: 600; 
-            background: #18181b; color: #fff; border: 1px solid #3f3f46; 
-            transition: all 0.2s;
-        }}
+        div.stButton > button {{ width: 100%; border-radius: 8px; font-weight: 600; background: #18181b; color: #fff; border: 1px solid #3f3f46; transition: all 0.2s; }}
         div.stButton > button:hover {{ border-color: #71717a; background: #27272a; }}
-        [data-testid="stDataFrame"] {{ border: 1px solid #27272a; border-radius: 8px; overflow: hidden; }}
-        [data-testid="stHeader"] {{ background: transparent !important; }}
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -1068,6 +1083,7 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
 
