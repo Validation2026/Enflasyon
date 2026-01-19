@@ -48,28 +48,30 @@ def apply_theme():
             --neon-green: #22c55e;
             --neon-red: #ef4444;
         }}
-
-        /* --- 1. HEADER VE TOOLBAR'I YOK ETME (Gizlilik Modu) --- */
-        [data-testid="stHeader"] {{
-            visibility: hidden;
-            height: 0px;
-        }}
-        [data-testid="stToolbar"] {{
-            display: none !important;
-            visibility: hidden !important;
-        }}
-        [data-testid="stDecoration"] {{
-            display: none !important;
-        }}
-        [data-testid="stStatusWidget"] {{
-            display: none !important;
-        }}
-        /* İçerik yukarı kaymasın diye padding ayarı */
-        .main .block-container {{
-            padding-top: 2rem !important; 
+        
+        /* --- KRİTİK DÜZELTME: TABLOYU KARARTMA --- */
+        /* Bu komut tarayıcıya bu alanın karanlık modda olduğunu söyler */
+        [data-testid="stDataEditor"], [data-testid="stDataFrame"] {{
+            color-scheme: dark; 
+            background-color: transparent !important;
         }}
         
-        /* --- 2. GENEL ARKA PLAN --- */
+        /* Tablonun etrafındaki border ve arka plan */
+        div[data-testid="stDataEditor"] > div, div[data-testid="stDataFrame"] > div {{
+            background-color: rgba(24, 24, 27, 0.4) !important;
+            border: 1px solid #333 !important;
+            border-radius: 8px !important;
+        }}
+
+        /* --- HEADER VE TOOLBAR YOK ETME --- */
+        [data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
+        [data-testid="stToolbar"] {{ display: none; }}
+        [data-testid="stDecoration"] {{ display: none; }}
+        
+        /* İçerik yukarı kaysın */
+        .main .block-container {{ padding-top: 2rem !important; }}
+
+        /* --- GENEL ARKA PLAN --- */
         [data-testid="stAppViewContainer"] {{
             background-color: var(--bg-color);
             background-image: 
@@ -79,36 +81,7 @@ def apply_theme():
             color: #e4e4e7 !important;
         }}
 
-        /* --- 3. TABLO (DATAFRAME) STİLİ - CYBERPUNK --- */
-        [data-testid="stDataFrame"] {{
-            background-color: transparent !important;
-            border: 1px solid #27272a !important;
-        }}
-        [data-testid="stDataFrame"] div[role="grid"] {{
-            background-color: transparent !important;
-        }}
-        /* Tablo Başlıkları */
-        [data-testid="stDataFrame"] th {{
-            background-color: #18181b !important;
-            color: #a1a1aa !important;
-            font-family: 'Inter', sans-serif !important;
-            font-weight: 700 !important;
-            border-bottom: 1px solid #3f3f46 !important;
-        }}
-        /* Tablo Hücreleri */
-        [data-testid="stDataFrame"] td {{
-            background-color: rgba(24, 24, 27, 0.4) !important;
-            color: #e4e4e7 !important;
-            font-family: 'JetBrains Mono', monospace !important; /* Kod fontu */
-            font-size: 12px !important;
-        }}
-        /* Tablo Hover Efekti */
-        [data-testid="stDataFrame"] [role="row"]:hover > div {{
-            background-color: rgba(59, 130, 246, 0.1) !important; /* Mavi hover */
-        }}
-
-        /* --- 4. SEKME VE BUTONLAR --- */
-        /* Sekme İsimleri Beyaz */
+        /* --- TAB (SEKME) İSİMLERİ BEYAZ --- */
         button[data-baseweb="tab"] {{ background-color: transparent !important; }}
         button[data-baseweb="tab"] div[data-testid="stMarkdownContainer"] p {{
             color: #ffffff !important;
@@ -117,7 +90,7 @@ def apply_theme():
         }}
         button[data-baseweb="tab"][aria-selected="true"] {{ border-bottom-color: #3b82f6 !important; }}
 
-        /* Excel İndir Butonu Siyah */
+        /* --- EXCEL İNDİR BUTONU SİYAH --- */
         [data-testid="stDownloadButton"] button {{
             background-color: #000000 !important;
             color: #ffffff !important;
@@ -133,48 +106,27 @@ def apply_theme():
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.1) !important;
         }}
 
-        /* Scrollbar */
-        ::-webkit-scrollbar {{ width: 6px; height: 6px; }}
-        ::-webkit-scrollbar-track {{ background: transparent; }}
-        ::-webkit-scrollbar-thumb {{ background: #3f3f46; border-radius: 3px; }}
-        ::-webkit-scrollbar-thumb:hover {{ background: #52525b; }}
-
-        /* --- 5. KARTLAR VE TICKER --- */
+        /* --- KARTLAR VE DİĞERLERİ --- */
         .kpi-card {{
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            position: relative;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }}
-        .kpi-card:hover {{
-            transform: translateY(-5px) scale(1.01);
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
-        }}
-        .kpi-title {{ font-size: 11px; font-weight: 700; color: #a1a1aa !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }}
-        .kpi-value {{ font-size: 38px; font-weight: 800; color: #ffffff !important; letter-spacing: -1.5px; text-shadow: 0 0 20px rgba(255,255,255,0.1); }}
+        .kpi-card:hover {{ transform: translateY(-5px) scale(1.01); border-color: rgba(255, 255, 255, 0.2); }}
+        .kpi-title {{ font-size: 11px; font-weight: 700; color: #a1a1aa !important; text-transform: uppercase; margin-bottom: 8px; }}
+        .kpi-value {{ font-size: 38px; font-weight: 800; color: #ffffff !important; text-shadow: 0 0 20px rgba(255,255,255,0.1); }}
         .kpi-sub {{ font-size: 12px; font-weight: 500; margin-top: 8px; color: #d4d4d8 !important; display: flex; align-items: center; gap: 5px; }}
 
-        .pg-card {{
-            background: rgba(39, 39, 42, 0.4); border: 1px solid var(--border-color); border-radius: 12px;
-            padding: 16px; height: 180px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-            text-align: center; position: relative; transition: all 0.3s ease;
-        }}
+        .pg-card {{ background: rgba(39, 39, 42, 0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; height: 180px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; position: relative; transition: all 0.3s ease; }}
         .pg-card:hover {{ background: rgba(63, 63, 70, 0.6); border-color: rgba(255,255,255,0.2); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }}
         .pg-name {{ font-size: 13px; font-weight: 600; color: #e4e4e7 !important; line-height: 1.4; opacity: 0.9; }}
         .pg-price {{ font-size: 24px; font-weight: 900; color: #ffffff !important; letter-spacing: -0.5px; margin: 10px 0; }}
-        
         .pg-badge {{ padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; width: auto; min-width: 80px; display: inline-flex; justify-content: center; align-items: center; gap: 4px; }}
-        .pg-red {{ background: rgba(239, 68, 68, 0.15); color: #fca5a5 !important; border: 1px solid rgba(239, 68, 68, 0.2); box-shadow: 0 0 10px rgba(239, 68, 68, 0.1); }}
-        .pg-green {{ background: rgba(34, 197, 94, 0.15); color: #86efac !important; border: 1px solid rgba(34, 197, 94, 0.2); box-shadow: 0 0 10px rgba(34, 197, 94, 0.1); }}
+        .pg-red {{ background: rgba(239, 68, 68, 0.15); color: #fca5a5 !important; border: 1px solid rgba(239, 68, 68, 0.2); }}
+        .pg-green {{ background: rgba(34, 197, 94, 0.15); color: #86efac !important; border: 1px solid rgba(34, 197, 94, 0.2); }}
         .pg-gray {{ background: #27272a; color: #a1a1aa !important; }}
 
-        .status-tag {{ position: absolute; top: -8px; right: -8px; font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; z-index: 5; letter-spacing: 0.5px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }}
+        .status-tag {{ position: absolute; top: -8px; right: -8px; font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; z-index: 5; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }}
         .tag-peak {{ background: #ffffff !important; color: #000000 !important; border: 2px solid #000; }}
         .tag-dip {{ background: #3b82f6 !important; color: #ffffff !important; border: 2px solid #1e3a8a; }}
 
@@ -186,6 +138,11 @@ def apply_theme():
         section[data-testid="stSidebar"] {{ background-color: #000000 !important; border-right: 1px solid #27272a; }}
         div.stButton > button {{ width: 100%; border-radius: 8px; font-weight: 600; background: #18181b; color: #fff; border: 1px solid #3f3f46; transition: all 0.2s; }}
         div.stButton > button:hover {{ border-color: #71717a; background: #27272a; }}
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+        ::-webkit-scrollbar-track {{ background: transparent; }}
+        ::-webkit-scrollbar-thumb {{ background: #3f3f46; border-radius: 3px; }}
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -1083,6 +1040,7 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
 
