@@ -761,6 +761,7 @@ def dashboard_modu():
 
                 # -------------------------------------------------------------
                 # --- [BAŞLANGIÇ] TÜİK METODOLOJİSİ: ZİNCİRLEME LASPEYRES ---
+                # --- REVİZE: SON GÜN YERİNE AYLIK ORTALAMA FİYAT KULLANIMI ---
                 # -------------------------------------------------------------
                 
                 # 1. BAZ DÖNEMİ BELİRLEME (Referans: Önceki Yılın Aralık Ayı)
@@ -778,24 +779,31 @@ def dashboard_modu():
                     baz_col = gunler[0]
                     baz_tanimi = f"Başlangıç ({baz_col})"
 
-                # 2. ENDEKS VE ENFLASYON HESABI
-                # Sadece hem "Şu An" hem "Baz Tarihte" fiyatı olan ürünler üzerinden hesaplanır
-                gecerli_veri = df_analiz.dropna(subset=[son, baz_col]).copy()
+                # 2. AYLIK ORTALAMA FİYAT HESAPLAMA (VOLATİLİTEYİ AZALTMAK İÇİN)
+                # Bu ayın (son veri tarihi ayı) tüm sütunlarını bul
+                bu_ay_str = f"{dt_son.year}-{dt_son.month:02d}"
+                bu_ay_cols = [c for c in gunler if c.startswith(bu_ay_str)]
+                
+                # Ana tabloda "Aylik_Ortalama" sütunu oluştur
+                if bu_ay_cols:
+                    df_analiz['Aylik_Ortalama'] = df_analiz[bu_ay_cols].mean(axis=1)
+                else:
+                    df_analiz['Aylik_Ortalama'] = df_analiz[son] # Fallback
+
+                # 3. ENDEKS VE ENFLASYON HESABI
+                # Sadece hem "Şu An (Ortalama)" hem "Baz Tarihte" veri olan ürünler üzerinden hesaplanır
+                # Not: Son günde veri olmasa bile ay içinde veri varsa ortalama oluşur, bu daha sağlıklıdır.
+                gecerli_veri = df_analiz.dropna(subset=['Aylik_Ortalama', baz_col]).copy()
                 
                 enf_genel = 0.0; enf_gida = 0.0
                 
                 if not gecerli_veri.empty:
-                    # Kümülatif (Yıl içi) Enflasyon Hesabı
+                    # Kümülatif (Yıl içi) Enflasyon Hesabı (ORTALAMA ÜZERİNDEN)
                     w = gecerli_veri[agirlik_col]
-                    # 1. Bu aya ait tüm günlerin sütunlarını bul (Örn: 2026-01-01, 2026-01-02...)
-                    bu_ay_prefix = f"{dt_son.year}-{dt_son.month:02d}"
-                    bu_ay_gunleri = [c for c in gunler if c.startswith(bu_ay_prefix)]
                     
-                    # 2. Bu günlerin fiyat ortalamasını al (Her ürün için)
-                    gecerli_veri['Bu_Ay_Ortalama'] = gecerli_veri[bu_ay_gunleri].mean(axis=1)
+                    # KRİTİK DEĞİŞİKLİK: [son] yerine ['Aylik_Ortalama'] kullanıyoruz
+                    p_relative = gecerli_veri['Aylik_Ortalama'] / gecerli_veri[baz_col]
                     
-                    # 3. Hesabı "Son Gün" yerine "Ortalama" ile yap
-                    p_relative_ortalama = gecerli_veri['Bu_Ay_Ortalama'] / gecerli_veri[baz_col]
                     # Formül: I = Toplam(W * (Pn/P0)) / Toplam(W) * 100
                     genel_endeks = (w * p_relative).sum() / w.sum() * 100
                     enf_genel = genel_endeks - 100
@@ -804,19 +812,18 @@ def dashboard_modu():
                     gida_df = gecerli_veri[gecerli_veri['Kod'].astype(str).str.startswith("01")]
                     if not gida_df.empty:
                         w_g = gida_df[agirlik_col]
-                        p_rel_g = gida_df[son] / gida_df[baz_col]
+                        p_rel_g = gida_df['Aylik_Ortalama'] / gida_df[baz_col]
                         enf_gida = ((w_g * p_rel_g).sum() / w_g.sum() * 100) - 100
 
-                    # Ürün Bazlı Kümülatif Değişim (Tablo için)
-                    df_analiz['Fark'] = (df_analiz[son] / df_analiz[baz_col]) - 1
+                    # Ürün Bazlı Kümülatif Değişim (Tabloda % Farkı Ortalama ile gösterelim)
+                    df_analiz['Fark'] = (df_analiz['Aylik_Ortalama'] / df_analiz[baz_col]) - 1
                 else:
                     df_analiz['Fark'] = 0.0
 
-                # 3. ZAMAN SERİSİ / TREND HESAPLAMA (Prophet İçin)
-                # Geçmiş günlerin de aynı baz (P0) kullanılarak endekslerinin hesaplanması gerekir
+                # 4. ZAMAN SERİSİ / TREND HESAPLAMA (Prophet İçin - Günlük devam edebilir)
+                # Trend grafiğinde günlük değişimleri görmek isteyebilirsin, burayı günlük bırakıyorum.
                 trend_data = []
                 for g in gunler:
-                    # O günkü veri ile Baz (P0) verisi kesişimi
                     tmp_df = df_analiz.dropna(subset=[g, baz_col])
                     if not tmp_df.empty:
                         w_tmp = tmp_df[agirlik_col]
@@ -828,7 +835,7 @@ def dashboard_modu():
                     df_trend['Tarih'] = pd.to_datetime(df_trend['Tarih'])
                 
                 # -------------------------------------------------------------
-                # --- [BİTİŞ] TÜİK METODOLOJİSİ ---
+                # --- [BİTİŞ] HESAPLAMA BLOĞU ---
                 # -------------------------------------------------------------
 
                 # ZİRVE/DİP HESAPLAMA (Grid İçin)
@@ -932,7 +939,11 @@ def dashboard_modu():
                     
                     cols = st.columns(4)
                     for idx, row in df_goster.iterrows():
-                        fiyat, fark = row[son], row['Fark'] * 100
+                        # KARTLARDA SON FİYATI GÖSTERELİM (ETİKET BİLGİSİ İÇİN)
+                        fiyat = row[son] 
+                        # AMA DEĞİŞİM YÜZDESİNİ ORTALAMADAN HESAPLADIĞIMIZ FARK İLE GÖSTERELİM
+                        fark = row['Fark'] * 100 
+                        
                         if fark > 0: badge_cls = "pg-red"; symbol = "▲"
                         elif fark < 0: badge_cls = "pg-green"; symbol = "▼"
                         else: badge_cls = "pg-gray"; symbol = "-"
@@ -1122,4 +1133,3 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
-
