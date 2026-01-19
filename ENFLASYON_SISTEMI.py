@@ -31,7 +31,7 @@ st.set_page_config(
     initial_sidebar_state="expanded" 
 )
 
-# --- CSS MOTORU (AGRESİF STİL) ---
+# --- CSS MOTORU (AGRESİF STİL - GÜNCELLENDİ) ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
@@ -103,20 +103,53 @@ def apply_theme():
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.1) !important;
         }}
 
-        /* --- KARTLAR VE DİĞERLERİ --- */
+        /* --- GÜNCELLENEN KPI KARTLARI (NEON GLOW) --- */
         .kpi-card {{
-            background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; position: relative;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(145deg, rgba(24, 24, 27, 0.8), rgba(24, 24, 27, 0.4));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            overflow: hidden;
         }}
-        .kpi-card:hover {{ transform: translateY(-5px) scale(1.01); border-color: rgba(255, 255, 255, 0.2); }}
-        .kpi-title {{ font-size: 11px; font-weight: 700; color: #a1a1aa !important; text-transform: uppercase; margin-bottom: 8px; }}
-        .kpi-value {{ font-size: 38px; font-weight: 800; color: #ffffff !important; text-shadow: 0 0 20px rgba(255,255,255,0.1); }}
-        .kpi-sub {{ font-size: 12px; font-weight: 500; margin-top: 8px; color: #d4d4d8 !important; display: flex; align-items: center; gap: 5px; }}
+        .kpi-card:hover {{ 
+            transform: translateY(-5px); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.1);
+            border-color: rgba(255, 255, 255, 0.2); 
+        }}
+        
+        /* Kartın arkasında dönen hafif ışık efekti */
+        .kpi-card::before {{
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%);
+            transform: rotate(30deg);
+            pointer-events: none;
+        }}
 
+        .kpi-title {{ font-size: 11px; font-weight: 700; color: #a1a1aa !important; text-transform: uppercase; margin-bottom: 8px; position: relative; z-index: 1; }}
+        .kpi-value {{ font-size: 38px; font-weight: 800; color: #ffffff !important; text-shadow: 0 0 20px rgba(255,255,255,0.1); position: relative; z-index: 1; }}
+        .kpi-sub {{ font-size: 12px; font-weight: 500; margin-top: 8px; color: #d4d4d8 !important; display: flex; align-items: center; gap: 5px; position: relative; z-index: 1; }}
+
+        /* --- ÜRÜN KARTLARI (GÜNCELLENDİ) --- */
         .pg-card {{ background: rgba(39, 39, 42, 0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; height: 180px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; position: relative; transition: all 0.3s ease; }}
         .pg-card:hover {{ background: rgba(63, 63, 70, 0.6); border-color: rgba(255,255,255,0.2); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }}
-        .pg-name {{ font-size: 13px; font-weight: 600; color: #e4e4e7 !important; line-height: 1.4; opacity: 0.9; }}
+        
+        /* Uzun İsimler İçin Düzenleme */
+        .pg-name {{ 
+            font-size: 13px; font-weight: 600; color: #e4e4e7 !important; line-height: 1.4; opacity: 0.9; 
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 36px;
+        }}
+        
         .pg-price {{ font-size: 24px; font-weight: 900; color: #ffffff !important; letter-spacing: -0.5px; margin: 10px 0; }}
         .pg-badge {{ padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; width: auto; min-width: 80px; display: inline-flex; justify-content: center; align-items: center; gap: 4px; }}
         .pg-red {{ background: rgba(239, 68, 68, 0.15); color: #fca5a5 !important; border: 1px solid rgba(239, 68, 68, 0.2); }}
@@ -133,8 +166,22 @@ def apply_theme():
         @keyframes marquee {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
 
         section[data-testid="stSidebar"] {{ background-color: #000000 !important; border-right: 1px solid #27272a; }}
-        div.stButton > button {{ width: 100%; border-radius: 8px; font-weight: 600; background: #18181b; color: #fff; border: 1px solid #3f3f46; transition: all 0.2s; }}
-        div.stButton > button:hover {{ border-color: #71717a; background: #27272a; }}
+        
+        /* --- YENİ BUTON STİLİ (CYBERPUNK) --- */
+        div.stButton > button {{ 
+            width: 100%; border-radius: 8px; font-weight: 600; 
+            background: linear-gradient(to bottom, #27272a, #18181b); 
+            color: #e4e4e7; border: 1px solid rgba(255,255,255,0.1); 
+            transition: all 0.2s; 
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase; letter-spacing: 1px; font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }}
+        div.stButton > button:hover {{ 
+            border-color: #3b82f6; color: #fff; background: #27272a;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+        }}
+        div.stButton > button:active {{ transform: scale(0.98); }}
         
         /* Scrollbar */
         ::-webkit-scrollbar {{ width: 6px; height: 6px; }}
@@ -255,8 +302,8 @@ class PDFReport(FPDF):
         if not text: return
         self.set_text_color(50, 50, 50)
         self.set_font(self.font_family, '', 11)
-        lines = str(text).split('\n')
-        for line in lines:
+        self.lines = str(text).split('\n')
+        for line in self.lines:
             line = self.fix_text(line)
             if any(x in line for x in ["Saygilarimizla", "[Basekonomist", "[Kurum", "Unvani]", "Basekonomist Ofisi"]): continue
             if not line.strip(): self.ln(5); continue
@@ -514,7 +561,6 @@ def html_isleyici(log_callback):
             for _, row in df_conf.iterrows():
                 if pd.notna(row[manuel_col]) and str(row[manuel_col]).strip() != "":
                     try:
-                        # 1. DEĞİŞİKLİK BURADA: int() yerine float() kullanıldı
                         fiyat_man = float(row[manuel_col]) 
                         if fiyat_man > 0:
                             veriler.append({"Tarih": bugun, "Zaman": simdi, "Kod": row['Kod'], "Madde_Adi": row[ad_col], "Fiyat": fiyat_man, "Kaynak": "Manuel", "URL": row[url_col]})
@@ -544,7 +590,6 @@ def html_isleyici(log_callback):
                                 if target['Kod'] in islenen_kodlar: continue
                                 fiyat, kaynak = fiyat_bul_siteye_gore(soup, target[url_col])
                                 if fiyat > 0:
-                                    # 2. DEĞİŞİKLİK BURADA: int(fiyat) yerine float(fiyat) yapıldı
                                     veriler.append({"Tarih": bugun, "Zaman": simdi, "Kod": target['Kod'], "Madde_Adi": target[ad_col], "Fiyat": float(fiyat), "Kaynak": kaynak, "URL": target[url_col]})
                                     islenen_kodlar.add(target['Kod']); hs += 1
             except Exception as e: log_callback(f"⚠️ Hata ({zip_file.name}): {str(e)}")
@@ -600,7 +645,14 @@ def dashboard_modu():
 
     # SIDEBAR (HABER AKIŞI)
     with st.sidebar:
-        st.title("💎 PİYASA MONİTÖRÜ")
+        # --- GÜNCELLENDİ: SIDEBAR LOGO/ICON ---
+        st.markdown("""
+            <div style="text-align: center; padding-bottom: 20px;">
+                <div style="font-size: 60px; filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));">💎</div>
+            </div>
+        """, unsafe_allow_html=True)
+        st.title("PİYASA MONİTÖRÜ")
+        
         tv_theme = "dark" 
         symbols = [
             {"s": "FX_IDC:USDTRY", "d": "Dolar / TL"}, 
@@ -1018,7 +1070,12 @@ def dashboard_modu():
                       st.data_editor(
                           df_analiz[['Grup', ad_col, 'Fark', baz_col, son]], 
                           column_config={
-                              "Fark": st.column_config.ProgressColumn("Kümülatif Değişim (Geo. Ort)", format="%.2f", min_value=-0.5, max_value=0.5), 
+                              # --- GÜNCELLENDİ: BarChartColumn ile daha estetik gösterim ---
+                              "Fark": st.column_config.BarChartColumn(
+                                  "Kümülatif Değişim",
+                                  help="Baz döneme göre değişim oranı",
+                                  y_min=-0.5, y_max=0.5
+                              ),
                               ad_col: "Ürün", "Grup": "Kategori",
                               baz_col: st.column_config.NumberColumn(f"Fiyat ({baz_tanimi})", format="%.2f ₺"),
                               son: st.column_config.NumberColumn(f"Fiyat ({son})", format="%.2f ₺")
@@ -1058,9 +1115,3 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
-
-
-
-
-
-
