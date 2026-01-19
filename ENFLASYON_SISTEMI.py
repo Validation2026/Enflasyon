@@ -1039,97 +1039,10 @@ def dashboard_modu():
                             st.success("✅ Rapor Hazırlandı!")
                             st.download_button("📥 PDF Raporunu İndir", data=pdf_data, file_name=f"Strateji_Raporu_{son}.pdf", mime="application/pdf")
 
-            # --- SİNYAL MERKEZİ BOTU ---
-            with st.popover("💬"):
-                st.markdown("### 🤖 SİNYAL MERKEZİ")
-                st.caption("Veri analitiği asistanı (Offline)")
-                
-                tum_kategoriler = ["TÜMÜ"] + sorted(df_analiz['Grup'].unique().tolist())
-                bot_kapsam = st.selectbox("Kapsam:", tum_kategoriler, key="bot_kapsam_float")
-                
-                df_bot = df_analiz.copy()
-                if bot_kapsam != "TÜMÜ":
-                    df_bot = df_bot[df_bot['Grup'] == bot_kapsam]
-
-                sorular = [
-                    "Soru Seçiniz...",
-                    "📈 En yüksek artış (Zam Şampiyonu)?",
-                    "📉 En büyük düşüş (İndirim Lideri)?",
-                    "📊 Ortalama değişim (Enflasyon) ne kadar?",
-                    "💎 En pahalı ürün hangisi?",
-                    "🏷️ En ucuz ürün hangisi?",
-                    "⚖️ Fiyatı değişmeyen (Sabit) ürün var mı?",
-                    "🔢 Kaç ürün arttı / kaç ürün düştü?",
-                    "🔥 %10'dan fazla artan ürünler?",
-                    "🧊 %10'dan fazla düşen ürünler?"
-                ]
-                
-                bot_soru = st.selectbox("Soru:", sorular, key="bot_soru_float")
-                
-                if bot_soru != "Soru Seçiniz...":
-                    cevap = ""
-                    if df_bot.empty:
-                        cevap = "Seçilen kapsamda veri bulunamadı."
-                    else:
-                        if "Zam Şampiyonu" in bot_soru:
-                            row = df_bot.sort_values('Fark', ascending=False).iloc[0]
-                            cevap = f"Zirvedeki ürün: **{row[ad_col]}**.<br>Kümülatif Artış: <span style='color:#f87171'>%{row['Fark']*100:.2f}</span>"
-                        elif "İndirim Lideri" in bot_soru:
-                            row = df_bot.sort_values('Fark', ascending=True).iloc[0]
-                            renk = "#4ade80" if row['Fark'] < 0 else "#a1a1aa"
-                            cevap = f"En dipteki ürün: **{row[ad_col]}**.<br>Değişim: <span style='color:{renk}'>%{row['Fark']*100:.2f}</span>"
-                        elif "Ortalama değişim" in bot_soru:
-                            # Ağırlıklı ortalamayı burada da kullanabiliriz ama basit soru için aritmetik
-                            ort = df_bot['Fark'].mean() * 100
-                            renk = "#f87171" if ort > 0 else "#4ade80"
-                            cevap = f"Bu kapsamdaki ({len(df_bot)} ürün) basit ortalama: <span style='color:{renk}'>%{ort:.2f}</span>"
-                        elif "En pahalı" in bot_soru:
-                            row = df_bot.sort_values(son, ascending=False).iloc[0]
-                            cevap = f"Etiket fiyatı en yüksek: **{row[ad_col]}**.<br>Fiyat: **{row[son]:.2f} TL**"
-                        elif "En ucuz" in bot_soru:
-                            row = df_bot.sort_values(son, ascending=True).iloc[0]
-                            cevap = f"Etiket fiyatı en düşük: **{row[ad_col]}**.<br>Fiyat: **{row[son]:.2f} TL**"
-                        elif "Sabit" in bot_soru:
-                            sabitler = df_bot[df_bot['Fark'] == 0]
-                            count = len(sabitler)
-                            if count > 0:
-                                ornekler = ", ".join(sabitler[ad_col].head(3).tolist())
-                                cevap = f"Toplam **{count}** ürünün fiyatı baz döneme göre değişmedi.<br>Örnekler: {ornekler}..."
-                            else:
-                                cevap = "Fiyatı sabit kalan ürün bulunmuyor."
-                        elif "Kaç ürün" in bot_soru:
-                            artan = len(df_bot[df_bot['Fark'] > 0])
-                            dusen = len(df_bot[df_bot['Fark'] < 0])
-                            sabit = len(df_bot[df_bot['Fark'] == 0])
-                            cevap = f"🔺 Artan: **{artan}**<br>🔻 Düşen: **{dusen}**<br>➖ Sabit: **{sabit}**"
-                        elif "%10'dan fazla artan" in bot_soru:
-                            liste = df_bot[df_bot['Fark'] > 0.10]
-                            count = len(liste)
-                            if count > 0:
-                                ornek = liste.sort_values('Fark', ascending=False).iloc[0][ad_col]
-                                cevap = f"Toplam **{count}** üründe %10 üzeri artış var.<br>Lider: {ornek}"
-                            else:
-                                cevap = "Bu kriterde ürün yok."
-                        elif "%10'dan fazla düşen" in bot_soru:
-                            liste = df_bot[df_bot['Fark'] < -0.10]
-                            count = len(liste)
-                            if count > 0:
-                                ornek = liste.sort_values('Fark', ascending=True).iloc[0][ad_col]
-                                cevap = f"Toplam **{count}** üründe %10 üzeri düşüş var.<br>Lider: {ornek}"
-                            else:
-                                cevap = "Bu kriterde ürün yok."
-
-                    st.markdown(f"""
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:3px solid #3b82f6; padding:12px; border-radius:8px; margin-top:10px;">
-                        <div style="font-size:10px; color:#64748b; margin-bottom:4px; text-transform:uppercase;">ANALİZ SONUCU:</div>
-                        <div style="color:#0f172a; font-size:13px; line-height:1.4;">{cevap}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-        except Exception as e: st.error(f"Sistem Hatası: {e}")
     st.markdown('<div style="text-align:center; color:#52525b; font-size:11px; margin-top:50px;">VALIDASYON MUDURLUGU © 2026 - CONFIDENTIAL</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
