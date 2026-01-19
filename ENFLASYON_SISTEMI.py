@@ -547,7 +547,8 @@ def html_isleyici(log_callback):
             for _, row in df_conf.iterrows():
                 if pd.notna(row[manuel_col]) and str(row[manuel_col]).strip() != "":
                     try:
-                        fiyat_man = int(float(row[manuel_col]))
+                        # 1. DEĞİŞİKLİK BURADA: int() yerine float() kullanıldı
+                        fiyat_man = float(row[manuel_col]) 
                         if fiyat_man > 0:
                             veriler.append({"Tarih": bugun, "Zaman": simdi, "Kod": row['Kod'], "Madde_Adi": row[ad_col], "Fiyat": fiyat_man, "Kaynak": "Manuel", "URL": row[url_col]})
                             islenen_kodlar.add(row['Kod']); ms += 1
@@ -576,7 +577,8 @@ def html_isleyici(log_callback):
                                 if target['Kod'] in islenen_kodlar: continue
                                 fiyat, kaynak = fiyat_bul_siteye_gore(soup, target[url_col])
                                 if fiyat > 0:
-                                    veriler.append({"Tarih": bugun, "Zaman": simdi, "Kod": target['Kod'], "Madde_Adi": target[ad_col], "Fiyat": int(fiyat), "Kaynak": kaynak, "URL": target[url_col]})
+                                    # 2. DEĞİŞİKLİK BURADA: int(fiyat) yerine float(fiyat) yapıldı
+                                    veriler.append({"Tarih": bugun, "Zaman": simdi, "Kod": target['Kod'], "Madde_Adi": target[ad_col], "Fiyat": float(fiyat), "Kaynak": kaynak, "URL": target[url_col]})
                                     islenen_kodlar.add(target['Kod']); hs += 1
             except Exception as e: log_callback(f"⚠️ Hata ({zip_file.name}): {str(e)}")
         if veriler:
@@ -1147,4 +1149,5 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
