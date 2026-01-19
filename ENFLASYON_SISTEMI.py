@@ -1107,9 +1107,9 @@ def dashboard_modu():
                             st.download_button("📥 PDF Raporunu İndir", data=pdf_data, file_name=f"Strateji_Raporu_{son}.pdf", mime="application/pdf")
 
             # --- SİNYAL MERKEZİ BOTU ---
-            # --- SİNYAL MERKEZİ BOTU (GELİŞMİŞ VERSİYON) ---
+# --- SİNYAL MERKEZİ BOTU (GELİŞMİŞ VERSİYON - DÜZELTİLMİŞ) ---
             with st.popover("💬", help="AI Asistan"):
-                st.markdown("🧬 VERİ MERKEZİ")
+                st.markdown("### 🧬 SİNYAL MERKEZİ v2.0")
                 
                 # Kapsam Seçimi
                 tum_kategoriler = ["TÜMÜ"] + sorted(df_analiz['Grup'].unique().tolist())
@@ -1130,16 +1130,15 @@ def dashboard_modu():
                         "📈 Pazar Yönü (Artan/Azalan)"
                     ]
                     bot_soru = st.selectbox("Soru", sorular, label_visibility="collapsed", key="bot_soru_yeni")
-            
+
                 # Veri Filtreleme
                 df_bot = df_analiz.copy()
                 if bot_kapsam != "TÜMÜ":
                     df_bot = df_bot[df_bot['Grup'] == bot_kapsam]
-            
+
                 # Cevap Mantığı ve HTML Oluşturma
                 if bot_soru != "Analiz Seçiniz...":
                     html_out = ""
-                    header_txt = f"SYSTEM_ANALYSIS :: {bot_kapsam.upper()} :: {datetime.now().strftime('%H:%M:%S')}"
                     
                     if df_bot.empty:
                         html_out = "<span style='color:red'>HATA: Veri seti boş.</span>"
@@ -1151,16 +1150,15 @@ def dashboard_modu():
                                 for i, (_, r) in enumerate(top3.iterrows()):
                                     rows += f"<tr><td>#{i+1} {r[ad_col][:20]}..</td><td style='text-align:right' class='trend-up'>%{(r['Fark']*100):.2f} ▲</td></tr>"
                                 html_out = f"Dönemin en yüksek fiyat artışları:<table class='mini-table'><tr><th>ÜRÜN</th><th style='text-align:right'>DEĞİŞİM</th></tr>{rows}</table>"
-            
+
                             elif "İndirim Liderleri" in bot_soru:
                                 top3 = df_bot.sort_values('Fark', ascending=True).head(3)
                                 rows = ""
                                 for i, (_, r) in enumerate(top3.iterrows()):
-                                    # Sadece düşenleri veya en az artanları göster
                                     color_cls = "trend-down" if r['Fark'] < 0 else "cmd-response"
                                     rows += f"<tr><td>#{i+1} {r[ad_col][:20]}..</td><td style='text-align:right' class='{color_cls}'>%{(r['Fark']*100):.2f} ▼</td></tr>"
                                 html_out = f"Fiyatı gevşeyen veya en az artanlar:<table class='mini-table'><tr><th>ÜRÜN</th><th style='text-align:right'>DEĞİŞİM</th></tr>{rows}</table>"
-            
+
                             elif "Ortalama" in bot_soru:
                                 ort = df_bot['Fark'].mean() * 100
                                 med = df_bot['Fark'].median() * 100
@@ -1171,21 +1169,21 @@ def dashboard_modu():
                                 • Aritmetik Ort: <span class='{trend}'>%{ort:.2f} {arrow}</span><br>
                                 • Medyan (Ortanca): <span class='highlight-val'>%{med:.2f}</span>
                                 """
-            
+
                             elif "En Pahalı" in bot_soru:
                                 top3 = df_bot.sort_values(son, ascending=False).head(3)
                                 rows = ""
                                 for i, (_, r) in enumerate(top3.iterrows()):
                                     rows += f"<tr><td>{r[ad_col][:18]}..</td><td style='text-align:right' class='highlight-val'>{r[son]:.2f} ₺</td></tr>"
                                 html_out = f"Etiket fiyatı en yüksek ürünler:<table class='mini-table'>{rows}</table>"
-            
+
                             elif "En Ucuz" in bot_soru:
                                 top3 = df_bot.sort_values(son, ascending=True).head(3)
                                 rows = ""
                                 for i, (_, r) in enumerate(top3.iterrows()):
                                     rows += f"<tr><td>{r[ad_col][:18]}..</td><td style='text-align:right' class='highlight-val'>{r[son]:.2f} ₺</td></tr>"
                                 html_out = f"Etiket fiyatı en düşük ürünler:<table class='mini-table'>{rows}</table>"
-            
+
                             elif "Sabit" in bot_soru:
                                 sabitler = df_bot[df_bot['Fark'] == 0]
                                 count = len(sabitler)
@@ -1194,7 +1192,7 @@ def dashboard_modu():
                                     html_out = f"Toplam <span class='highlight-val'>{count}</span> ürünün fiyatı değişmedi.<br><br>Örnekler:<br><span style='font-size:11px; opacity:0.8'>{ornekler}...</span>"
                                 else:
                                     html_out = "Baz döneme göre fiyatı değişmeyen ürün bulunamadı."
-            
+
                             elif "Pazar Yönü" in bot_soru:
                                 artan = len(df_bot[df_bot['Fark'] > 0])
                                 dusen = len(df_bot[df_bot['Fark'] < 0])
@@ -1209,8 +1207,8 @@ def dashboard_modu():
                                 """
                         except Exception as e:
                             html_out = f"<span style='color:red'>HESAPLAMA HATASI: {str(e)}</span>"
-            
-                    # TERMİNAL ÇIKTISI GÖSTERİMİ
+
+                    # TERMİNAL ÇIKTISI GÖSTERİMİ (SONUÇ EKRANI)
                     st.markdown(f"""
                     <div class="terminal-wrapper">
                         <div class="terminal-header">
@@ -1223,18 +1221,16 @@ def dashboard_modu():
                         </div>
                         <div style="margin-top:10px; font-size:9px; color:#555;">_ cursor blinking...</div>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True) # <--- BURADA VAR
                 
                 else:
-                    # Boş Durum (Placeholder) - DÜZELTİLMİŞ KOD
+                    # Boş Durum (Placeholder) - SİYAH EKRAN DÜZELTMESİ
                     st.markdown(f"""
                     <div class="terminal-wrapper" style="background-color: #050505 !important; opacity: 1 !important; border: 1px solid #333;">
-                        
                         <div class="terminal-header" style="color: #4ade80 !important; border-bottom: 1px solid #333; opacity: 1 !important; font-weight: bold;">
                             <span>SYSTEM_STATUS</span>
                             <span>WAITING_INPUT</span>
                         </div>
-                        
                         <div class="cmd-response" style="color: #ffffff !important; opacity: 1 !important; font-size: 13px; padding-top: 15px;">
                             Sistem hazır. Analiz başlatmak için yukarıdan bir sorgu seçin.
                             <br><br>
@@ -1243,11 +1239,10 @@ def dashboard_modu():
                             <span style="animation: blink 1s step-end infinite; color: #22c55e; font-weight: bold;">█</span>
                         </div>
                     </div>
-                    
                     <style>
                         @keyframes blink {{ 0% {{ opacity: 1; }} 50% {{ opacity: 0; }} 100% {{ opacity: 1; }} }}
                     </style>
-                    """, unsafe_allow_html=True)  # <--- BU KISIM ÇOK ÖNEMLİ
+                    """, unsafe_allow_html=True) # <--- BURADA DA VAR (KESİN ÇÖZÜM)
 
                 
         except Exception as e: st.error(f"Sistem Hatası: {e}")
@@ -1255,6 +1250,7 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
 
