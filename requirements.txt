@@ -1,10 +1,9 @@
-fastapi
-uvicorn
+streamlit
 pandas
-numpy
+plotly
+beautifulsoup4
 PyGithub
 requests
-urllib3
-fpdf
 prophet
-openpyxl
+fpdf
+numpy
