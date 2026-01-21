@@ -745,15 +745,25 @@ Hesaplanan veriler, fiyat istikrarında henüz tam bir dengelenme (konsolidasyon
 
 
 # --- 8. DASHBOARD MODU ---
+# --- 8. DASHBOARD MODU (GÜNCELLENMİŞ: ZAMAN MAKİNESİ) ---
 def dashboard_modu():
-    bugun = datetime.now().strftime("%Y-%m-%d")
-
+    # 1. VERİYİ ÖNCE YÜKLE (Sidebar için tarih listesi lazım)
     df_f = github_excel_oku(FIYAT_DOSYASI)
     df_s = github_excel_oku(EXCEL_DOSYASI, SAYFA_ADI)
+    
+    # Tarihleri Hazırla
+    if not df_f.empty:
+        df_f['Tarih_DT'] = pd.to_datetime(df_f['Tarih'], errors='coerce')
+        df_f = df_f.dropna(subset=['Tarih_DT']).sort_values('Tarih_DT')
+        df_f['Tarih_Str'] = df_f['Tarih_DT'].dt.strftime('%Y-%m-%d')
+        # Mevcut tüm tarihleri tersten sırala (En yeni en üstte)
+        tum_tarihler = sorted(df_f['Tarih_Str'].unique().tolist(), reverse=True)
+    else:
+        tum_tarihler = []
 
-    # SIDEBAR (HABER AKIŞI)
+    # 2. SIDEBAR (ZAMAN MAKİNESİ ENTEGRASYONU)
     with st.sidebar:
-        # SIDEBAR LOGO/ICON (Gradient Metin)
+        # LOGO ALANI
         st.markdown("""
             <div style="text-align: center; padding-bottom: 20px;">
                 <div style="font-size: 50px; filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.4)); animation: float 6s ease-in-out infinite;">💎</div>
@@ -765,6 +775,29 @@ def dashboard_modu():
             </style>
         """, unsafe_allow_html=True)
 
+        st.markdown("---")
+        
+        # --- ZAMAN MAKİNESİ ---
+        st.markdown("### ⏳ Zaman Makinesi")
+        if tum_tarihler:
+            secilen_tarih = st.selectbox(
+                "Geçmiş bir tarihe git:",
+                options=tum_tarihler,
+                index=0, # Varsayılan olarak en son tarih
+                help="Seçtiğiniz tarihe geri dönerek o günkü piyasa koşullarını ve raporları görüntüler."
+            )
+            
+            # Zaman makinesi aktifse görsel uyarı
+            if secilen_tarih != tum_tarihler[0]:
+                st.warning(f"⚠️ Şu an {secilen_tarih} tarihli arşiv kaydını inceliyorsunuz.")
+        else:
+            secilen_tarih = None
+            st.error("Veri bulunamadı.")
+
+        st.markdown("---")
+
+        # PIYASA VERİLERİ (BIST ÖZETİ KALDIRILDI, SADECE DÖVİZ KALDI)
+        st.markdown("### 🌍 Piyasa Verileri")
         tv_theme = "dark"
         symbols = [
             {"s": "FX_IDC:USDTRY", "d": "Dolar / TL"},
@@ -786,67 +819,49 @@ def dashboard_modu():
         components.html(f'<div style="display:flex; flex-direction:column; overflow:hidden;">{widgets_html}</div>',
                         height=len(symbols) * 115)
 
-        st.markdown("---")
-        st.markdown("### 🇹🇷 BIST ÖZET")
-        all_stocks_html = """
-        <div class="tradingview-widget-container" style="border:1px solid rgba(255,255,255,0.05); border-radius:12px; overflow:hidden;">
-          <div class="tradingview-widget-container__widget"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>
-          { "width": "100%", "height": 500, "defaultColumn": "overview", "defaultScreen": "general", "market": "turkey", "showToolbar": false, "colorTheme": "dark", "locale": "tr", "isTransparent": true }
-          </script>
-        </div>
-        """
-        components.html(all_stocks_html, height=500)
 
-    # HEADER
-    header_html_code = """
+    # 3. ANA EKRAN HEADER (Dinamik Tarihli)
+    header_date = datetime.strptime(secilen_tarih, "%Y-%m-%d").strftime("%d.%m.%Y") if secilen_tarih else "--.--.----"
+    
+    header_html_code = f"""
     <!DOCTYPE html>
     <html lang="tr">
     <head>
         <meta charset="UTF-8">
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
-            body { margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }
-            .header-wrapper {
+            body {{ margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }}
+            .header-wrapper {{
                 background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px);
                 border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
                 padding: 24px 32px; display: flex; justify-content: space-between; align-items: center;
                 box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
-            }
-            .app-title { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -1px; display: flex; align-items: center; gap: 15px; }
-            .app-subtitle { font-size: 13px; color: #a1a1aa; font-weight: 500; margin-top: 4px; letter-spacing: 0.5px; }
-            .live-badge { display: inline-flex; align-items: center; background: rgba(16, 185, 129, 0.1); color: #34d399; padding: 6px 14px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.2); letter-spacing: 0.5px; }
-            .live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; margin-right: 8px; box-shadow: 0 0 12px #10b981; animation: pulse 2s infinite; }
-            @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
-            .clock-container { text-align: right; }
-            .location-tag { font-size: 10px; color: #71717a; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2px; }
-            #live_clock { font-family: 'Inter', monospace; font-size: 32px; font-weight: 800; color: #e4e4e7; letter-spacing: -1.5px; line-height: 1; }
+            }}
+            .app-title {{ font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -1px; display: flex; align-items: center; gap: 15px; }}
+            .app-subtitle {{ font-size: 13px; color: #a1a1aa; font-weight: 500; margin-top: 4px; letter-spacing: 0.5px; }}
+            .live-badge {{ display: inline-flex; align-items: center; background: rgba(59, 130, 246, 0.1); color: #60a5fa; padding: 6px 14px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid rgba(59, 130, 246, 0.2); letter-spacing: 0.5px; }}
+            .clock-container {{ text-align: right; }}
+            .location-tag {{ font-size: 10px; color: #71717a; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2px; }}
+            #report_date {{ font-family: 'Inter', monospace; font-size: 32px; font-weight: 800; color: #e4e4e7; letter-spacing: -1.5px; line-height: 1; }}
         </style>
     </head>
     <body>
         <div class="header-wrapper">
             <div>
-                <div class="app-title">Piyasa Monitörü <span class="live-badge"><div class="live-dot"></div>ONLINE</span></div>
+                <div class="app-title">Piyasa Monitörü <span class="live-badge">SİMÜLASYON MODU</span></div>
                 <div class="app-subtitle">Yapay Zeka Destekli Enflasyon & Fiyat Analiz Sistemi</div>
             </div>
             <div class="clock-container">
-                <div class="location-tag">İSTANBUL / HQ</div>
-                <div id="live_clock">--:--:--</div>
+                <div class="location-tag">RAPOR TARİHİ</div>
+                <div id="report_date">{header_date}</div>
             </div>
         </div>
-        <script>
-            function updateClock() {
-                const now = new Date();
-                document.getElementById('live_clock').innerText = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            }
-            setInterval(updateClock, 1000); updateClock();
-        </script>
     </body>
     </html>
     """
     components.html(header_html_code, height=140)
 
-    # BUTON
+    # BUTON (Senkronizasyon)
     col_btn1, col_btn2 = st.columns([3, 1])
     with col_btn2:
         if st.button("SİSTEMİ SENKRONİZE ET ⚡", type="primary", use_container_width=True):
@@ -873,6 +888,7 @@ def dashboard_modu():
             else:
                 st.error(res)
 
+    # 4. HESAPLAMA MOTORU
     if not df_f.empty and not df_s.empty:
         try:
             df_s.columns = df_s.columns.str.strip()
@@ -880,13 +896,12 @@ def dashboard_modu():
             ad_col = next((c for c in df_s.columns if 'ad' in c.lower()), 'Madde adı')
             agirlik_col = next((c for c in df_s.columns if 'agirlik' in c.lower().replace('ğ', 'g').replace('ı', 'i')),
                                'Agirlik_2025')
+            
             df_f['Kod'] = df_f['Kod'].astype(str).apply(kod_standartlastir)
             df_s['Kod'] = df_s[kod_col].astype(str).apply(kod_standartlastir)
-            df_f['Tarih_DT'] = pd.to_datetime(df_f['Tarih'], errors='coerce')
-            df_f = df_f.dropna(subset=['Tarih_DT']).sort_values('Tarih_DT')
-            df_f['Tarih_Str'] = df_f['Tarih_DT'].dt.strftime('%Y-%m-%d')
             df_f['Fiyat'] = pd.to_numeric(df_f['Fiyat'], errors='coerce')
             df_f = df_f[df_f['Fiyat'] > 0]
+            
             pivot = df_f.pivot_table(index='Kod', columns='Tarih_Str', values='Fiyat', aggfunc='last').ffill(
                 axis=1).bfill(axis=1).reset_index()
 
@@ -905,11 +920,23 @@ def dashboard_modu():
                     df_analiz['Agirlik_2025'] = 1;
                     agirlik_col = 'Agirlik_2025'
 
-                gunler = sorted([c for c in pivot.columns if c != 'Kod'])
-                son = gunler[-1];
-                dt_son = datetime.strptime(son, '%Y-%m-%d')
-                days_left = calendar.monthrange(dt_son.year, dt_son.month)[1] - dt_son.day
+                # --- ZAMAN MAKİNESİ FİLTRELEME MANTIĞI ---
+                tum_gunler_sirali = sorted([c for c in pivot.columns if c != 'Kod'])
+                
+                # Seçilen tarihe kadar olan günleri al
+                if secilen_tarih in tum_gunler_sirali:
+                    idx = tum_gunler_sirali.index(secilen_tarih)
+                    gunler = tum_gunler_sirali[:idx+1] # Baştan seçilen güne kadar (dahil)
+                else:
+                    gunler = tum_gunler_sirali # Hata olursa hepsi
 
+                if not gunler:
+                    st.error("Seçilen tarih için veri oluşturulamadı.")
+                    return
+
+                son = gunler[-1]; # Artık 'son' gün, kullanıcının seçtiği tarih oldu.
+                dt_son = datetime.strptime(son, '%Y-%m-%d')
+                
                 # -------------------------------------------------------------
                 # --- [BAŞLANGIÇ] HESAPLAMA BLOĞU ---
                 # -------------------------------------------------------------
@@ -917,12 +944,14 @@ def dashboard_modu():
                 # 1. BAZ DÖNEMİ BELİRLEME
                 simdi_yil = dt_son.year
                 onceki_yil_aralik_prefix = f"{simdi_yil - 1}-12"
+                # Sadece mevcut 'gunler' listesi içinden baz ara
                 aralik_cols = [c for c in gunler if c.startswith(onceki_yil_aralik_prefix)]
 
                 if aralik_cols:
                     baz_col = aralik_cols[-1]
                     baz_tanimi = f"Aralık {simdi_yil - 1}"
                 else:
+                    # Eğer geçmiş yılın aralık ayı verisi yoksa, eldeki en eski veriyi baz al
                     baz_col = gunler[0]
                     baz_tanimi = f"Başlangıç ({baz_col})"
 
@@ -933,17 +962,17 @@ def dashboard_modu():
                         return np.nan
                     return np.exp(np.mean(np.log(valid_vals)))
 
-                # 2. GÜNCEL DURUM (BUGÜN) HESABI
+                # 2. GÜNCEL DURUM (SEÇİLEN GÜN) HESABI
                 bu_ay_str = f"{dt_son.year}-{dt_son.month:02d}"
                 bu_ay_cols = [c for c in gunler if c.startswith(bu_ay_str)]
 
                 # Eğer bu ay hiç veri yoksa son sütunu al
                 if not bu_ay_cols: bu_ay_cols = [son]
 
-                # BUGÜNÜN Geometrik Ortalaması
+                # SEÇİLEN GÜNÜN Geometrik Ortalaması
                 df_analiz['Aylik_Ortalama'] = df_analiz[bu_ay_cols].apply(geometrik_ortalama_hesapla, axis=1)
 
-                # BUGÜNÜN Enflasyon Hesabı
+                # SEÇİLEN GÜNÜN Enflasyon Hesabı
                 gecerli_veri = df_analiz.dropna(subset=['Aylik_Ortalama', baz_col]).copy()
                 enf_genel = 0.0
                 enf_gida = 0.0
@@ -966,17 +995,12 @@ def dashboard_modu():
                 else:
                     df_analiz['Fark'] = 0.0
 
-                # 3. ÖNCEKİ GÜN SİMÜLASYONU
+                # 3. ÖNCEKİ GÜN SİMÜLASYONU (Günlük Değişim İçin)
                 enf_onceki = 0.0
 
-                # Eğer listede birden fazla gün varsa (Örn: Ayın 1'i ve 2'si)
                 if len(bu_ay_cols) > 1:
                     onceki_cols = bu_ay_cols[:-1]  # Son günü listeden çıkar
-
-                    # DÜNÜN Geometrik Ortalaması (Bugün ile birebir aynı fonksiyon)
                     df_analiz['Onceki_Ortalama'] = df_analiz[onceki_cols].apply(geometrik_ortalama_hesapla, axis=1)
-
-                    # DÜNÜN Enflasyon Hesabı
                     gecerli_veri_prev = df_analiz.dropna(subset=['Onceki_Ortalama', baz_col])
 
                     if not gecerli_veri_prev.empty:
@@ -985,16 +1009,15 @@ def dashboard_modu():
                         genel_endeks_prev = (w_p * p_rel_p).sum() / w_p.sum() * 100
                         enf_onceki = genel_endeks_prev - 100
                     else:
-                        enf_onceki = enf_genel  # Veri yoksa değişim yok say
+                        enf_onceki = enf_genel 
                 else:
-                    # Ayın ilk günü ise veya tek veri varsa değişim 0 kabul edilir
                     enf_onceki = enf_genel
 
-                # 4. TREND VERİSİ (Grafik İçin - Ama KPI'ı Ezmeyecek)
+                # 4. TREND VERİSİ (Grafik İçin - Sadece seçilen tarihe kadar)
                 trend_data = []
                 analiz_gunleri = bu_ay_cols
 
-                # Vektörel Hızlandırma (Sadece grafik çizimi için kullanılır)
+                # Vektörel Hızlandırma
                 def get_geo_mean_vectorized(df_in, cols):
                     data = df_in[cols].values.astype(float)
                     data[data <= 0] = np.nan
@@ -1007,17 +1030,15 @@ def dashboard_modu():
                     aktif_gunler = analiz_gunleri[:i]
                     su_anki_tarih = aktif_gunler[-1]
 
-                    # Geçici hesaplama (sadece trend için)
                     df_analiz[f'Geo_Temp_{i}'] = get_geo_mean_vectorized(df_analiz, aktif_gunler)
-
                     gecerli = df_analiz.dropna(subset=[f'Geo_Temp_{i}', baz_col])
+                    
                     if not gecerli.empty:
                         w = gecerli[agirlik_col]
                         p_rel = gecerli[f'Geo_Temp_{i}'] / gecerli[baz_col]
                         idx_val = (w * p_rel).sum() / w.sum() * 100
                         trend_data.append({"Tarih": su_anki_tarih, "TÜFE": idx_val})
                     else:
-                        # Veri yoksa bir önceki değeri koy
                         prev_val = trend_data[-1]["TÜFE"] if trend_data else 100.0
                         trend_data.append({"Tarih": su_anki_tarih, "TÜFE": prev_val})
 
@@ -1025,21 +1046,20 @@ def dashboard_modu():
                 if not df_trend.empty:
                     df_trend['Tarih'] = pd.to_datetime(df_trend['Tarih'])
 
-                # Değişim Farkı (Bugün - Dün)
+                # Değişim Farkı
                 kumu_fark = enf_genel - enf_onceki
                 kumu_icon_color = "#ef4444" if kumu_fark > 0 else "#22c55e"
-
                 kumu_sub_text = f"Önceki: %{enf_onceki:.2f} ({'+' if kumu_fark > 0 else ''}{kumu_fark:.2f})"
 
                 # -------------------------------------------------------------
                 # --- [BİTİŞ] HESAPLAMA BLOĞU ---
                 # -------------------------------------------------------------
 
-                # ZİRVE/DİP HESAPLAMA (Grid İçin)
+                # ZİRVE/DİP HESAPLAMA
                 df_analiz['Max_Fiyat'] = df_analiz[gunler].max(axis=1)
                 df_analiz['Min_Fiyat'] = df_analiz[gunler].min(axis=1)
 
-                with st.spinner("Analitik Modeller Çalıştırılıyor..."):
+                with st.spinner(f"{header_date} tarihi için modeller çalıştırılıyor..."):
                     df_forecast = predict_inflation_prophet(df_trend)
 
                 target_jan_end = pd.Timestamp(dt_son.year, dt_son.month,
@@ -1052,12 +1072,11 @@ def dashboard_modu():
                     else:
                         month_end_forecast = df_forecast.iloc[-1]['yhat'] - 100
                 else:
-                    month_end_forecast = enf_genel  # Basitçe mevcut durum
+                    month_end_forecast = enf_genel
 
-                month_end_forecast = math.floor(month_end_forecast + random.uniform(-0.1, 0.1))  # Hafif gürültü
+                month_end_forecast = math.floor(month_end_forecast + random.uniform(-0.1, 0.1))
 
-                # AYLIK / GÜNLÜK DEĞİŞİM (Ticker ve Oklar için)
-                # Bir önceki kayıtlı güne göre değişim
+                # GÜNLÜK DEĞİŞİM (Ticker)
                 if len(gunler) >= 2:
                     onceki_gun = gunler[-2]
                     df_analiz['Gunluk_Degisim'] = (df_analiz[son] / df_analiz[onceki_gun]) - 1
@@ -1084,28 +1103,30 @@ def dashboard_modu():
                 st.markdown(f"""<div class="ticker-wrap"><div class="ticker-move">{ticker_html_content}</div></div>""",
                             unsafe_allow_html=True)
 
+                # RESMİ VERİ (Tarihe göre bulabildiğimiz en yakın resmi veri)
                 df_resmi, msg = get_official_inflation()
                 resmi_aylik_enf = 0.0;
                 resmi_tarih_str = "-";
-                if df_resmi is not None and not df_resmi.empty and len(df_resmi) > 1:
-                    try:
-                        df_resmi = df_resmi.sort_values('Tarih');
-                        son_veri = df_resmi.iloc[-1];
-                        onceki_veri = df_resmi.iloc[-2]
-                        resmi_aylik_enf = ((son_veri['Resmi_TUFE'] / onceki_veri['Resmi_TUFE']) - 1) * 100
-                        aylar = {1: 'Ocak', 2: 'Şubat', 3: 'Mart', 4: 'Nisan', 5: 'Mayıs', 6: 'Haziran', 7: 'Temmuz',
-                                 8: 'Ağustos', 9: 'Eylül', 10: 'Ekim', 11: 'Kasım', 12: 'Aralık'}
-                        resmi_tarih_str = f"{aylar[son_veri['Tarih'].month]} {son_veri['Tarih'].year}"
-                    except:
-                        pass
+                if df_resmi is not None and not df_resmi.empty:
+                    # Seçilen tarihten önceki resmi verileri filtrele
+                    df_resmi_filtered = df_resmi[df_resmi['Tarih'] <= dt_son].sort_values('Tarih')
+                    
+                    if len(df_resmi_filtered) > 1:
+                        try:
+                            son_veri = df_resmi_filtered.iloc[-1];
+                            onceki_veri = df_resmi_filtered.iloc[-2]
+                            resmi_aylik_enf = ((son_veri['Resmi_TUFE'] / onceki_veri['Resmi_TUFE']) - 1) * 100
+                            aylar = {1: 'Ocak', 2: 'Şubat', 3: 'Mart', 4: 'Nisan', 5: 'Mayıs', 6: 'Haziran', 7: 'Temmuz',
+                                     8: 'Ağustos', 9: 'Eylül', 10: 'Ekim', 11: 'Kasım', 12: 'Aralık'}
+                            resmi_tarih_str = f"{aylar[son_veri['Tarih'].month]} {son_veri['Tarih'].year}"
+                        except:
+                            pass
 
                 def kpi_card(title, val, sub, sub_color, accent_color, icon):
                     # Alt metin varsa HTML hazırla, yoksa boş string
-                    # sub_html'i de tek satırda tutuyoruz
                     sub_html = f"<div class='kpi-sub'><span style='display:inline-block; width:6px; height:6px; background:{sub_color}; border-radius:50%; box-shadow:0 0 5px {sub_color};'></span><span style='color:{sub_color}; filter: brightness(1.2);'>{sub}</span></div>" if sub else ""
 
-                    # KESİN ÇÖZÜM: HTML'i tek satırda birleştiriyoruz. 
-                    # Bu sayede Streamlit/Markdown parser boşlukları yanlış yorumlayıp ekrana </div> basamaz.
+                    # Tek satırda birleştirilmiş HTML
                     card_html = f'<div class="kpi-card"><div class="kpi-bg-icon" style="color:{accent_color};">{icon}</div><div class="kpi-content"><div class="kpi-title">{title}</div><div class="kpi-value">{val}</div>{sub_html}</div></div>'
 
                     st.markdown(card_html, unsafe_allow_html=True)
@@ -1117,7 +1138,7 @@ def dashboard_modu():
                 with c2:
                     kpi_card("Gıda Enflasyonu", f"%{enf_gida:.2f}", "Mutfak Sepeti", "#fca5a5", "#10b981", "🛒")
                 with c3:
-                    kpi_card("Ay Sonu Tahmini", f"%{math.floor(enf_genel):.2f}","Yapay Zeka Modeli", "#a78bfa", "#8b5cf6", "🤖")
+                    kpi_card("Ay Sonu Tahmini", f"%{math.floor(enf_genel):.2f}", None, "#a78bfa", "#8b5cf6", "🤖")
                 with c4:
                     kpi_card("Resmi TÜİK Verisi", f"%{resmi_aylik_enf:.2f}", f"{resmi_tarih_str}", "#fbbf24", "#f59e0b",
                              "🏛️")
@@ -1143,7 +1164,6 @@ def dashboard_modu():
                                            gridwidth=1)
                             ))
                         fig.update_layout(**layout_args)
-                        # Modebar'ı (grafik üzerindeki butonları) gizle, sadece hoverda göster
                         fig.update_layout(modebar=dict(bgcolor='rgba(0,0,0,0)', color='#71717a', activecolor='#fff'))
                     return fig
 
@@ -1154,7 +1174,6 @@ def dashboard_modu():
                 with t_sektor:
                     st.markdown("### 🔍 Detaylı Fiyat Analizi")
 
-                    # --- YENİ EKLENEN ÖZELLİK: FİLTRE & ARAMA PANELİ ---
                     f_col1, f_col2 = st.columns([1, 2])
                     with f_col1:
                         kategoriler = ["TÜMÜ"] + sorted(df_analiz['Grup'].unique().tolist())
@@ -1162,7 +1181,6 @@ def dashboard_modu():
                     with f_col2:
                         arama_terimi = st.text_input("Ürün Ara...", placeholder="Örn: Zeytinyağı, Beyaz Peynir...")
 
-                    # Filtreleme Mantığı
                     df_goster = df_analiz.copy()
                     if secilen_kategori != "TÜMÜ":
                         df_goster = df_goster[df_goster['Grup'] == secilen_kategori]
@@ -1192,7 +1210,6 @@ def dashboard_modu():
                         st.info("🔍 Aradığınız kriterlere uygun ürün bulunamadı.")
 
                 with t_ozet:
-                    # --- MEVCUT ÖZETLER ---
                     rising = len(df_analiz[df_analiz['Fark'] > 0])
                     falling = len(df_analiz[df_analiz['Fark'] < 0])
                     total = len(df_analiz)
@@ -1241,6 +1258,7 @@ def dashboard_modu():
 
                 with t_veri:
                     st.markdown("### 📋 Veri Seti")
+                    # Tabloda sadece seçilen tarih ve baz dönemi kalsın
                     st.data_editor(
                         df_analiz[['Grup', ad_col, 'Fark', baz_col, son]],
                         column_config={
@@ -1263,7 +1281,7 @@ def dashboard_modu():
 
                 with t_rapor:
                     st.markdown("### 📝 Stratejik Görünüm Raporu")
-                    st.info("Bu rapor, sistemdeki güncel veriler kullanılarak otomatik analiz motoru ile oluşturulur.")
+                    st.info("Bu rapor, seçilen tarihteki veriler kullanılarak oluşturulur.")
                     if st.button("🚀 DETAYLI RAPORU HAZIRLA (PDF)", type="primary"):
                         with st.spinner("Rapor oluşturuluyor..."):
                             en_cok_artan_row = df_analiz.sort_values('Fark', ascending=False).iloc[0]
@@ -1310,6 +1328,7 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
 
