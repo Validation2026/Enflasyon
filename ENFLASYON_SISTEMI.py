@@ -1277,18 +1277,27 @@ def dashboard_modu():
                     with t_veri:
                         st.markdown("### 📋 Veri Seti")
                         
-                        # --- YENİ EKLENEN KISIM: FİYAT GRAFİĞİ LİSTESİ OLUŞTURMA ---
-                        # Her ürün satırı için, seçilen tarih aralığındaki tüm fiyatları tek bir liste haline getiriyoruz
-                        df_analiz['Fiyat_Trendi'] = df_analiz[gunler].values.tolist()
+                        # --- HATA DÜZELTİCİ BLOK BAŞLANGIÇ ---
+                        # Sabit fiyatlarda (min=max) grafik motorunun çökmesini engellemek için
+                        # veriye mikroskobik bir fark ekliyoruz.
+                        def fix_sparkline(row):
+                            vals = row.tolist()
+                            # Eğer veri yoksa veya hepsi eşitse (sabit fiyat)
+                            if vals and min(vals) == max(vals):
+                                vals[-1] += 0.00001  # Gözle görülmez, ama motoru çalıştırır
+                            return vals
+    
+                        # apply fonksiyonu ile 'Fiyat_Trendi' sütununu oluşturuyoruz
+                        df_analiz['Fiyat_Trendi'] = df_analiz[gunler].apply(fix_sparkline, axis=1)
+                        # --- HATA DÜZELTİCİ BLOK BİTİŞ ---
     
                         st.data_editor(
-                            df_analiz[['Grup', ad_col, 'Fiyat_Trendi', baz_col, son]], # 'Fark' yerine 'Fiyat_Trendi'
+                            df_analiz[['Grup', ad_col, 'Fiyat_Trendi', baz_col, son]], 
                             column_config={
                                 "Fiyat_Trendi": st.column_config.LineChartColumn(
                                     "Fiyat Grafiği",
                                     width="medium",
                                     help="Seçilen dönem içindeki fiyat hareketi",
-                                    # y_min=0 koymuyoruz ki dalgalanma net görünsün
                                 ),
                                 ad_col: "Ürün", 
                                 "Grup": "Kategori",
@@ -1297,9 +1306,11 @@ def dashboard_modu():
                             },
                             hide_index=True, use_container_width=True, height=600
                         )
+                        
+                        # (Alt kısımdaki Excel indirme kodları aynı kalacak...)
                         output = BytesIO()
-                        with pd.ExcelWriter(output, engine='openpyxl') as writer: df_analiz.to_excel(writer, index=False,
-                                                                                                     sheet_name='Analiz')
+                        with pd.ExcelWriter(output, engine='openpyxl') as writer: 
+                            df_analiz.to_excel(writer, index=False, sheet_name='Analiz')
                         st.download_button("📥 Excel İndir", data=output.getvalue(), file_name=f"Rapor_{son}.xlsx",
                                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
@@ -1352,6 +1363,7 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
 
