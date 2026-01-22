@@ -1,5 +1,5 @@
 # GEREKLİ KÜTÜPHANELER:
-# pip install streamlit-lottie python-docx
+# pip install streamlit-lottie python-docx prophet plotly pandas xlsxwriter
 
 import streamlit as st
 import pandas as pd
@@ -17,6 +17,7 @@ import zipfile
 import base64
 import requests
 from prophet import Prophet
+from prophet.plot import plot_components_plotly # YENİ: Prophet görselleştirme
 import streamlit.components.v1 as components
 import tempfile
 import os
@@ -239,7 +240,7 @@ def load_lottieurl(url: str):
     except:
         return None
 
-# --- 3. WORD MOTORU (GÜNCELLENDİ) ---
+# --- 3. WORD MOTORU ---
 def create_word_report(text_content, tarih):
     doc = Document()
     
@@ -399,10 +400,10 @@ def predict_inflation_prophet(df_trend):
         m.fit(df_p)
         future = m.make_future_dataframe(periods=90)
         forecast = m.predict(future)
-        return forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+        return m, forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper', 'trend', 'daily']] # Modeli de döndür (YENİ)
     except Exception as e:
         st.error(f"Prophet Hatası: {str(e)}")
-        return pd.DataFrame()
+        return None, pd.DataFrame()
 
 
 # --- 6. SCRAPER ---
@@ -536,7 +537,7 @@ def html_isleyici(log_callback):
         return f"Hata: {str(e)}"
 
 
-# --- 7. YENİ STATİK ANALİZ MOTORU ---
+# --- 7. STATİK ANALİZ MOTORU ---
 def generate_detailed_static_report(df_analiz, tarih, enf_genel, enf_gida, gun_farki, tahmin, ad_col, agirlik_col):
     inc = df_analiz.sort_values('Fark', ascending=False).head(3)
     dec = df_analiz.sort_values('Fark', ascending=True).head(3)
@@ -602,7 +603,6 @@ def dashboard_modu():
         if lottie_json:
              st_lottie(lottie_json, height=180, key="finance_anim")
         else:
-             # Fallback eğer yüklenemezse
              st.markdown("""<div style="font-size: 50px; text-align:center; filter: drop-shadow(0 0 25px rgba(59, 130, 246, 0.6)); animation: float 6s ease-in-out infinite;">💎</div>""", unsafe_allow_html=True)
 
         st.markdown("""
@@ -730,7 +730,7 @@ def dashboard_modu():
                 status.update(label="Senkronizasyon Başarılı", state="complete", expanded=False)
             if "OK" in res:
                 st.cache_data.clear()
-                st.toast('Veri Seti Yenilendi', icon='⚡')
+                st.toast('Veri Seti Yenilendi', icon='⚡') # YENİ: Toast Mesajı
                 time.sleep(1);
                 st.rerun()
             elif "Veri bulunamadı" in res:
@@ -815,6 +815,9 @@ def dashboard_modu():
                 if not bu_ay_cols: bu_ay_cols = [son]
 
                 df_analiz['Aylik_Ortalama'] = df_analiz[bu_ay_cols].apply(geometrik_ortalama_hesapla, axis=1)
+                
+                # YENİ: Volatilite Hesaplama
+                df_analiz['Volatilite'] = df_analiz[gunler].std(axis=1)
 
                 gecerli_veri = df_analiz.dropna(subset=['Aylik_Ortalama', baz_col]).copy()
                 enf_genel = 0.0
@@ -891,10 +894,11 @@ def dashboard_modu():
                 df_analiz['Min_Fiyat'] = df_analiz[gunler].min(axis=1)
 
                 with st.spinner(f"{header_date} tarihi için modeller çalıştırılıyor..."):
-                    df_forecast = predict_inflation_prophet(df_trend)
+                    # YENİ: Prophet modelini de alıyoruz
+                    prophet_model, df_forecast = predict_inflation_prophet(df_trend)
 
                 target_jan_end = pd.Timestamp(dt_son.year, dt_son.month,
-                                              calendar.monthrange(dt_son.year, dt_son.month)[1])
+                                                calendar.monthrange(dt_son.year, dt_son.month)[1])
                 month_end_forecast = 0.0
                 if not df_forecast.empty:
                     forecast_row = df_forecast[df_forecast['ds'] == target_jan_end]
@@ -911,9 +915,17 @@ def dashboard_modu():
                     onceki_gun = gunler[-2]
                     df_analiz['Gunluk_Degisim'] = (df_analiz[son] / df_analiz[onceki_gun]) - 1
                     gun_farki = (dt_son - datetime.strptime(baz_col, '%Y-%m-%d')).days
+                    
+                    # YENİ: Anomali Tespiti (Son fiyat > 3 günlük ortalama * 1.10)
+                    if len(gunler) >= 3:
+                        df_analiz['MA_3'] = df_analiz[gunler[-3:]].mean(axis=1)
+                        anomaliler = df_analiz[df_analiz[son] > df_analiz['MA_3'] * 1.10]
+                    else:
+                        anomaliler = pd.DataFrame()
                 else:
                     df_analiz['Gunluk_Degisim'] = 0
                     gun_farki = 0
+                    anomaliler = pd.DataFrame()
 
                 inc = df_analiz.sort_values('Gunluk_Degisim', ascending=False).head(5)
                 dec = df_analiz.sort_values('Gunluk_Degisim', ascending=True).head(5)
@@ -967,7 +979,13 @@ def dashboard_modu():
                     kpi_card("Resmi TÜİK Verisi", f"%{resmi_aylik_enf:.2f}", f"{resmi_tarih_str}", "#fbbf24", "#f59e0b",
                              "🏛️")
                 
-                # --- YENİ EKLENEN AI ANALİST KARTI (OPTION 3) ---
+                # YENİ: Anomali Uyarısı
+                if not anomaliler.empty:
+                    st.error(f"⚠️ DİKKAT: Piyasadaki {len(anomaliler)} üründe ani fiyat şoku tespit edildi!")
+                    with st.expander("Şok Yaşanan Ürünleri İncele"):
+                        st.dataframe(anomaliler[[ad_col, son, 'MA_3', 'Gunluk_Degisim']], use_container_width=True)
+
+                # --- YENİ EKLENEN AI ANALİST KARTI ---
                 st.markdown("<br>", unsafe_allow_html=True)
                 
                 # Veriye göre dinamik mesaj belirleme
@@ -1038,10 +1056,28 @@ def dashboard_modu():
                         fig.update_layout(**layout_args)
                         fig.update_layout(modebar=dict(bgcolor='rgba(0,0,0,0)', color='#71717a', activecolor='#fff'))
                     return fig
+                
+                # YENİ: Heatmap Fonksiyonu
+                def plot_correlation_heatmap(df_pivot):
+                    try:
+                        corr_matrix = df_pivot.iloc[:, 1:].T.corr() 
+                        selected_indices = corr_matrix.index[:15] 
+                        corr_small = corr_matrix.loc[selected_indices, selected_indices]
+                        
+                        fig = px.imshow(corr_small,
+                                        text_auto=False,
+                                        aspect="auto",
+                                        color_continuous_scale='RdBu_r',
+                                        title="Ürün Fiyat Hareketleri Korelasyon Matrisi")
+                        return fig
+                    except:
+                        return None
 
                 df_analiz['Fark_Yuzde'] = df_analiz['Fark'] * 100
-                t_sektor, t_ozet, t_veri, t_rapor = st.tabs(
-                    ["📂 KATEGORİ DETAY", "📊 PİYASA ÖZETİ", "📋 TAM LİSTE", "📝 RAPORLAMA"])
+                
+                # YENİ SEKMELER EKLENDİ: ANALİTİK ve SİMÜLASYON
+                t_sektor, t_ozet, t_analitik, t_simulasyon, t_veri, t_rapor = st.tabs(
+                    ["📂 KATEGORİ DETAY", "📊 PİYASA ÖZETİ", "📈 ANALİTİK", "🎧 SİMÜLASYON", "📋 TAM LİSTE", "📝 RAPORLAMA"])
 
                 with t_sektor:
                     st.markdown("### 🔍 Detaylı Fiyat Analizi")
@@ -1127,39 +1163,100 @@ def dashboard_modu():
                             totals={"marker": {"color": "#f8fafc"}}
                         ))
                         st.plotly_chart(style_chart(fig_water), use_container_width=True)
+                
+                # YENİ: ANALİTİK SEKME İÇERİĞİ
+                with t_analitik:
+                    col_a1, col_a2 = st.columns(2)
+                    with col_a1:
+                        st.markdown("### 🌪️ Volatilite (Risk) Analizi")
+                        st.caption("Fiyatı en kararsız (sürekli değişen) ürünler")
+                        top_risky = df_analiz.sort_values('Volatilite', ascending=False).head(10)
+                        fig_risk = px.bar(top_risky, x=ad_col, y='Volatilite', 
+                                          color='Volatilite', color_continuous_scale='Oranges')
+                        st.plotly_chart(style_chart(fig_risk), use_container_width=True)
+                    
+                    with col_a2:
+                        st.markdown("### 🔗 Fiyat Korelasyonları")
+                        st.caption("Ürünlerin fiyat hareketleri arasındaki ilişki")
+                        fig_corr = plot_correlation_heatmap(pivot)
+                        if fig_corr:
+                            st.plotly_chart(style_chart(fig_corr), use_container_width=True)
+                        else:
+                            st.info("Korelasyon için yeterli veri yok.")
 
-                    with t_veri:
-                        st.markdown("### 📋 Veri Seti")
+                    st.markdown("---")
+                    st.markdown("### 🧠 Prophet Model Bileşenleri")
+                    st.caption("Enflasyonun Trend vs Mevsimsellik Ayrımı")
+                    if prophet_model is not None and not df_forecast.empty:
+                         try:
+                             # Plotly componentlerini çiz
+                             fig_comp = plot_components_plotly(prophet_model, df_forecast)
+                             fig_comp.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                             st.plotly_chart(fig_comp, use_container_width=True)
+                         except Exception as e:
+                             st.warning(f"Bileşenler çizilemedi: {e}")
+                
+                # YENİ: SİMÜLASYON SEKME İÇERİĞİ
+                with t_simulasyon:
+                    st.markdown("### 🎧 Kişisel Enflasyon Simülatörü")
+                    st.info("Aşağıdaki kaydırıcıları kullanarak kendi harcama alışkanlıklarınıza göre kişisel enflasyonunuzu hesaplayın.")
+                    
+                    col_sim1, col_sim2 = st.columns([1, 2])
+                    with col_sim1:
+                        st.markdown("**Harcama Ağırlıklarınız**")
+                        w_gida = st.slider("Gıda Harcaması (%)", 0, 100, 25)
+                        w_ulasim = st.slider("Ulaşım (%)", 0, 100, 15)
+                        w_konut = st.slider("Konut/Kira (%)", 0, 100, 20)
+                        kalan = max(0, 100 - (w_gida + w_ulasim + w_konut))
+                        st.markdown(f"**Diğer Kalemler: %{kalan}** (Otomatik)")
                         
-                        def fix_sparkline(row):
-                            vals = row.tolist()
-                            if vals and min(vals) == max(vals):
-                                vals[-1] += 0.00001
-                            return vals
-    
-                        df_analiz['Fiyat_Trendi'] = df_analiz[gunler].apply(fix_sparkline, axis=1)
-    
-                        st.data_editor(
-                            df_analiz[['Grup', ad_col, 'Fiyat_Trendi', baz_col, son]], 
-                            column_config={
-                                "Fiyat_Trendi": st.column_config.LineChartColumn(
-                                    "Fiyat Grafiği",
-                                    width="medium",
-                                    help="Seçilen dönem içindeki fiyat hareketi",
-                                ),
-                                ad_col: "Ürün", 
-                                "Grup": "Kategori",
-                                baz_col: st.column_config.NumberColumn(f"Fiyat ({baz_tanimi})", format="%.2f ₺"),
-                                son: st.column_config.NumberColumn(f"Fiyat ({son})", format="%.2f ₺")
-                            },
-                            hide_index=True, use_container_width=True, height=600
-                        )
+                    with col_sim2:
+                        # Basit simülasyon mantığı: Genel enflasyon ile kullanıcının girdiği ağırlıkların kombinasyonu
+                        # Gerçekte alt grupların enflasyonunu çekmek gerekir ama burada basitleştirilmiş bir model kuruyoruz.
+                        # Gıda enflasyonunu zaten hesaplamıştık (enf_gida). Diğerleri için genel enflasyonu baz alalım.
                         
-                        output = BytesIO()
-                        with pd.ExcelWriter(output, engine='openpyxl') as writer: 
-                            df_analiz.to_excel(writer, index=False, sheet_name='Analiz')
-                        st.download_button("📥 Excel İndir", data=output.getvalue(), file_name=f"Rapor_{son}.xlsx",
-                                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                        simule_enf = (enf_gida * (w_gida/100)) + (enf_genel * (1 - (w_gida/100))) 
+                        
+                        st.markdown("#### Sizin Enflasyonunuz:")
+                        st.metric(label="Kişisel TÜFE", value=f"%{simule_enf:.2f}", delta=f"{simule_enf-enf_genel:.2f} (Genele Göre)")
+                        st.progress(min(simule_enf/100, 1.0))
+                        
+                        st.markdown("""
+                        > *Bu simülasyon, gıda enflasyonunun sizin bütçenizdeki ağırlığına göre genel endeksi yeniden ağırlıklandırır.*
+                        """)
+
+                with t_veri:
+                    st.markdown("### 📋 Veri Seti")
+                    
+                    def fix_sparkline(row):
+                        vals = row.tolist()
+                        if vals and min(vals) == max(vals):
+                            vals[-1] += 0.00001
+                        return vals
+    
+                    df_analiz['Fiyat_Trendi'] = df_analiz[gunler].apply(fix_sparkline, axis=1)
+    
+                    st.data_editor(
+                        df_analiz[['Grup', ad_col, 'Fiyat_Trendi', baz_col, son]], 
+                        column_config={
+                            "Fiyat_Trendi": st.column_config.LineChartColumn(
+                                "Fiyat Grafiği",
+                                width="medium",
+                                help="Seçilen dönem içindeki fiyat hareketi",
+                            ),
+                            ad_col: "Ürün", 
+                            "Grup": "Kategori",
+                            baz_col: st.column_config.NumberColumn(f"Fiyat ({baz_tanimi})", format="%.2f ₺"),
+                            son: st.column_config.NumberColumn(f"Fiyat ({son})", format="%.2f ₺")
+                        },
+                        hide_index=True, use_container_width=True, height=600
+                    )
+                    
+                    output = BytesIO()
+                    with pd.ExcelWriter(output, engine='openpyxl') as writer: 
+                        df_analiz.to_excel(writer, index=False, sheet_name='Analiz')
+                    st.download_button("📥 Excel İndir", data=output.getvalue(), file_name=f"Rapor_{son}.xlsx",
+                                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
                 with t_rapor:
                     st.markdown("### 📝 Stratejik Görünüm Raporu")
@@ -1209,5 +1306,3 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
-
-
