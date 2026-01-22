@@ -218,6 +218,28 @@ def apply_theme():
         ::-webkit-scrollbar-track {{ background: transparent; }}
         ::-webkit-scrollbar-thumb {{ background: rgba(255,255,255,0.1); border-radius: 4px; }}
         ::-webkit-scrollbar-thumb:hover {{ background: rgba(255,255,255,0.25); }}
+        
+        /* --- YENİ: SMART SECTOR CARDS --- */
+        .smart-card {{
+            background: rgba(30, 30, 35, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex; flex-direction: column; gap: 5px;
+            transition: all 0.2s;
+        }}
+        .smart-card:hover {{ border-color: var(--accent-blue); transform: translateY(-2px); }}
+        .sc-title {{ font-size: 11px; color: #a1a1aa; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }}
+        .sc-val {{ font-size: 20px; color: #fff; font-weight:700; display:flex; align-items:center; gap:8px; }}
+        
+        /* --- YENİ: SYSTEM STATUS --- */
+        .sys-status {{
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px; padding: 12px; margin-top: 20px; font-size: 11px; color: #71717a;
+            font-family: 'JetBrains Mono', monospace;
+        }}
+        .sys-row {{ display:flex; justify-content:space-between; margin-bottom:4px; }}
+        .sys-dot {{ width:8px; height:8px; background:#10b981; border-radius:50%; box-shadow:0 0 5px #10b981; display:inline-block; margin-right:5px; }}
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -655,6 +677,24 @@ def dashboard_modu():
             """
         components.html(f'<div style="display:flex; flex-direction:column; overflow:hidden;">{widgets_html}</div>',
                         height=len(symbols) * 125)
+        
+        # --- YENİ EKLENEN: SİSTEM STATUS PANELİ ---
+        st.markdown("---")
+        st.markdown("<h3 style='color: #e4e4e7; font-size: 14px; font-weight: 600; text-transform:uppercase; letter-spacing:1px; margin-bottom: 10px;'>📡 SİSTEM SAĞLIĞI</h3>", unsafe_allow_html=True)
+        
+        simulasyon_durumu = "Online"
+        toplam_veri = len(df_f) if not df_f.empty else 0
+        son_guncelleme = tum_tarihler[0] if tum_tarihler else "-"
+        
+        status_html = f"""
+        <div class="sys-status">
+            <div class="sys-row"><span>API DURUMU:</span><span><div class="sys-dot"></div>{simulasyon_durumu}</span></div>
+            <div class="sys-row"><span>SON VERİ:</span><span style="color:#fff">{son_guncelleme}</span></div>
+            <div class="sys-row"><span>TOPLAM KAYIT:</span><span style="color:#fff">{toplam_veri:,}</span></div>
+            <div class="sys-row"><span>MOD:</span><span style="color:#3b82f6">Simülasyon</span></div>
+        </div>
+        """
+        st.markdown(status_html, unsafe_allow_html=True)
 
 
     # 3. ANA EKRAN HEADER
@@ -1058,11 +1098,44 @@ def dashboard_modu():
                 
                 df_analiz['Fark_Yuzde'] = df_analiz['Fark'] * 100
                 
-                # Sekmeler (Analitik ve Simülasyon Kaldırıldı)
+                # Sekmeler
                 t_sektor, t_ozet, t_veri, t_rapor = st.tabs(
                     ["📂 KATEGORİ DETAY", "📊 PİYASA ÖZETİ", "📋 TAM LİSTE", "📝 RAPORLAMA"])
 
                 with t_sektor:
+                    # --- YENİ EKLENEN: AKILLI SEKTÖR KARTLARI ---
+                    st.markdown("### 🏆 Sektörel Liderler")
+                    
+                    # Ağırlıklı Ortalama Hesabı ve Sıralama
+                    df_analiz['Agirlikli_Fark'] = df_analiz['Fark'] * df_analiz[agirlik_col]
+                    sektor_ozet = df_analiz.groupby('Grup').agg({
+                        'Agirlikli_Fark': 'sum',
+                        agirlik_col: 'sum'
+                    }).reset_index()
+                    sektor_ozet['Ortalama_Degisim'] = (sektor_ozet['Agirlikli_Fark'] / sektor_ozet[agirlik_col]) * 100
+                    
+                    # En büyük 4 sektörü seç (Ağırlığa göre)
+                    top_sektorler = sektor_ozet.sort_values(agirlik_col, ascending=False).head(4)
+                    
+                    sc_cols = st.columns(4)
+                    for idx, (i, row) in enumerate(top_sektorler.iterrows()):
+                        degisim = row['Ortalama_Degisim']
+                        renk = "#ef4444" if degisim > 0 else "#10b981"
+                        icon = "▲" if degisim > 0 else "▼"
+                        
+                        smart_card_html = f"""
+                        <div class="smart-card">
+                            <div class="sc-title">{row['Grup']}</div>
+                            <div class="sc-val">
+                                <span style="color:{renk}">{icon}</span>
+                                %{degisim:.2f}
+                            </div>
+                        </div>
+                        """
+                        with sc_cols[idx]:
+                            st.markdown(smart_card_html, unsafe_allow_html=True)
+                    
+                    st.markdown("---")
                     st.markdown("### 🔍 Detaylı Fiyat Analizi")
 
                     f_col1, f_col2 = st.columns([1, 2])
@@ -1101,25 +1174,46 @@ def dashboard_modu():
                         st.info("🔍 Aradığınız kriterlere uygun ürün bulunamadı.")
 
                 with t_ozet:
-                    rising = len(df_analiz[df_analiz['Fark'] > 0])
-                    falling = len(df_analiz[df_analiz['Fark'] < 0])
-                    total = len(df_analiz)
-                    if total > 0:
-                        r_pct = (rising / total) * 100
-                        f_pct = (falling / total) * 100
-                        n_pct = 100 - r_pct - f_pct
-                        st.subheader("📊 Piyasa Derinliği")
-                        st.markdown(f"""
-                        <div style="display:flex; width:100%; height:12px; border-radius:99px; overflow:hidden; margin-bottom:15px; background:rgba(255,255,255,0.05); box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);">
-                            <div style="width:{r_pct}%; background:#ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);"></div>
-                            <div style="width:{n_pct}%; background:transparent;"></div>
-                            <div style="width:{f_pct}%; background:#10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);"></div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; font-size:12px; color:#a1a1aa; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">
-                            <span style="color:#ef4444">▲ {rising} Ürün Artışta</span>
-                            <span style="color:#10b981">▼ {falling} Ürün Düşüşte</span>
-                        </div>
-                        """, unsafe_allow_html=True)
+                    # --- YENİ EKLENEN: FİYAT DAĞILIM HİSTOGRAMI ---
+                    st.subheader("📊 Piyasa Derinliği ve Dağılım")
+                    
+                    ozet_col1, ozet_col2 = st.columns([2, 1])
+                    
+                    with ozet_col1:
+                        fig_hist = px.histogram(df_analiz, x="Fark_Yuzde", nbins=30, 
+                                                title="Fiyat Değişim Dağılımı (Histogram)",
+                                                labels={"Fark_Yuzde": "Değişim Oranı (%)"},
+                                                color_discrete_sequence=["#3b82f6"])
+                        fig_hist.update_layout(bargap=0.1)
+                        st.plotly_chart(style_chart(fig_hist), use_container_width=True)
+                        
+                    with ozet_col2:
+                         rising = len(df_analiz[df_analiz['Fark'] > 0])
+                         falling = len(df_analiz[df_analiz['Fark'] < 0])
+                         total = len(df_analiz)
+                         if total > 0:
+                            r_pct = (rising / total) * 100
+                            f_pct = (falling / total) * 100
+                            n_pct = 100 - r_pct - f_pct
+                            
+                            st.markdown(f"""
+                            <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:20px; border:1px solid rgba(255,255,255,0.05);">
+                                <div style="font-size:12px; color:#a1a1aa; margin-bottom:10px;">PİYASA YÖNÜ</div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-weight:600;">
+                                    <span style="color:#ef4444">Yükselen</span>
+                                    <span>{rising}</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-weight:600;">
+                                    <span style="color:#10b981">Düşen</span>
+                                    <span>{falling}</span>
+                                </div>
+                                <div style="width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; display:flex;">
+                                    <div style="width:{r_pct}%; background:#ef4444;"></div>
+                                    <div style="width:{n_pct}%; background:transparent;"></div>
+                                    <div style="width:{f_pct}%; background:#10b981;"></div>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
 
                     c_ozet1, c_ozet2 = st.columns(2)
                     with c_ozet1:
