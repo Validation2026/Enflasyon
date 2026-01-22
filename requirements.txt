@@ -11,3 +11,4 @@ wordcloud
 openpyxl
 scipy
 streamlit-lottie
+python-docx
