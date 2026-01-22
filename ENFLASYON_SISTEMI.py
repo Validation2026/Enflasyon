@@ -1180,11 +1180,23 @@ def dashboard_modu():
                     ozet_col1, ozet_col2 = st.columns([2, 1])
                     
                     with ozet_col1:
+                        # --- GÜNCELLENMİŞ KOD BAŞLANGICI ---
                         fig_hist = px.histogram(df_analiz, x="Fark_Yuzde", nbins=30, 
                                                 title="Fiyat Değişim Dağılımı (Histogram)",
                                                 labels={"Fark_Yuzde": "Değişim Oranı (%)"},
                                                 color_discrete_sequence=["#3b82f6"])
+                        
                         fig_hist.update_layout(bargap=0.1)
+                        
+                        # --- DÜZELTME BURADA ---
+                        # X eksenindeki etiket sayısını maksimum 10 ile sınırla ve formatı sadeleştir
+                        fig_hist.update_xaxes(
+                            nticks=10,             # En fazla 10 adet sayı göster (kalabalığı önler)
+                            tickformat=".1f",      # Sayıları virgülden sonra 1 basamak göster (örn: 12.5)
+                            tickangle=0            # Yazıları düz tut
+                        )
+                        # -----------------------
+                        
                         st.plotly_chart(style_chart(fig_hist), use_container_width=True)
                         
                     with ozet_col2:
@@ -1322,3 +1334,4 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
