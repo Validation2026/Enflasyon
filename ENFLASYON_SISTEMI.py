@@ -1357,7 +1357,7 @@ def dashboard_modu():
     
                         # --- GÜNCELLEME: BUTON STİLİ (type='primary') EKLENDİ ---
                         st.download_button(
-                            label="📥 Akıllı Excel İndir (Renklendirilmiş)", 
+                            label="📥 Excel İndir", 
                             data=output.getvalue(), 
                             file_name=f"Rapor_{son}.xlsx",
                             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1395,7 +1395,7 @@ def dashboard_modu():
                     with c_dl1:
                         word_buffer = create_word_report(rap_text, son)
                         st.download_button(
-                            label="📥 Raporu Word Olarak İndir (.docx)",
+                            label="📥 Raporu İndir ",
                             data=word_buffer,
                             file_name=f"Strateji_Raporu_{son}.docx",
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -1411,6 +1411,7 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
 
