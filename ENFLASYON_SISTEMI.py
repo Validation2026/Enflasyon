@@ -25,6 +25,11 @@ import random
 import html
 import numpy as np
 
+try:
+    import xlsxwriter
+except ImportError:
+    st.error("Lütfen 'pip install xlsxwriter' komutunu çalıştırın. Excel raporlama modülü için gereklidir.")
+    
 # --- YENİ KÜTÜPHANELER ---
 try:
     from streamlit_lottie import st_lottie
@@ -1409,6 +1414,7 @@ def dashboard_modu():
 
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
 
