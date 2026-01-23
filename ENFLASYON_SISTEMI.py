@@ -51,8 +51,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME - SHOW EDITION V2) ---
-# --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME - SHOW EDITION V2.1) ---
+# --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME - SHOW EDITION V2.3) ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
@@ -73,7 +72,7 @@ def apply_theme():
             --card-radius: 16px;
         }}
 
-        /* --- LABEL RENKLERİ (DÜZELTME - İSTEK ÜZERİNE BEYAZ YAPILDI) --- */
+        /* --- LABEL RENKLERİ (BEYAZ - KORUNDU) --- */
         .stSelectbox label p, .stTextInput label p {{
             color: #ffffff !important;
             font-weight: 700 !important;
@@ -312,7 +311,7 @@ def apply_theme():
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
-    
+
 apply_theme()
 
 # --- 2. GITHUB & VERİ MOTORU ---
@@ -1177,7 +1176,7 @@ def dashboard_modu():
                                 ad_col: "Ürün",
                                 son: st.column_config.NumberColumn(f"Fiyat ({son})", format="%.4f ₺"),
                                 ma3_baslik: st.column_config.NumberColumn(ma3_baslik, format="%.4f ₺"),
-                                "Gunluk_Degisim": st.column_config.NumberColumn("Değişim", format="%.4f")
+                                "Gunluk_Degisim": st.column_config.NumberColumn("Şok Olan Üründeki Değişim", format="%.4f")
                             },
                             hide_index=True,
                             use_container_width=True
@@ -1425,7 +1424,8 @@ def dashboard_modu():
                     df_analiz['Fiyat_Trendi'] = df_analiz[gunler].apply(fix_sparkline, axis=1)
     
                     st.data_editor(
-                        df_analiz[['Grup', ad_col, 'Fiyat_Trendi', baz_col, son, 'Fark']], 
+                        # Fark yerine Gunluk_Degisim koyduk (Değer olarak)
+                        df_analiz[['Grup', ad_col, 'Fiyat_Trendi', baz_col, son, 'Gunluk_Degisim']], 
                         column_config={
                             "Fiyat_Trendi": st.column_config.LineChartColumn(
                                 "Fiyat Grafiği", width="medium", help="Seçilen dönem içindeki fiyat hareketi"
@@ -1434,9 +1434,10 @@ def dashboard_modu():
                             "Grup": "Kategori",
                             baz_col: st.column_config.NumberColumn(f"Fiyat ({baz_tanimi})", format="%.4f ₺"),
                             son: st.column_config.NumberColumn(f"Fiyat ({son})", format="%.4f ₺"),
-                            "Fark": st.column_config.ProgressColumn(
-                                "Değişim Şiddeti",
-                                help="Dönemsel değişim oranı",
+                            # Label olarak "Günlük Değişim" yaptık
+                            "Gunluk_Degisim": st.column_config.ProgressColumn(
+                                "Günlük Değişim",
+                                help="Bir önceki güne göre değişim",
                                 format="%.2f%%",
                                 min_value=-0.5,
                                 max_value=0.5,
@@ -1531,4 +1532,3 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
-
