@@ -53,6 +53,7 @@ st.set_page_config(
 
 # --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME) ---
 # --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME - SHOW EDITION) ---
+# --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME - SHOW EDITION) ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
@@ -73,7 +74,7 @@ def apply_theme():
             --card-radius: 16px;
         }}
 
-        /* --- ANIMASYONLAR (SHOW KISMI) --- */
+        /* --- ANIMASYONLAR --- */
         @keyframes fadeInUp {{
             from {{ opacity: 0; transform: translate3d(0, 20px, 0); }}
             to {{ opacity: 1; transform: translate3d(0, 0, 0); }}
@@ -85,11 +86,7 @@ def apply_theme():
             100% {{ border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 0 0 rgba(59, 130, 246, 0); }}
         }}
 
-        .animate-enter {{
-            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-        }}
-        
-        /* Gecikmeli animasyonlar için sınıflar */
+        .animate-enter {{ animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }}
         .delay-1 {{ animation-delay: 0.1s; }}
         .delay-2 {{ animation-delay: 0.2s; }}
         .delay-3 {{ animation-delay: 0.3s; }}
@@ -115,6 +112,13 @@ def apply_theme():
             background: linear-gradient(180deg, rgba(5, 5, 10, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%) !important;
             border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(20px);
+        }}
+        
+        /* --- RADIO BUTTON YAZI RENGİ DÜZELTMESİ (İSTEĞİNİZ) --- */
+        .stRadio [data-testid="stMarkdownContainer"] > p {{
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.5px;
         }}
         
         /* --- INPUT VE SELECTBOX --- */
@@ -179,7 +183,7 @@ def apply_theme():
             transform: translateY(-1px);
         }}
 
-        /* --- KPI CARD DESIGN (ANIMASYONLU) --- */
+        /* --- KPI CARD DESIGN --- */
         .kpi-card {{
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             border: 1px solid var(--glass-border);
@@ -1428,14 +1432,3 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
-
-
-
-
-
-
-
-
-
-
-
