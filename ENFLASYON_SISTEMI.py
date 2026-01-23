@@ -51,9 +51,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME) ---
-# --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME - SHOW EDITION) ---
-# --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME - SHOW EDITION) ---
+# --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME - SHOW EDITION V2) ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
@@ -74,22 +72,47 @@ def apply_theme():
             --card-radius: 16px;
         }}
 
+        /* --- BACKGROUND PARTICLES (YENİ) --- */
+        [data-testid="stAppViewContainer"]::before {{
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40 60, 130 270;
+            opacity: 0.07;
+            z-index: 0;
+            animation: star-move 200s linear infinite;
+            pointer-events: none;
+        }}
+
+        @keyframes star-move {{
+            from {{ transform: translateY(0); }}
+            to {{ transform: translateY(-2000px); }}
+        }}
+
         /* --- ANIMASYONLAR --- */
         @keyframes fadeInUp {{
             from {{ opacity: 0; transform: translate3d(0, 20px, 0); }}
             to {{ opacity: 1; transform: translate3d(0, 0, 0); }}
         }}
         
-        @keyframes pulse-border {{
-            0% {{ border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 0 0 rgba(59, 130, 246, 0); }}
-            50% {{ border-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); }}
-            100% {{ border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 0 0 rgba(59, 130, 246, 0); }}
+        @keyframes border-flow {{
+            0% {{ background-position: 0% 50%; }}
+            50% {{ background-position: 100% 50%; }}
+            100% {{ background-position: 0% 50%; }}
         }}
 
         .animate-enter {{ animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }}
         .delay-1 {{ animation-delay: 0.1s; }}
         .delay-2 {{ animation-delay: 0.2s; }}
         .delay-3 {{ animation-delay: 0.3s; }}
+        
+        .blink {{ animation: blinker 1s linear infinite; }} 
+        @keyframes blinker {{ 50% {{ opacity: 0; }} }}
 
         /* --- ANA ARKA PLAN --- */
         [data-testid="stAppViewContainer"] {{
@@ -102,6 +125,12 @@ def apply_theme():
             color: var(--text-main) !important;
         }}
 
+        /* --- SCROLLBAR (YENİ) --- */
+        ::-webkit-scrollbar {{ width: 8px; height: 8px; }}
+        ::-webkit-scrollbar-track {{ background: #02040a; }}
+        ::-webkit-scrollbar-thumb {{ background: #3b82f6; border-radius: 4px; }}
+        ::-webkit-scrollbar-thumb:hover {{ background: #60a5fa; box-shadow: 0 0 10px #3b82f6; }}
+
         /* --- HEADER GİZLEME --- */
         [data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
         [data-testid="stToolbar"] {{ display: none; }}
@@ -112,13 +141,11 @@ def apply_theme():
             background: linear-gradient(180deg, rgba(5, 5, 10, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%) !important;
             border-right: 1px solid var(--glass-border);
             backdrop-filter: blur(20px);
+            z-index: 99;
         }}
         
-        /* --- RADIO BUTTON YAZI RENGİ DÜZELTMESİ (İSTEĞİNİZ) --- */
         .stRadio [data-testid="stMarkdownContainer"] > p {{
-            color: #ffffff !important;
-            font-weight: 600 !important;
-            letter-spacing: 0.5px;
+            color: #ffffff !important; font-weight: 600 !important; letter-spacing: 0.5px;
         }}
         
         /* --- INPUT VE SELECTBOX --- */
@@ -147,34 +174,24 @@ def apply_theme():
         
         /* --- SEKME (TABS) --- */
         .stTabs [data-baseweb="tab-list"] {{
-            gap: 8px;
-            background: rgba(255,255,255,0.02);
-            padding: 8px;
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
+            gap: 8px; background: rgba(255,255,255,0.02);
+            padding: 8px; border-radius: 12px; border: 1px solid var(--glass-border);
         }}
         .stTabs [data-baseweb="tab"] {{
-            height: 40px;
-            border-radius: 8px;
-            padding: 0 20px;
-            color: var(--text-dim) !important;
-            font-weight: 500;
-            border: none !important;
+            height: 40px; border-radius: 8px; padding: 0 20px;
+            color: var(--text-dim) !important; font-weight: 500; border: none !important;
             transition: all 0.2s ease;
         }}
         .stTabs [aria-selected="true"] {{
             background-color: rgba(255,255,255,0.1) !important;
-            color: #fff !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            color: #fff !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }}
 
         /* --- BUTTONS --- */
         div.stButton > button {{
             background: linear-gradient(145deg, rgba(40,40,45,0.8), rgba(20,20,25,0.9));
             border: 1px solid var(--glass-border);
-            color: #fff;
-            border-radius: 10px;
-            font-weight: 600;
+            color: #fff; border-radius: 10px; font-weight: 600;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         div.stButton > button:hover {{
@@ -183,18 +200,29 @@ def apply_theme():
             transform: translateY(-1px);
         }}
 
-        /* --- KPI CARD DESIGN --- */
+        /* --- KPI CARD DESIGN (NEON BORDER EKLENDİ) --- */
         .kpi-card {{
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             border: 1px solid var(--glass-border);
             border-radius: var(--card-radius);
-            padding: 24px;
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            animation: fadeInUp 0.6s ease-out both, pulse-border 4s infinite;
+            padding: 24px; position: relative; overflow: hidden;
+            backdrop-filter: blur(10px); transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out both;
+            z-index: 1;
         }}
+        
+        /* NEON BORDER EFFECT */
+        .kpi-card::before, .pg-card::before, .smart-card::before {{
+            content: ""; position: absolute; inset: -1px; z-index: -1;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+            background-size: 400% 400%;
+            animation: border-flow 10s ease infinite;
+            border-radius: inherit; opacity: 0; transition: opacity 0.3s ease;
+        }}
+        .kpi-card:hover::before, .pg-card:hover::before, .smart-card:hover::before {{
+            opacity: 0.6; filter: blur(10px);
+        }}
+
         .kpi-card:hover {{
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
             border-color: var(--glass-highlight);
@@ -221,6 +249,7 @@ def apply_theme():
             text-align: center;
             transition: all 0.2s ease;
             animation: fadeInUp 0.5s ease-out both;
+            position: relative; z-index: 1;
         }}
         .pg-card:hover {{
             background: rgba(40, 40, 45, 0.6);
@@ -256,19 +285,20 @@ def apply_theme():
             display: flex; flex-direction: column; gap: 5px;
             transition: all 0.2s;
             animation: fadeInUp 0.7s ease-out both;
+            position: relative; z-index: 1;
         }}
         .smart-card:hover {{ border-color: var(--accent-blue); transform: translateY(-2px); }}
         .sc-title {{ font-size: 11px; color: #a1a1aa; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }}
         .sc-val {{ font-size: 20px; color: #fff; font-weight:700; display:flex; align-items:center; gap:8px; }}
         
-        /* --- SYSTEM STATUS --- */
-        .sys-status {{
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 8px; padding: 12px; margin-top: 20px; font-size: 11px; color: #71717a;
-            font-family: 'JetBrains Mono', monospace;
+        /* --- SKELETON LOADER (YENİ) --- */
+        .skeleton {{
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
         }}
-        .sys-row {{ display:flex; justify-content:space-between; margin-bottom:4px; }}
-        .sys-dot {{ width:8px; height:8px; background:#10b981; border-radius:50%; box-shadow:0 0 5px #10b981; display:inline-block; margin-right:5px; }}
+        @keyframes loading {{ 0% {{ background-position: 200% 0; }} 100% {{ background-position: -200% 0; }} }}
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -623,13 +653,87 @@ Hesaplanan veriler, fiyat istikrarında henüz tam bir dengelenme (konsolidasyon
 """
     return text.strip()
 
+# --- YENİ YARDIMCI FONKSİYONLAR (GÖRSEL ŞOV İÇİN) ---
 
-# --- 8. DASHBOARD MODU ---
+def make_neon_chart(fig):
+    """Grafiklere neon glow efekti ekler"""
+    new_traces = []
+    for trace in fig.data:
+        if trace.type == 'scatter' or trace.type == 'line':
+            glow_trace = go.Scatter(
+                x=trace.x, y=trace.y,
+                mode='lines',
+                line=dict(width=10, color=trace.line.color), 
+                opacity=0.2, 
+                hoverinfo='skip', 
+                showlegend=False
+            )
+            new_traces.append(glow_trace)
+    
+    fig.add_traces(new_traces)
+    
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        xaxis=dict(showgrid=False, zeroline=False),
+        yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', zeroline=False)
+    )
+    return fig
+
+def render_skeleton():
+    """Yükleme ekranı için iskelet görünümü"""
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
+    with c2: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
+    with c3: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
+    with c4: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="skeleton" style="height:300px; margin-top:20px;"></div>', unsafe_allow_html=True)
+
+def stream_text(text, container, kutu_rengi, kenar_rengi, durum_emoji, durum_baslik, delay=0.015):
+    """Typewriter efekti"""
+    for i in range(len(text) + 1):
+        curr_text = text[:i]
+        container.markdown(f"""
+        <div class="delay-2 animate-enter" style="
+            background: {kutu_rengi}; 
+            border-left: 4px solid {kenar_rengi}; 
+            border-radius: 12px; 
+            padding: 24px; 
+            margin-bottom: 30px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                <span style="font-size:24px;">{durum_emoji}</span>
+                <span style="font-weight:700; color:#fff; letter-spacing:1px; font-size:14px; font-family:'Inter', sans-serif;">AI MARKET ANALİSTİ: <span style="color:{kenar_rengi}">{durum_baslik}</span> <span class="blink">|</span></span>
+            </div>
+            <div style="font-size:14px; color:#d4d4d8; line-height:1.6; font-style:italic; padding-left:42px;">
+                "{curr_text}"
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        time.sleep(delay)
+
 # --- 8. DASHBOARD MODU (SHOW EDITION) ---
 def dashboard_modu():
+    # 0. SKELETON LOADING SIMULATION (GÖRSEL ŞOV)
+    loader_placeholder = st.empty()
+    with loader_placeholder.container():
+        # Sadece sayfa ilk açılıyorsa gösterilebilir ama şov için kısa süreli tutuyoruz
+        # Gerçek veri çekme sırasında bu durabilir.
+        pass 
+
     # 1. VERİYİ ÖNCE YÜKLE
+    # Yükleme sırasında skeleton gösterelim
+    with loader_placeholder.container():
+        render_skeleton()
+    
     df_f = github_excel_oku(FIYAT_DOSYASI)
     df_s = github_excel_oku(EXCEL_DOSYASI, SAYFA_ADI)
+    
+    # Veri gelince loader'ı temizle
+    loader_placeholder.empty()
     
     # Tarihleri Hazırla ve FİLTRELE
     if not df_f.empty:
@@ -643,13 +747,11 @@ def dashboard_modu():
     else:
         tum_tarihler = []
 
-    # 2. SIDEBAR
     # 2. SIDEBAR (TEMİZ & GÜVENLİ)
     with st.sidebar:
         # --- LOTTIE ANİMASYONU (HATA KORUMALI) ---
         lottie_url = "https://lottie.host/98606416-297c-4a37-9b2a-714013063529/5D6o8k8fW0.json" 
         try:
-            # Gerekli fonksiyonların varlığını kontrol et
             if 'load_lottieurl' in globals() and 'st_lottie' in globals():
                 lottie_json = load_lottieurl(lottie_url)
                 if lottie_json:
@@ -659,7 +761,6 @@ def dashboard_modu():
             else:
                  st.markdown("""<div style="font-size: 50px; text-align:center; padding: 20px;">💎</div>""", unsafe_allow_html=True)
         except Exception:
-            # Herhangi bir hatada sabit ikon
             st.markdown("""<div style="font-size: 50px; text-align:center; padding: 20px;">💎</div>""", unsafe_allow_html=True)
 
         st.markdown("""
@@ -673,7 +774,6 @@ def dashboard_modu():
         
         st.markdown("<h3 style='color: #e4e4e7; font-size: 14px; font-weight: 600; text-transform:uppercase; letter-spacing:1px; margin-bottom: 15px;'>⏳ Geçmiş Veri</h3>", unsafe_allow_html=True)
         
-        # Değişken kontrolü (NameError önlemi)
         if 'tum_tarihler' not in locals(): tum_tarihler = []
         
         if tum_tarihler:
@@ -792,7 +892,7 @@ def dashboard_modu():
             if "OK" in res:
                 st.cache_data.clear()
                 st.toast('Sistem Senkronize Edildi!', icon='🚀') 
-                st.balloons() # ŞOV BURADA
+                st.balloons() 
                 time.sleep(1);
                 st.rerun()
             elif "Veri bulunamadı" in res:
@@ -843,7 +943,7 @@ def dashboard_modu():
                              idx = tum_gunler_sirali.index(son_tarih)
                              gunler = tum_gunler_sirali[:idx+1]
                         else:
-                             gunler = tum_gunler_sirali
+                             gunler = tum_gunler_sirali 
                     else:
                         gunler = tum_gunler_sirali 
 
@@ -987,7 +1087,6 @@ def dashboard_modu():
                     # Anomali Tespiti
                     if ma3_baslik in df_analiz.columns:
                         anomaliler = df_analiz[df_analiz[son] > df_analiz[ma3_baslik] * 1.10].copy()
-                        # Sayısal formatı hazırla (Virgülden sonra 4 hane)
                         anomaliler[ma3_baslik] = anomaliler[ma3_baslik].astype(float)
                         anomaliler['Gunluk_Degisim'] = anomaliler['Gunluk_Degisim'].astype(float)
                     else:
@@ -1074,7 +1173,7 @@ def dashboard_modu():
                             use_container_width=True
                         )
 
-                # --- AI ANALİST KARTI (ANIMASYONLU) ---
+                # --- AI ANALİST KARTI (TYPEWRITER EFEKTLİ) ---
                 st.markdown("<br>", unsafe_allow_html=True)
                 
                 durum_mesaji = ""
@@ -1097,28 +1196,9 @@ def dashboard_modu():
                     kutu_rengi = "linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)" 
                     kenar_rengi = "#10b981"
 
-                # HTML Kartı (delay-2 animasyonu eklendi)
-                ai_card_html = f"""
-                <div class="delay-2 animate-enter" style="
-                    background: {kutu_rengi}; 
-                    border-left: 4px solid {kenar_rengi}; 
-                    border-radius: 12px; 
-                    padding: 24px; 
-                    margin-bottom: 30px;
-                    border-top: 1px solid rgba(255,255,255,0.05);
-                    border-right: 1px solid rgba(255,255,255,0.05);
-                    border-bottom: 1px solid rgba(255,255,255,0.05);
-                    backdrop-filter: blur(10px);">
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-                        <span style="font-size:24px;">{durum_emoji}</span>
-                        <span style="font-weight:700; color:#fff; letter-spacing:1px; font-size:14px; font-family:'Inter', sans-serif;">AI MARKET ANALİSTİ: <span style="color:{kenar_rengi}">{durum_baslik}</span></span>
-                    </div>
-                    <div style="font-size:14px; color:#d4d4d8; line-height:1.6; font-style:italic; padding-left:42px;">
-                        "{durum_mesaji}"
-                    </div>
-                </div>
-                """
-                st.markdown(ai_card_html, unsafe_allow_html=True)
+                # Typewriter Placeholder'ı
+                ai_placeholder = st.empty()
+                stream_text(durum_mesaji, ai_placeholder, kutu_rengi, kenar_rengi, durum_emoji, durum_baslik)
                 
                 # --- NORMALE DÖNÜŞ ---
 
@@ -1152,7 +1232,7 @@ def dashboard_modu():
                     ["📂 KATEGORİ DETAY", "📊 PİYASA ÖZETİ", "📋 TAM LİSTE", "📝 RAPORLAMA"])
 
                 with t_sektor:
-                    # --- YENİ EKLENEN: AKILLI SEKTÖR KARTLARI ---
+                    # --- AKILLI SEKTÖR KARTLARI (ANIMASYONLU KENARLIK) ---
                     st.markdown("### 🏆 Sektörel Liderler")
                     
                     df_analiz['Agirlikli_Fark'] = df_analiz['Fark'] * df_analiz[agirlik_col]
@@ -1170,7 +1250,6 @@ def dashboard_modu():
                         renk = "#ef4444" if degisim > 0 else "#10b981"
                         icon = "▲" if degisim > 0 else "▼"
                         
-                        # Animasyon class'ı ekledik
                         smart_card_html = f"""
                         <div class="smart-card delay-1">
                             <div class="sc-title">{row['Grup']}</div>
@@ -1223,7 +1302,7 @@ def dashboard_modu():
                         st.info("🔍 Aradığınız kriterlere uygun ürün bulunamadı.")
 
                 with t_ozet:
-                    # --- FİYAT DAĞILIM HİSTOGRAMI ---
+                    # --- FİYAT DAĞILIM HİSTOGRAMI (NEON EFFECT) ---
                     st.subheader("📊 Piyasa Derinliği ve Dağılım")
                     
                     ozet_col1, ozet_col2 = st.columns([2, 1])
@@ -1241,25 +1320,25 @@ def dashboard_modu():
                             margin=dict(l=10, r=10, t=40, b=10) 
                         )
                         
-                        # KESİN ÇÖZÜM: Ekseni formatla - Kullanıcı İsteği: 4 Hane Hassasiyet
                         fig_hist.update_xaxes(
                             type="linear",       
                             tickmode="auto",      
                             nticks=5,            
-                            tickformat=".4f",    # Kullanıcı isteği: her türlü virgülden sonra 4 hane
+                            tickformat=".4f",    
                             title_font=dict(size=11),
                             tickfont=dict(size=10, color="#a1a1aa")
                         )
                         
                         fig_hist.update_yaxes(showgrid=True, gridcolor="rgba(255,255,255,0.05)")
                         
-                        st.plotly_chart(style_chart(fig_hist), use_container_width=True)
+                        # NEON CHART EFEKTI UYGULANIYOR
+                        st.plotly_chart(make_neon_chart(style_chart(fig_hist)), use_container_width=True)
                         
                     with ozet_col2:
-                         rising = len(df_analiz[df_analiz['Fark'] > 0])
-                         falling = len(df_analiz[df_analiz['Fark'] < 0])
-                         total = len(df_analiz)
-                         if total > 0:
+                          rising = len(df_analiz[df_analiz['Fark'] > 0])
+                          falling = len(df_analiz[df_analiz['Fark'] < 0])
+                          total = len(df_analiz)
+                          if total > 0:
                             r_pct = (rising / total) * 100
                             f_pct = (falling / total) * 100
                             n_pct = 100 - r_pct - f_pct
@@ -1288,7 +1367,7 @@ def dashboard_modu():
                         st.subheader("☀️ Pazar Dağılımı")
                         
                         grafik_tipi = st.radio("Görünüm Modu:", ["Halka (Sunburst)", "Kutu (Treemap)"], 
-                                             horizontal=True, label_visibility="collapsed")
+                                               horizontal=True, label_visibility="collapsed")
                         
                         if grafik_tipi == "Halka (Sunburst)":
                             fig_sun = px.sunburst(
@@ -1315,13 +1394,14 @@ def dashboard_modu():
                         fig_water = go.Figure(go.Waterfall(
                             name="", orientation="v", measure=["relative"] * len(df_sektor_katki),
                             x=df_sektor_katki['Grup'], textposition="outside",
-                            text=df_sektor_katki['Katki_Puan'].apply(lambda x: f"{x:.4f}"), # Burada da 4 hane
+                            text=df_sektor_katki['Katki_Puan'].apply(lambda x: f"{x:.4f}"),
                             y=df_sektor_katki['Katki_Puan'], connector={"line": {"color": "#52525b"}},
                             decreasing={"marker": {"color": "#34d399", "line": {"width": 0}}},
                             increasing={"marker": {"color": "#f87171", "line": {"width": 0}}},
                             totals={"marker": {"color": "#f8fafc"}}
                         ))
-                        st.plotly_chart(style_chart(fig_water), use_container_width=True)
+                        # NEON EFFECT for Waterfall lines
+                        st.plotly_chart(make_neon_chart(style_chart(fig_water)), use_container_width=True)
 
                 with t_veri:
                     st.markdown("### 📋 Veri Seti")
@@ -1380,9 +1460,9 @@ def dashboard_modu():
                                 fark_col_idx = df_export.columns.get_loc('Fark')
                                 row_count = len(df_export)
                                 worksheet.conditional_format(1, fark_col_idx, row_count, fark_col_idx,
-                                                            {'type': 'cell', 'criteria': '>', 'value': 0, 'format': format_red})
+                                                             {'type': 'cell', 'criteria': '>', 'value': 0, 'format': format_red})
                                 worksheet.conditional_format(1, fark_col_idx, row_count, fark_col_idx,
-                                                            {'type': 'cell', 'criteria': '<', 'value': 0, 'format': format_green})
+                                                             {'type': 'cell', 'criteria': '<', 'value': 0, 'format': format_green})
                     except ImportError:
                          # Fallback
                          with pd.ExcelWriter(output) as writer:
@@ -1441,5 +1521,3 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
-
-
