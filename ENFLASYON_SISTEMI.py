@@ -1173,7 +1173,8 @@ def dashboard_modu():
                 with c2:
                     kpi_card("Gıda Enflasyonu", f"%{enf_gida:.2f}", "Mutfak Sepeti", "#fca5a5", "#10b981", "🛒", "delay-2")
                 with c3:
-                    kpi_card("Ay Sonu Tahmini", f"%{math.floor(month_end_forecast):.2f}", "Yapay Zeka Modeli", "#a78bfa", "#8b5cf6", "🤖", "delay-3")
+                    # DÜZELTİLEN SATIR BURASI:
+                    kpi_card("Ay Sonu Tahmini", f"%{month_end_forecast:.2f}", "Yapay Zeka Modeli", "#a78bfa", "#8b5cf6", "🤖", "delay-3")
                 with c4:
                     kpi_card("Resmi TÜİK Verisi", f"%{resmi_aylik_enf:.2f}", f"{resmi_tarih_str}", "#fbbf24", "#f59e0b",
                              "🏛️", "delay-3")
@@ -1545,3 +1546,4 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
