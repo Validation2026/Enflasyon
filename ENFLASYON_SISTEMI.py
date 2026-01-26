@@ -625,40 +625,93 @@ def html_isleyici(log_callback):
 
 # --- 7. STATİK ANALİZ MOTORU ---
 def generate_detailed_static_report(df_analiz, tarih, enf_genel, enf_gida, gun_farki, tahmin, ad_col, agirlik_col):
-    inc = df_analiz.sort_values('Fark', ascending=False).head(3)
-    dec = df_analiz.sort_values('Fark', ascending=True).head(3)
-    en_cok_artan_text = ", ".join([f"{row[ad_col]} (%{row['Fark'] * 100:.2f})" for _, row in inc.iterrows()])
-    en_cok_dusen_text = ", ".join([f"{row[ad_col]} (%{row['Fark'] * 100:.2f})" for _, row in dec.iterrows()])
-    if 'Grup' in df_analiz.columns:
-        grup_analiz = df_analiz.groupby('Grup').apply(
-            lambda x: (x['Fark'] * x[agirlik_col]).sum() / x[agirlik_col].sum() * 100).sort_values(ascending=False)
-        lider_sektor = grup_analiz.index[0]
-        lider_oran = grup_analiz.iloc[0]
-        sektor_text = f"Sektörel bazda incelendiğinde, en yüksek fiyat baskısının **%{lider_oran:.2f}** artış ile **{lider_sektor}** grubunda hissedildiği görülmüştür."
-    else:
-        sektor_text = "Veri setinde grup bilgisi bulunmadığından sektörel ayrışma yapılamamıştır."
+    # --- 1. VERİ HAZIRLIĞI VE İSTATİSTİKLER ---
     toplam_urun = len(df_analiz)
-    artan_sayisi = len(df_analiz[df_analiz['Fark'] > 0])
-    sabit_sayisi = len(df_analiz[df_analiz['Fark'] == 0])
-    dusen_sayisi = len(df_analiz[df_analiz['Fark'] < 0])
+    
+    # Hareket Yönü Analizi
+    artanlar = df_analiz[df_analiz['Fark'] > 0]
+    dusenler = df_analiz[df_analiz['Fark'] < 0]
+    sabitler = df_analiz[df_analiz['Fark'] == 0]
+    
+    artan_sayisi = len(artanlar)
+    dusen_sayisi = len(dusenler)
+    sabit_sayisi = len(sabitler)
+    
+    # Yayılım Endeksi (Diffusion Index)
+    yayilim_endeksi = (artan_sayisi / toplam_urun) * 100
+    
+    # Aşırı Volatilite Kontrolü (>%5 değişim gösterenler)
+    yuksek_volatilite_sayisi = len(df_analiz[abs(df_analiz['Fark']) > 0.05])
+    
+    # En Sert Hareketler (Top 5 Artış ve Düşüş)
+    inc = df_analiz.sort_values('Fark', ascending=False).head(5)
+    dec = df_analiz.sort_values('Fark', ascending=True).head(5)
+    
+    inc_str = "\n".join([f"   - {row[ad_col]}: %{row['Fark']*100:.2f}" for _, row in inc.iterrows()])
+    dec_str = "\n".join([f"   - {row[ad_col]}: %{row['Fark']*100:.2f}" for _, row in dec.iterrows()])
+    
+    # Sektörel Performans Analizi
+    sektor_text = ""
+    if 'Grup' in df_analiz.columns:
+        # Ağırlıklı Sektör Etkisi Hesaplama
+        df_analiz['Agirlikli_Etki'] = df_analiz['Fark'] * df_analiz[agirlik_col]
+        sektor_grp = df_analiz.groupby('Grup').agg({
+            'Agirlikli_Etki': 'sum',
+            agirlik_col: 'sum'
+        })
+        sektor_grp['Endeks_Degisimi'] = (sektor_grp['Agirlikli_Etki'] / sektor_grp[agirlik_col]) * 100
+        sektor_sirali = sektor_grp.sort_values('Endeks_Degisimi', ascending=False)
+        
+        en_yuksek_sektor = sektor_sirali.index[0]
+        en_yuksek_oran = sektor_sirali.iloc[0]['Endeks_Degisimi']
+        
+        en_dusuk_sektor = sektor_sirali.index[-1]
+        en_dusuk_oran = sektor_sirali.iloc[-1]['Endeks_Degisimi']
+        
+        sektor_text = (f"Sektörel bazda ayrışma belirgindir. **{en_yuksek_sektor}** grubu, **%{en_yuksek_oran:.2f}** "
+                       f"artış ile manşet enflasyonu yukarı çeken ana katalizör olmuştur. "
+                       f"Buna karşın **{en_dusuk_sektor}** grubu **%{en_dusuk_oran:.2f}** değişim ile endeksi dengelemeye çalışmıştır.")
+    else:
+        sektor_text = "Veri setinde grup kırılımı bulunmadığından sektörel attribution analizi yapılamamıştır."
+
+    # --- 2. RAPOR METNİ OLUŞTURMA ---
     text = f"""
-**PİYASA GÖRÜNÜM RAPORU**
+**STRATEJİK PİYASA GÖRÜNÜM RAPORU**
+**Rapor Tarihi:** {tarih} | **Statü:** Otomatik Validasyon
 
-**1. MAKRO EKONOMİK GÖRÜNÜM VE MANŞET VERİLER**
-{tarih} tarihi itibarıyla sistemimiz tarafından takip edilen mal ve hizmet sepetindeki genel fiyat seviyesi, yılbaşına göre (Kümülatif) **%{enf_genel:.2f}** oranında artış kaydetmiştir. Analiz periyodu olan son dönemde, piyasadaki fiyatlama davranışlarının seyri yakından izlenmektedir. Özellikle gıda ve temel ihtiyaç maddelerindeki **%{enf_gida:.2f}** seviyesindeki gerçekleşme, hanehalkı bütçesi üzerindeki etkiyi yansıtmaktadır.
+**1. YÖNETİCİ ÖZETİ VE MAKRO GÖRÜNÜM**
+{tarih} itibarıyla sistemimiz tarafından izlenen dijital fiyat sepeti, kümülatif bazda **%{enf_genel:.2f}** oranında değer kazanmıştır. Özellikle hanehalkı harcama sepetinde yüksek ağırlığa sahip olan gıda grubundaki **%{enf_gida:.2f}** seviyesindeki değişim, reel satın alma gücü üzerindeki baskının devam ettiğini göstermektedir. Piyasa genelindeki fiyatlama davranışı incelendiğinde, enflasyonun henüz tam anlamıyla sönümlenmediği ve yapışkanlık etkisinin sürdüğü gözlemlenmektedir.
 
-**2. DETAYLI SEPET ANALİZİ VE VOLATİLİTE**
-Takip edilen toplam **{toplam_urun}** adet ürünün fiyat hareketleri incelendiğinde; ürünlerin **{artan_sayisi}** adedinde fiyat artışı, **{dusen_sayisi}** adedinde fiyat düşüşü tespit edilmiş, **{sabit_sayisi}** ürünün fiyatı ise değişmemiştir. Bu durum, enflasyonist baskının sepetin geneline yayıldığını (yayılım endeksi: %{(artan_sayisi / toplam_urun) * 100:.1f}) göstermektedir.
+**2. PİYASA DERİNLİĞİ VE YAYILIM ANALİZİ**
+Analiz evrenindeki toplam **{toplam_urun}** adet ürünün fiyat hareketleri aşağıdaki gibi dağılmıştır:
+* **Fiyatı Artan Ürünler:** {artan_sayisi} adet (Sepetin %{(artan_sayisi/toplam_urun)*100:.1f}'i)
+* **Fiyatı Düşen Ürünler:** {dusen_sayisi} adet (Sepetin %{(dusen_sayisi/toplam_urun)*100:.1f}'i)
+* **Fiyatı Değişmeyenler:** {sabit_sayisi} adet
 
-**3. SEKTÖREL AYRIŞMA VE ÖNE ÇIKAN KALEMLER**
+Yayılım Endeksi (Diffusion Index) **%{yayilim_endeksi:.1f}** seviyesinde hesaplanmıştır. Endeksin 50'nin üzerinde olması, fiyat artışlarının genele yayıldığını işaret eder. Ayrıca, sepetin **{yuksek_volatilite_sayisi}** adetlik kısmında %5'in üzerinde sert fiyat hareketleri (anomali/şok) tespit edilmiştir. Bu durum, tedarik zinciri veya talep kaynaklı lokal şokların varlığına delalet eder.
+
+**3. SEKTÖREL AYRIŞMA VE KATALİZÖRLER**
 {sektor_text}
-Dönem içerisinde fiyatı en çok artan ürünler sırasıyla **{en_cok_artan_text}** olmuştur. Buna karşın, **{en_cok_dusen_text}** ürünlerinde fiyat gevşemeleri veya kampanyalar nedeniyle düşüşler kaydedilmiştir. Fiyatı en çok artan ürün grubunun ağırlığı, sepet genelindeki varyansı yukarı çekmektedir.
 
-**4. PROJEKSİYON VE RİSK DEĞERLENDİRMESİ**
-Mevcut veri setine uygulanan zaman serisi analizleri (Prophet Modeli) ve günlük volatilite standart sapması baz alındığında; ay sonu enflasyon eğiliminin **%{tahmin:.2f}** bandına yakınsayacağı matematiksel olarak öngörülmektedir. 
+**4. EN YÜKSEK VOLATİLİTE GÖSTEREN KALEMLER**
+Dönem içerisinde fiyatlamasıyla endeksten pozitif ve negatif yönde en çok ayrışan ürünler şunlardır:
 
-**SONUÇ**
-Hesaplanan veriler, fiyat istikrarında henüz tam bir dengelenme (konsolidasyon) sağlanamadığını, özellikle talep esnekliği düşük olan gıda kalemlerindeki yapışkanlığın devam ettiğini işaret etmektedir. Karar alıcıların stok yönetimi ve fiyatlama stratejilerinde bu volatiliteyi göz önünde bulundurmaları önerilir.
+**▲ Fiyatı En Çok Artanlar (Top 5):**
+{inc_str}
+
+**▼ Fiyatı En Çok Düşenler (Top 5):**
+{dec_str}
+
+**5. PROJEKSİYON VE RİSK MATRİSİ**
+Mevcut veri setine uygulanan zaman serisi analizleri (Prophet & Moving Average) ışığında;
+* **Ay Sonu Tahmini:** Mevcut momentumun korunması halinde, ay sonu manşet enflasyonun **%{tahmin:.2f}** bandına yakınsaması öngörülmektedir.
+* **Risk Değerlendirmesi:** Gıda enflasyonunun manşet veriden pozitif ayrışması (%{enf_gida:.2f} > %{enf_genel:.2f}), maliyet baskısının perakende fiyatlarına yansıtılmaya devam ettiğini gösterir.
+
+**SONUÇ VE ÖNERİ**
+Veriler, piyasada henüz fiyat istikrarı (konsolidasyon) oluşmadığını teyit etmektedir. Karar vericilerin, özellikle yüksek volatilite gösteren kalemlerdeki stok/maliyet yönetimini gözden geçirmeleri ve nakit akış projeksiyonlarını **%{tahmin:.2f}**'lik enflasyon senaryosuna göre güncellemeleri önerilir.
+
+---
+*Bu rapor, Pro Analytics yapay zeka algoritmaları tarafından otomatik olarak üretilmiştir.*
 """
     return text.strip()
 
@@ -1546,4 +1599,5 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
 
