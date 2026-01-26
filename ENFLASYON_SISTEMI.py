@@ -880,34 +880,41 @@ def dashboard_modu():
     """
     components.html(header_html_code, height=140)
 
-    # BUTON (Senkronizasyon)
-    col_btn1, col_btn2 = st.columns([3, 1])
-    with col_btn2:
-        if st.button("SİSTEMİ SENKRONİZE ET ⚡", type="primary", use_container_width=True):
-            with st.status("🚀 Veri Akışı Sağlanıyor...", expanded=True) as status:
-                st.write("📡 Uzak sunucu ile el sıkışılıyor...")
-                log_ph = st.empty();
-                log_msgs = []
+    # --- BUTON KONTROL PANELİ ---
+    # Butonu göstermek istediğinde bu değeri True yapabilirsin
+    SHOW_SYNC_BUTTON = False 
 
-                def logger(m):
-                    log_msgs.append(f"> {m}")
-                    log_ph.markdown(
-                        f'<div style="font-size:12px; font-family:monospace; color:#cbd5e1;">{"<br>".join(log_msgs)}</div>',
-                        unsafe_allow_html=True)
+    if SHOW_SYNC_BUTTON:
+        col_btn1, col_btn2 = st.columns([3, 1])
+        with col_btn2:
+            if st.button("SİSTEMİ SENKRONİZE ET ⚡", type="primary", use_container_width=True):
+                with st.status("🚀 Veri Akışı Sağlanıyor...", expanded=True) as status:
+                    st.write("📡 Uzak sunucu ile el sıkışılıyor...")
+                    log_ph = st.empty();
+                    log_msgs = []
 
-                res = html_isleyici(logger)
-                status.update(label="✅ Senkronizasyon Başarıyla Tamamlandı!", state="complete", expanded=False)
-            
-            if "OK" in res:
-                st.cache_data.clear()
-                st.toast('Sistem Senkronize Edildi!', icon='🚀') 
-                st.balloons() 
-                time.sleep(1);
-                st.rerun()
-            elif "Veri bulunamadı" in res:
-                st.warning("⚠️ Yeni veri akışı yok.")
-            else:
-                st.error(res)
+                    def logger(m):
+                        log_msgs.append(f"> {m}")
+                        log_ph.markdown(
+                            f'<div style="font-size:12px; font-family:monospace; color:#cbd5e1;">{"<br>".join(log_msgs)}</div>',
+                            unsafe_allow_html=True)
+
+                    res = html_isleyici(logger)
+                    status.update(label="✅ Senkronizasyon Başarıyla Tamamlandı!", state="complete", expanded=False)
+                
+                if "OK" in res:
+                    st.cache_data.clear()
+                    st.toast('Sistem Senkronize Edildi!', icon='🚀') 
+                    st.balloons() 
+                    time.sleep(1);
+                    st.rerun()
+                elif "Veri bulunamadı" in res:
+                    st.warning("⚠️ Yeni veri akışı yok.")
+                else:
+                    st.error(res)
+    else:
+        # Buton gizliyken arayüzde boşluk kalmaması için küçük bir ayırıcı veya boş geçiş
+        st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # 4. HESAPLAMA MOTORU
     if not df_f.empty and not df_s.empty:
@@ -1531,3 +1538,4 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
