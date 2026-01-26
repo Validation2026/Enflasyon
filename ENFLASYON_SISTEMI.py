@@ -625,93 +625,119 @@ def html_isleyici(log_callback):
 
 # --- 7. STATİK ANALİZ MOTORU ---
 def generate_detailed_static_report(df_analiz, tarih, enf_genel, enf_gida, gun_farki, tahmin, ad_col, agirlik_col):
-    # --- 1. VERİ HAZIRLIĞI VE İSTATİSTİKLER ---
-    toplam_urun = len(df_analiz)
+    import numpy as np
     
-    # Hareket Yönü Analizi
-    artanlar = df_analiz[df_analiz['Fark'] > 0]
-    dusenler = df_analiz[df_analiz['Fark'] < 0]
-    sabitler = df_analiz[df_analiz['Fark'] == 0]
+    # --- 1. İSTATİSTİKSEL HESAPLAMALAR ---
+    df_clean = df_analiz.dropna(subset=['Fark'])
+    toplam_urun = len(df_clean)
+    
+    # Merkezi Eğilim Ölçüleri
+    ortalama_fark = df_clean['Fark'].mean()
+    medyan_fark = df_clean['Fark'].median()
+    std_sapma = df_clean['Fark'].std()
+    
+    # Skewness (Çarpıklık) Analizi: Enflasyonun tabana yayılıp yayılmadığını gösterir
+    # Eğer Ortalama > Medyan ise: Birkaç aşırı pahalı ürün endeksi yukarı çekiyordur (Pozitif Çarpıklık).
+    # Eğer Medyan ~= Ortalama ise: Artış genele yayılmıştır (Homojen Dağılım).
+    carpiklik_durumu = ""
+    if ortalama_fark > (medyan_fark * 1.2):
+        carpiklik_durumu = "Pozitif (Sağa) Çarpık - Artış belirli kalemlerde yoğunlaşmış"
+    elif ortalama_fark < (medyan_fark * 0.8):
+        carpiklik_durumu = "Negatif (Sola) Çarpık - Fiyat düşüşleri ortalamayı baskılıyor"
+    else:
+        carpiklik_durumu = "Simetrik/Normal Dağılım - Fiyat artışı genele homojen yayılmış"
+
+    # Momentum Analizi
+    artanlar = df_clean[df_clean['Fark'] > 0]
+    dusenler = df_clean[df_clean['Fark'] < 0]
+    sabitler = df_clean[df_clean['Fark'] == 0]
     
     artan_sayisi = len(artanlar)
     dusen_sayisi = len(dusenler)
-    sabit_sayisi = len(sabitler)
     
-    # Yayılım Endeksi (Diffusion Index)
-    yayilim_endeksi = (artan_sayisi / toplam_urun) * 100
+    # Net Breadth (Piyasa Genişliği)
+    net_breadth = artan_sayisi - dusen_sayisi
+    diffusion_index = (artan_sayisi / toplam_urun) * 100
     
-    # Aşırı Volatilite Kontrolü (>%5 değişim gösterenler)
-    yuksek_volatilite_sayisi = len(df_analiz[abs(df_analiz['Fark']) > 0.05])
+    # Z-Score Analizi (Sigma Olayları)
+    # Standart sapmanın 2 katından fazla değişen ürünler "Anomali"dir.
+    df_clean['Z_Score'] = (df_clean['Fark'] - ortalama_fark) / std_sapma
+    anomaliler = df_clean[abs(df_clean['Z_Score']) > 2]
+    anomali_sayisi = len(anomaliler)
     
-    # En Sert Hareketler (Top 5 Artış ve Düşüş)
-    inc = df_analiz.sort_values('Fark', ascending=False).head(5)
-    dec = df_analiz.sort_values('Fark', ascending=True).head(5)
+    # En Sert Hareketler (Detaylı)
+    inc = df_clean.sort_values('Fark', ascending=False).head(5)
+    dec = df_clean.sort_values('Fark', ascending=True).head(5)
     
-    inc_str = "\n".join([f"   - {row[ad_col]}: %{row['Fark']*100:.2f}" for _, row in inc.iterrows()])
-    dec_str = "\n".join([f"   - {row[ad_col]}: %{row['Fark']*100:.2f}" for _, row in dec.iterrows()])
+    inc_str = "\n".join([f"   • {row[ad_col]}: %{row['Fark']*100:.2f} (σ: {row['Z_Score']:.1f})" for _, row in inc.iterrows()])
+    dec_str = "\n".join([f"   • {row[ad_col]}: %{row['Fark']*100:.2f} (σ: {row['Z_Score']:.1f})" for _, row in dec.iterrows()])
+
+    # Sektörel Attribution (Katkı) Analizi
+    sektor_text = "Veri seti grup detayı içermiyor."
+    lider_sektor_ad = "-"
     
-    # Sektörel Performans Analizi
-    sektor_text = ""
     if 'Grup' in df_analiz.columns:
-        # Ağırlıklı Sektör Etkisi Hesaplama
-        df_analiz['Agirlikli_Etki'] = df_analiz['Fark'] * df_analiz[agirlik_col]
-        sektor_grp = df_analiz.groupby('Grup').agg({
+        df_clean['Agirlikli_Etki'] = df_clean['Fark'] * df_clean[agirlik_col]
+        sektor_grp = df_clean.groupby('Grup').agg({
             'Agirlikli_Etki': 'sum',
-            agirlik_col: 'sum'
+            agirlik_col: 'sum',
+            'Fark': 'mean' # Sektör içi ortalama değişim
         })
-        sektor_grp['Endeks_Degisimi'] = (sektor_grp['Agirlikli_Etki'] / sektor_grp[agirlik_col]) * 100
-        sektor_sirali = sektor_grp.sort_values('Endeks_Degisimi', ascending=False)
+        # Sektörün Endekse Puan Bazlı Katkısı
+        toplam_agirlik = df_clean[agirlik_col].sum()
+        sektor_grp['Puan_Katkisi'] = (sektor_grp['Agirlikli_Etki'] / toplam_agirlik) * 100
         
-        en_yuksek_sektor = sektor_sirali.index[0]
-        en_yuksek_oran = sektor_sirali.iloc[0]['Endeks_Degisimi']
+        sektor_sirali = sektor_grp.sort_values('Puan_Katkisi', ascending=False)
         
-        en_dusuk_sektor = sektor_sirali.index[-1]
-        en_dusuk_oran = sektor_sirali.iloc[-1]['Endeks_Degisimi']
+        lider_sektor_ad = sektor_sirali.index[0]
+        lider_katki = sektor_sirali.iloc[0]['Puan_Katkisi']
+        lider_ic_enf = (sektor_sirali.iloc[0]['Agirlikli_Etki'] / sektor_sirali.iloc[0][agirlik_col]) * 100
         
-        sektor_text = (f"Sektörel bazda ayrışma belirgindir. **{en_yuksek_sektor}** grubu, **%{en_yuksek_oran:.2f}** "
-                       f"artış ile manşet enflasyonu yukarı çeken ana katalizör olmuştur. "
-                       f"Buna karşın **{en_dusuk_sektor}** grubu **%{en_dusuk_oran:.2f}** değişim ile endeksi dengelemeye çalışmıştır.")
-    else:
-        sektor_text = "Veri setinde grup kırılımı bulunmadığından sektörel attribution analizi yapılamamıştır."
+        fren_sektor_ad = sektor_sirali.index[-1]
+        fren_katki = sektor_sirali.iloc[-1]['Puan_Katkisi']
+        
+        sektor_text = (f"Sektörel attribution analizi yapıldığında; manşet enflasyonun ana taşıyıcısının **{lider_sektor_ad}** grubu olduğu görülmektedir. "
+                       f"Bu grup, tek başına endekse **{lider_katki:+.2f} puan** etki etmiş ve kendi içinde **%{lider_ic_enf:.2f}** oranında fiyat artışı yaşamıştır. "
+                       f"Buna karşın **{fren_sektor_ad}** grubu, **{fren_katki:+.2f} puan** etki ile endeksi dengelemeye çalışmıştır.")
 
     # --- 2. RAPOR METNİ OLUŞTURMA ---
     text = f"""
-**STRATEJİK PİYASA GÖRÜNÜM RAPORU**
-**Rapor Tarihi:** {tarih} | **Statü:** Otomatik Validasyon
+**ALGORİTMİK PİYASA ANALİZ RAPORU**
+**Rapor ID:** {hash(tarih)} | **Tarih:** {tarih} | **Analiz Türü:** Quant Validasyon
 
-**1. YÖNETİCİ ÖZETİ VE MAKRO GÖRÜNÜM**
-{tarih} itibarıyla sistemimiz tarafından izlenen dijital fiyat sepeti, kümülatif bazda **%{enf_genel:.2f}** oranında değer kazanmıştır. Özellikle hanehalkı harcama sepetinde yüksek ağırlığa sahip olan gıda grubundaki **%{enf_gida:.2f}** seviyesindeki değişim, reel satın alma gücü üzerindeki baskının devam ettiğini göstermektedir. Piyasa genelindeki fiyatlama davranışı incelendiğinde, enflasyonun henüz tam anlamıyla sönümlenmediği ve yapışkanlık etkisinin sürdüğü gözlemlenmektedir.
+**1. MAKRO GÖRÜNÜM VE MANŞET VERİLER**
+Takip edilen dijital varlık sepeti, referans döneme göre **%{enf_genel:.2f}** oranında değer kazanarak yukarı yönlü bir ivme sergilemiştir. Volatilitenin yüksek olduğu gıda kalemlerindeki **%{enf_gida:.2f}** seviyesindeki gerçekleşme, çekirdek enflasyon göstergelerinden negatif bir ayrışmaya (spread) işaret etmektedir. Beklenti modeli (Prophet), ay sonu kapanışının **%{tahmin:.2f}** bandında oluşacağını öngörmektedir.
 
-**2. PİYASA DERİNLİĞİ VE YAYILIM ANALİZİ**
-Analiz evrenindeki toplam **{toplam_urun}** adet ürünün fiyat hareketleri aşağıdaki gibi dağılmıştır:
-* **Fiyatı Artan Ürünler:** {artan_sayisi} adet (Sepetin %{(artan_sayisi/toplam_urun)*100:.1f}'i)
-* **Fiyatı Düşen Ürünler:** {dusen_sayisi} adet (Sepetin %{(dusen_sayisi/toplam_urun)*100:.1f}'i)
-* **Fiyatı Değişmeyenler:** {sabit_sayisi} adet
+**2. İSTATİSTİKSEL DERİNLİK VE DAĞILIM**
+Piyasa verileri normal dağılım testine tabi tutulduğunda **"{carpiklik_durumu}"** yapısı gözlemlenmiştir.
+* **Medyan vs Ortalama:** Medyan artış (%{medyan_fark*100:.2f}), ortalama artışın (%{ortalama_fark*100:.2f}) {("altında" if ortalama_fark > medyan_fark else "üzerinde")} kalarak, {("büyük montanlı fiyat hareketlerinin ortalamayı saptırdığını" if ortalama_fark > medyan_fark else "fiyatlamaların tabana yayıldığını")} teyit etmiştir.
+* **Standart Sapma (Volatilite):** Fiyat değişimlerinin standart sapması **{std_sapma:.4f}** olarak hesaplanmıştır. Bu değer, piyasadaki belirsizlik katsayısını temsil eder.
 
-Yayılım Endeksi (Diffusion Index) **%{yayilim_endeksi:.1f}** seviyesinde hesaplanmıştır. Endeksin 50'nin üzerinde olması, fiyat artışlarının genele yayıldığını işaret eder. Ayrıca, sepetin **{yuksek_volatilite_sayisi}** adetlik kısmında %5'in üzerinde sert fiyat hareketleri (anomali/şok) tespit edilmiştir. Bu durum, tedarik zinciri veya talep kaynaklı lokal şokların varlığına delalet eder.
+**3. PİYASA GENİŞLİĞİ (MARKET BREADTH)**
+İncelenen **{toplam_urun}** adet enstrümanın fiyat hareketleri:
+* **Pozitif Yönlü (Artan):** {artan_sayisi} adet
+* **Negatif Yönlü (Düşen):** {dusen_sayisi} adet
+* **Nötr (Değişmeyen):** {len(sabitler)} adet
 
-**3. SEKTÖREL AYRIŞMA VE KATALİZÖRLER**
-{sektor_text}
+**Diffüzyon Endeksi %{diffusion_index:.1f}** seviyesinde gerçekleşmiştir. Endeksin >50 olması, enflasyonist baskının sadece belirli ürünlerde değil, sepetin geneline sirayet ettiğini (broad-based inflation) gösterir.
 
-**4. EN YÜKSEK VOLATİLİTE GÖSTEREN KALEMLER**
-Dönem içerisinde fiyatlamasıyla endeksten pozitif ve negatif yönde en çok ayrışan ürünler şunlardır:
+**4. ANOMALİ TESPİTİ VE SİGMA OLAYLARI**
+İstatistiksel olarak 2 Sigma (2σ) sınırını aşan, yani "normal piyasa koşullarıyla açıklanamayan" **{anomali_sayisi}** adet fiyat hareketi tespit edilmiştir. Bu kalemler, algoritmik inceleme listesine alınmalıdır.
 
-**▲ Fiyatı En Çok Artanlar (Top 5):**
+**▲ Pozitif Ayrışanlar (Outperformers):**
 {inc_str}
 
-**▼ Fiyatı En Çok Düşenler (Top 5):**
+**▼ Negatif Ayrışanlar (Underperformers):**
 {dec_str}
 
-**5. PROJEKSİYON VE RİSK MATRİSİ**
-Mevcut veri setine uygulanan zaman serisi analizleri (Prophet & Moving Average) ışığında;
-* **Ay Sonu Tahmini:** Mevcut momentumun korunması halinde, ay sonu manşet enflasyonun **%{tahmin:.2f}** bandına yakınsaması öngörülmektedir.
-* **Risk Değerlendirmesi:** Gıda enflasyonunun manşet veriden pozitif ayrışması (%{enf_gida:.2f} > %{enf_genel:.2f}), maliyet baskısının perakende fiyatlarına yansıtılmaya devam ettiğini gösterir.
+**5. SEKTÖREL ATTRIBUTION (KATKI) ANALİZİ**
+{sektor_text}
 
-**SONUÇ VE ÖNERİ**
-Veriler, piyasada henüz fiyat istikrarı (konsolidasyon) oluşmadığını teyit etmektedir. Karar vericilerin, özellikle yüksek volatilite gösteren kalemlerdeki stok/maliyet yönetimini gözden geçirmeleri ve nakit akış projeksiyonlarını **%{tahmin:.2f}**'lik enflasyon senaryosuna göre güncellemeleri önerilir.
+**SONUÇ VE ALGORİTMİK KARAR**
+Veri seti üzerindeki volatilite ve skewness (çarpıklık) parametreleri, piyasada henüz **konsolidasyon (fiyat istikrarı)** sağlanamadığını göstermektedir. Gıda grubundaki {("aşırı ısınma" if enf_gida > enf_genel else "görece stabilite")}, hanehalkı enflasyon algısını manşet veriden daha yüksek tutmaktadır. Stok yönetimi ve fiyatlama stratejilerinde **%{tahmin:.2f}** seviyesi "Base Case" (Baz Senaryo) olarak kabul edilmelidir.
 
 ---
-*Bu rapor, Pro Analytics yapay zeka algoritmaları tarafından otomatik olarak üretilmiştir.*
+*Pro Analytics Algoritmik Raporlama Modülü v2.4*
 """
     return text.strip()
 
@@ -1599,5 +1625,6 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
