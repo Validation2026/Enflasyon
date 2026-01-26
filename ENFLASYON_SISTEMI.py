@@ -1018,7 +1018,7 @@ def dashboard_modu():
 
     # --- BUTON KONTROL PANELİ ---
     # Butonu göstermek istediğinde bu değeri True yapabilirsin
-    SHOW_SYNC_BUTTON = False 
+    SHOW_SYNC_BUTTON = True 
 
     if SHOW_SYNC_BUTTON:
         col_btn1, col_btn2 = st.columns([3, 1])
@@ -1682,3 +1682,4 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
