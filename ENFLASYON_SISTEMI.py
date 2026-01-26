@@ -1,5 +1,5 @@
 # GEREKLİ KÜTÜPHANELER:
-# pip install streamlit-lottie python-docx prophet plotly pandas xlsxwriter
+# pip install streamlit-lottie python-docx prophet plotly pandas xlsxwriter matplotlib
 
 import streamlit as st
 import pandas as pd
@@ -24,13 +24,14 @@ import math
 import random
 import html
 import numpy as np
+import matplotlib.pyplot as plt # Grafik çizimi için eklendi
+import matplotlib
 
 try:
     import xlsxwriter
 except ImportError:
     st.error("Lütfen 'pip install xlsxwriter' komutunu çalıştırın. Excel raporlama modülü için gereklidir.")
     
-# --- YENİ KÜTÜPHANELER ---
 try:
     from streamlit_lottie import st_lottie
 except ImportError:
@@ -51,7 +52,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS MOTORU (ULTRA PREMIUM FINTECH THEME - SHOW EDITION V2.4) ---
+# --- CSS MOTORU ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
@@ -72,7 +73,7 @@ def apply_theme():
             --card-radius: 16px;
         }}
 
-        /* --- LABEL RENKLERİ (BEYAZ) --- */
+        /* --- LABEL RENKLERİ --- */
         .stSelectbox label p, .stTextInput label p {{
             color: #ffffff !important;
             font-weight: 700 !important;
@@ -329,9 +330,12 @@ def load_lottieurl(url: str):
     except:
         return None
 
-# --- 3. WORD MOTORU ---
-def create_word_report(text_content, tarih):
+# --- 3. WORD MOTORU (GÜNCELLENMİŞ - GRAFİK DESTEKLİ) ---
+def create_word_report(text_content, tarih, df_analiz=None):
     doc = Document()
+    
+    # Matplotlib Ayarı (GUI hatası almamak için)
+    matplotlib.use('Agg')
     
     # Başlık Stili
     style = doc.styles['Normal']
@@ -364,6 +368,58 @@ def create_word_report(text_content, tarih):
             if i % 2 == 1: 
                 run.bold = True
                 run.font.color.rgb = RGBColor(0, 50, 100) 
+
+    # --- GRAFİK EKLEME BÖLÜMÜ ---
+    if df_analiz is not None and not df_analiz.empty:
+        doc.add_page_break()
+        doc.add_heading('EKLER: GÖRSEL ANALİZLER', 1)
+        doc.add_paragraph("")
+
+        try:
+            # 1. GRAFİK: FİYAT DAĞILIMI
+            fig, ax = plt.subplots(figsize=(6, 4))
+            data = df_analiz['Fark'].dropna() * 100
+            ax.hist(data, bins=20, color='#3b82f6', edgecolor='white', alpha=0.7)
+            ax.set_title(f"Fiyat Değişim Dağılımı (%) - {tarih}", fontsize=12, fontweight='bold')
+            ax.set_xlabel("Değişim Oranı (%)")
+            ax.set_ylabel("Ürün Sayısı")
+            ax.grid(axis='y', linestyle='--', alpha=0.5)
+            
+            # Kaydet ve Ekle
+            memfile = BytesIO()
+            plt.savefig(memfile, format='png', dpi=100)
+            doc.add_picture(memfile, width=Inches(5.5))
+            memfile.close()
+            plt.close()
+            
+            doc.add_paragraph("Grafik 1: Ürünlerin fiyat değişim oranlarına göre dağılımı.")
+            doc.add_paragraph("")
+
+            # 2. GRAFİK: SEKTÖREL DAĞILIM (VARSA)
+            if 'Grup' in df_analiz.columns and 'Agirlik_2025' in df_analiz.columns:
+                # Sektörel etkiyi hesapla
+                df_analiz['Agirlikli_Fark'] = df_analiz['Fark'] * df_analiz['Agirlik_2025']
+                sektor_grp = df_analiz.groupby('Grup')['Agirlikli_Fark'].sum().sort_values(ascending=False).head(7)
+                
+                if not sektor_grp.empty:
+                    fig, ax = plt.subplots(figsize=(7, 4))
+                    colors = ['#ef4444' if x > 0 else '#10b981' for x in sektor_grp.values]
+                    sektor_grp.plot(kind='barh', ax=ax, color=colors)
+                    ax.set_title("Enflasyona En Çok Etki Eden Sektörler (Puan)", fontsize=12, fontweight='bold')
+                    ax.set_xlabel("Puan Katkısı")
+                    ax.invert_yaxis() # En yükseği üste al
+                    plt.tight_layout()
+
+                    memfile2 = BytesIO()
+                    plt.savefig(memfile2, format='png', dpi=100)
+                    doc.add_picture(memfile2, width=Inches(6.0))
+                    memfile2.close()
+                    plt.close()
+                    
+                    doc.add_paragraph("Grafik 2: Genel endeks üzerinde en çok baskı oluşturan ana harcama grupları.")
+
+        except Exception as e:
+            doc.add_paragraph(f"[Grafik oluşturulurken teknik bir sorun oluştu: {str(e)}]")
 
     # Footer Ekle
     section = doc.sections[0]
@@ -962,7 +1018,7 @@ def dashboard_modu():
 
     # --- BUTON KONTROL PANELİ ---
     # Butonu göstermek istediğinde bu değeri True yapabilirsin
-    SHOW_SYNC_BUTTON = True 
+    SHOW_SYNC_BUTTON = False 
 
     if SHOW_SYNC_BUTTON:
         col_btn1, col_btn2 = st.columns([3, 1])
@@ -1609,7 +1665,7 @@ def dashboard_modu():
 
                     c_dl1, c_dl2 = st.columns([1, 4])
                     with c_dl1:
-                        word_buffer = create_word_report(rap_text, son)
+                        word_buffer = create_word_report(rap_text, son, df_analiz)
                         st.download_button(
                             label="📥 Rapor İndir ",
                             data=word_buffer,
