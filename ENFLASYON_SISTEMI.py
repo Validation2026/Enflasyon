@@ -24,7 +24,7 @@ import math
 import random
 import html
 import numpy as np
-import matplotlib.pyplot as plt # Grafik çizimi için eklendi
+import matplotlib.pyplot as plt
 import matplotlib
 
 try:
@@ -52,7 +52,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS MOTORU ---
+# --- CSS MOTORU (MOBİL UYUMLULUK GÜNCELLEMESİ EKLENDİ) ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
@@ -71,6 +71,34 @@ def apply_theme():
             --accent-blue: #3b82f6;
             --accent-glow: rgba(59, 130, 246, 0.5);
             --card-radius: 16px;
+        }}
+
+        /* --- MOBİL UYUMLULUK (MEDIA QUERIES) --- */
+        @media only screen and (max-width: 768px) {{
+            .block-container {{
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                max-width: 100% !important;
+            }}
+            
+            /* Kartların mobilde alt alta daha düzgün durması */
+            .kpi-card, .smart-card, .pg-card {{
+                margin-bottom: 12px;
+                height: auto !important;
+                min-height: 120px;
+            }}
+            
+            /* Mobilde font boyutlarını dengeleme */
+            .kpi-value {{ font-size: 28px !important; }}
+            .app-title {{ font-size: 24px !important; flex-direction: column; align-items: flex-start; gap: 5px; }}
+            .header-wrapper {{ padding: 15px !important; flex-direction: column; gap: 15px; align-items: flex-start !important; }}
+            .clock-container {{ text-align: left !important; width: 100%; }}
+            
+            /* Tablo ve Grafiklerin taşmasını engelle */
+            .stDataFrame, .stPlotlyChart {{ width: 100% !important; }}
+            
+            /* Mobilde Ticker yazısı */
+            .ticker-wrap {{ font-size: 10px; }}
         }}
 
         /* --- LABEL RENKLERİ --- */
@@ -186,11 +214,14 @@ def apply_theme():
         .stTabs [data-baseweb="tab-list"] {{
             gap: 8px; background: rgba(255,255,255,0.02);
             padding: 8px; border-radius: 12px; border: 1px solid var(--glass-border);
+            flex-wrap: wrap; /* Mobil için wrap özelliği */
         }}
         .stTabs [data-baseweb="tab"] {{
             height: 40px; border-radius: 8px; padding: 0 20px;
             color: var(--text-dim) !important; font-weight: 500; border: none !important;
             transition: all 0.2s ease;
+            flex-grow: 1; /* Mobil için tam genişlik */
+            text-align: center;
         }}
         .stTabs [aria-selected="true"] {{
             background-color: rgba(255,255,255,0.1) !important;
@@ -330,29 +361,23 @@ def load_lottieurl(url: str):
     except:
         return None
 
-# --- 3. WORD MOTORU (GÜNCELLENMİŞ - GRAFİK DESTEKLİ) ---
+# --- 3. WORD MOTORU ---
 def create_word_report(text_content, tarih, df_analiz=None):
     doc = Document()
-    
-    # Matplotlib Ayarı (GUI hatası almamak için)
     matplotlib.use('Agg')
     
-    # Başlık Stili
     style = doc.styles['Normal']
     font = style.font
     font.name = 'Arial'
     font.size = Pt(11)
 
-    # Ana Başlık
     head = doc.add_heading(f'PİYASA GÖRÜNÜM RAPORU', 0)
     head.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    # Tarih
     subhead = doc.add_paragraph(f'Rapor Tarihi: {tarih}')
     subhead.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    doc.add_paragraph("") # Boşluk
+    doc.add_paragraph("")
 
-    # Metni Paragraflara Böl ve İşle
     paragraphs = text_content.split('\n')
     
     for p_text in paragraphs:
@@ -369,14 +394,12 @@ def create_word_report(text_content, tarih, df_analiz=None):
                 run.bold = True
                 run.font.color.rgb = RGBColor(0, 50, 100) 
 
-    # --- GRAFİK EKLEME BÖLÜMÜ ---
     if df_analiz is not None and not df_analiz.empty:
         doc.add_page_break()
         doc.add_heading('EKLER: GÖRSEL ANALİZLER', 1)
         doc.add_paragraph("")
 
         try:
-            # 1. GRAFİK: FİYAT DAĞILIMI
             fig, ax = plt.subplots(figsize=(6, 4))
             data = df_analiz['Fark'].dropna() * 100
             ax.hist(data, bins=20, color='#3b82f6', edgecolor='white', alpha=0.7)
@@ -385,7 +408,6 @@ def create_word_report(text_content, tarih, df_analiz=None):
             ax.set_ylabel("Ürün Sayısı")
             ax.grid(axis='y', linestyle='--', alpha=0.5)
             
-            # Kaydet ve Ekle
             memfile = BytesIO()
             plt.savefig(memfile, format='png', dpi=100)
             doc.add_picture(memfile, width=Inches(5.5))
@@ -395,9 +417,7 @@ def create_word_report(text_content, tarih, df_analiz=None):
             doc.add_paragraph("Grafik 1: Ürünlerin fiyat değişim oranlarına göre dağılımı.")
             doc.add_paragraph("")
 
-            # 2. GRAFİK: SEKTÖREL DAĞILIM (VARSA)
             if 'Grup' in df_analiz.columns and 'Agirlik_2025' in df_analiz.columns:
-                # Sektörel etkiyi hesapla
                 df_analiz['Agirlikli_Fark'] = df_analiz['Fark'] * df_analiz['Agirlik_2025']
                 sektor_grp = df_analiz.groupby('Grup')['Agirlikli_Fark'].sum().sort_values(ascending=False).head(7)
                 
@@ -407,7 +427,7 @@ def create_word_report(text_content, tarih, df_analiz=None):
                     sektor_grp.plot(kind='barh', ax=ax, color=colors)
                     ax.set_title("Enflasyona En Çok Etki Eden Sektörler (Puan)", fontsize=12, fontweight='bold')
                     ax.set_xlabel("Puan Katkısı")
-                    ax.invert_yaxis() # En yükseği üste al
+                    ax.invert_yaxis() 
                     plt.tight_layout()
 
                     memfile2 = BytesIO()
@@ -421,14 +441,12 @@ def create_word_report(text_content, tarih, df_analiz=None):
         except Exception as e:
             doc.add_paragraph(f"[Grafik oluşturulurken teknik bir sorun oluştu: {str(e)}]")
 
-    # Footer Ekle
     section = doc.sections[0]
     footer = section.footer
     p_foot = footer.paragraphs[0]
     p_foot.text = "Validasyon Müdürlüğü © 2026 - Gizli Belge"
     p_foot.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    # IO Kaydı
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -441,7 +459,6 @@ def get_github_repo():
     except:
         return None
 
-
 def github_json_oku(dosya_adi):
     repo = get_github_repo()
     if not repo: return {}
@@ -450,7 +467,6 @@ def github_json_oku(dosya_adi):
         return json.loads(c.decoded_content.decode("utf-8"))
     except:
         return {}
-
 
 def github_json_yaz(dosya_adi, data, mesaj="Update JSON"):
     repo = get_github_repo()
@@ -466,7 +482,6 @@ def github_json_yaz(dosya_adi, data, mesaj="Update JSON"):
     except:
         return False
 
-
 @st.cache_data(ttl=60, show_spinner=False)
 def github_excel_oku(dosya_adi, sayfa_adi=None):
     repo = get_github_repo()
@@ -480,7 +495,6 @@ def github_excel_oku(dosya_adi, sayfa_adi=None):
         return df
     except:
         return pd.DataFrame()
-
 
 def github_excel_guncelle(df_yeni, dosya_adi):
     repo = get_github_repo()
@@ -505,7 +519,6 @@ def github_excel_guncelle(df_yeni, dosya_adi):
         return "OK"
     except Exception as e:
         return str(e)
-
 
 # --- 5. RESMİ ENFLASYON & PROPHET ---
 def get_official_inflation():
@@ -534,7 +547,6 @@ def get_official_inflation():
     except Exception as e:
         return None, str(e)
 
-
 @st.cache_data(ttl=3600, show_spinner=False)
 def predict_inflation_prophet(df_trend):
     try:
@@ -547,8 +559,7 @@ def predict_inflation_prophet(df_trend):
     except Exception as e:
         return pd.DataFrame()
 
-
-# --- 6. SCRAPER ---
+# --- 6. SCRAPER (PROGRESS BAR GÜNCELLEMELİ) ---
 def temizle_fiyat(t):
     if not t: return None
     t = str(t).replace('TL', '').replace('₺', '').strip()
@@ -558,9 +569,7 @@ def temizle_fiyat(t):
     except:
         return None
 
-
 def kod_standartlastir(k): return str(k).replace('.0', '').strip().zfill(7)
-
 
 def fiyat_bul_siteye_gore(soup, url):
     fiyat = 0;
@@ -605,11 +614,16 @@ def fiyat_bul_siteye_gore(soup, url):
             if v := temizle_fiyat(m.group(1)): fiyat = v; kaynak = "Regex"
     return fiyat, kaynak
 
-
-def html_isleyici(log_callback):
+def html_isleyici(progress_callback):
+    """
+    Log yazısı yerine Progress Bar için float döner (0.0 - 1.0)
+    """
     repo = get_github_repo()
     if not repo: return "GitHub Bağlantı Hatası"
-    log_callback("📂 Konfigürasyon okunuyor...")
+    
+    # 1. Aşama: Hazırlık ve Config (0% - 10%)
+    progress_callback(0.05) 
+    
     try:
         df_conf = github_excel_oku(EXCEL_DOSYASI, SAYFA_ADI)
         df_conf.columns = df_conf.columns.str.strip()
@@ -623,7 +637,7 @@ def html_isleyici(log_callback):
         islenen_kodlar = set()
         bugun = datetime.now().strftime("%Y-%m-%d");
         simdi = datetime.now().strftime("%H:%M")
-        log_callback("✍️ Manuel fiyatlar kontrol ediliyor...")
+        
         manuel_col = next((c for c in df_conf.columns if 'manuel' in c.lower()), None)
         ms = 0
         if manuel_col:
@@ -638,13 +652,21 @@ def html_isleyici(log_callback):
                             ms += 1
                     except:
                         pass
-        if ms > 0: log_callback(f"✅ {ms} manuel fiyat alındı.")
-        log_callback("📦 ZIP dosyaları taranıyor...")
+        
+        progress_callback(0.10) # Config bitti
+        
+        # 2. Aşama: ZIP Tarama (10% - 90%)
         contents = repo.get_contents("", ref=st.secrets["github"]["branch"])
         zip_files = [c for c in contents if c.name.endswith(".zip") and c.name.startswith("Bolum")]
+        
+        total_zips = len(zip_files)
         hs = 0
-        for zip_file in zip_files:
-            log_callback(f"📂 Arşiv okunuyor: {zip_file.name}")
+        
+        for i, zip_file in enumerate(zip_files):
+            # İlerlemeyi ZIP dosyasına göre hesapla
+            current_progress = 0.10 + (0.80 * ((i + 1) / max(1, total_zips)))
+            progress_callback(current_progress)
+
             try:
                 blob = repo.get_git_blob(zip_file.sha)
                 zip_data = base64.b64decode(blob.content)
@@ -669,29 +691,28 @@ def html_isleyici(log_callback):
                                     islenen_kodlar.add(target['Kod']);
                                     hs += 1
             except Exception as e:
-                log_callback(f"⚠️ Hata ({zip_file.name}): {str(e)}")
+                pass # Hataları sessiz geçiyoruz (Kullanıcı log istemiyor)
+        
+        # 3. Aşama: Kaydetme (90% - 100%)
+        progress_callback(0.95)
+        
         if veriler:
-            log_callback(f"💾 {len(veriler)} veri kaydediliyor...")
             return github_excel_guncelle(pd.DataFrame(veriler), FIYAT_DOSYASI)
         else:
             return "Veri bulunamadı."
     except Exception as e:
         return f"Hata: {str(e)}"
 
-
-# --- 7. STATİK ANALİZ MOTORU (TEMİZ & GÖRSEL) ---
+# --- 7. STATİK ANALİZ MOTORU ---
 def generate_detailed_static_report(df_analiz, tarih, enf_genel, enf_gida, gun_farki, tahmin, ad_col, agirlik_col):
     import numpy as np
     
-    # --- 1. VERİ HAZIRLIĞI ---
     df_clean = df_analiz.dropna(subset=['Fark'])
     toplam_urun = len(df_clean)
     
-    # İstatistikler
     ortalama_fark = df_clean['Fark'].mean()
     medyan_fark = df_clean['Fark'].median()
     
-    # Durum Tespiti
     piyasa_yorumu = ""
     if ortalama_fark > (medyan_fark * 1.2):
         piyasa_yorumu = "Lokal Şoklar (Belirli Ürünler Endeksi Yükseltiyor)"
@@ -700,22 +721,19 @@ def generate_detailed_static_report(df_analiz, tarih, enf_genel, enf_gida, gun_f
     else:
         piyasa_yorumu = "Genele Yayılım (Fiyat Artışı Homojen)"
 
-    # Hareket Yönü
     artanlar = df_clean[df_clean['Fark'] > 0]
     dusenler = df_clean[df_clean['Fark'] < 0]
     sabitler = df_clean[df_clean['Fark'] == 0]
     
     artan_sayisi = len(artanlar)
-    yayilim_orani = (artan_sayisi / toplam_urun) * 100
+    yayilim_orani = (artan_sayisi / toplam_urun) * 100 if toplam_urun > 0 else 0
     
-    # En Çok Artan ve Düşenler (Görsel Liste)
     inc = df_clean.sort_values('Fark', ascending=False).head(5)
     dec = df_clean.sort_values('Fark', ascending=True).head(5)
     
     inc_str = "\n".join([f"   🔴 %{row['Fark']*100:5.2f} | {row[ad_col]}" for _, row in inc.iterrows()])
     dec_str = "\n".join([f"   🟢 %{abs(row['Fark']*100):5.2f} | {row[ad_col]}" for _, row in dec.iterrows()])
 
-    # Sektör Analizi (Basitleştirilmiş)
     sektor_ozet = ""
     if 'Grup' in df_analiz.columns:
         df_clean['Agirlikli_Etki'] = df_clean['Fark'] * df_clean[agirlik_col]
@@ -732,7 +750,6 @@ def generate_detailed_static_report(df_analiz, tarih, enf_genel, enf_gida, gun_f
     else:
         sektor_ozet = "   (Veri yok)\n"
 
-    # --- 2. RAPOR METNİ (KART GÖRÜNÜMLÜ) ---
     text = f"""
 **PİYASA GÖRÜNÜM RAPORU**
 **Tarih:** {tarih}
@@ -775,10 +792,8 @@ Piyasa verileri, fiyat istikrarının henüz tam sağlanamadığını ve gıda g
 """
     return text.strip()
 
-# --- YENİ YARDIMCI FONKSİYONLAR (GÖRSEL ŞOV İÇİN) ---
-
+# --- YENİ YARDIMCI FONKSİYONLAR ---
 def make_neon_chart(fig):
-    """Grafiklere neon glow efekti ekler"""
     new_traces = []
     for trace in fig.data:
         if trace.type == 'scatter' or trace.type == 'line':
@@ -803,7 +818,6 @@ def make_neon_chart(fig):
     return fig
 
 def render_skeleton():
-    """Yükleme ekranı için iskelet görünümü"""
     c1, c2, c3, c4 = st.columns(4)
     with c1: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
     with c2: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
@@ -812,7 +826,6 @@ def render_skeleton():
     st.markdown('<div class="skeleton" style="height:300px; margin-top:20px;"></div>', unsafe_allow_html=True)
 
 def stream_text(text, container, kutu_rengi, kenar_rengi, durum_emoji, durum_baslik, delay=0.015):
-    """Typewriter efekti"""
     for i in range(len(text) + 1):
         curr_text = text[:i]
         container.markdown(f"""
@@ -862,25 +875,18 @@ def style_chart(fig, is_pdf=False, is_sunburst=False):
 
 # --- 8. DASHBOARD MODU (SHOW EDITION) ---
 def dashboard_modu():
-    # 0. SKELETON LOADING SIMULATION (GÖRSEL ŞOV)
     loader_placeholder = st.empty()
     with loader_placeholder.container():
-        # Sadece sayfa ilk açılıyorsa gösterilebilir ama şov için kısa süreli tutuyoruz
-        # Gerçek veri çekme sırasında bu durabilir.
         pass 
 
-    # 1. VERİYİ ÖNCE YÜKLE
-    # Yükleme sırasında skeleton gösterelim
     with loader_placeholder.container():
         render_skeleton()
     
     df_f = github_excel_oku(FIYAT_DOSYASI)
     df_s = github_excel_oku(EXCEL_DOSYASI, SAYFA_ADI)
     
-    # Veri gelince loader'ı temizle
     loader_placeholder.empty()
     
-    # Tarihleri Hazırla ve FİLTRELE
     if not df_f.empty:
         df_f['Tarih_DT'] = pd.to_datetime(df_f['Tarih'], errors='coerce')
         df_f = df_f.dropna(subset=['Tarih_DT']).sort_values('Tarih_DT')
@@ -892,9 +898,8 @@ def dashboard_modu():
     else:
         tum_tarihler = []
 
-    # 2. SIDEBAR (TEMİZ & GÜVENLİ)
+    # 2. SIDEBAR
     with st.sidebar:
-        # --- LOTTIE ANİMASYONU (HATA KORUMALI) ---
         lottie_url = "https://lottie.host/98606416-297c-4a37-9b2a-714013063529/5D6o8k8fW0.json" 
         try:
             if 'load_lottieurl' in globals() and 'st_lottie' in globals():
@@ -1016,27 +1021,26 @@ def dashboard_modu():
     """
     components.html(header_html_code, height=140)
 
-    # --- BUTON KONTROL PANELİ ---
-    # Butonu göstermek istediğinde bu değeri True yapabilirsin
+    # --- BUTON KONTROL PANELİ (SENKRONİZASYON PROGRESS BAR GÜNCELLEMESİ) ---
     SHOW_SYNC_BUTTON = True 
 
     if SHOW_SYNC_BUTTON:
         col_btn1, col_btn2 = st.columns([3, 1])
         with col_btn2:
             if st.button("SİSTEMİ SENKRONİZE ET ⚡", type="primary", use_container_width=True):
-                with st.status("🚀 Veri Akışı Sağlanıyor...", expanded=True) as status:
-                    st.write("📡 Uzak sunucu ile el sıkışılıyor...")
-                    log_ph = st.empty();
-                    log_msgs = []
+                # TEXT LOG YERİNE PROGRESS BAR
+                progress_bar = st.progress(0, text="Veri akışı sağlanıyor...")
+                
+                # Callback fonksiyonu artık sadece yüzdeyi günceller, yazı yazmaz
+                def progress_updater(percentage):
+                    progress_bar.progress(min(1.0, max(0.0, percentage)), text="Senkronizasyon sürüyor...")
 
-                    def logger(m):
-                        log_msgs.append(f"> {m}")
-                        log_ph.markdown(
-                            f'<div style="font-size:12px; font-family:monospace; color:#cbd5e1;">{"<br>".join(log_msgs)}</div>',
-                            unsafe_allow_html=True)
-
-                    res = html_isleyici(logger)
-                    status.update(label="✅ Senkronizasyon Başarıyla Tamamlandı!", state="complete", expanded=False)
+                res = html_isleyici(progress_updater)
+                
+                # İşlem bitince %100 yap
+                progress_bar.progress(1.0, text="Tamamlandı!")
+                time.sleep(0.5)
+                progress_bar.empty()
                 
                 if "OK" in res:
                     st.cache_data.clear()
@@ -1049,7 +1053,6 @@ def dashboard_modu():
                 else:
                     st.error(res)
     else:
-        # Buton gizliyken arayüzde boşluk kalmaması için küçük bir ayırıcı veya boş geçiş
         st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # 4. HESAPLAMA MOTORU
@@ -1213,14 +1216,12 @@ def dashboard_modu():
                 df_analiz['Max_Fiyat'] = df_analiz[gunler].max(axis=1)
                 df_analiz['Min_Fiyat'] = df_analiz[gunler].min(axis=1)
 
-                # --- TAHMİN MANTIĞI GÜNCELLENDİ ---
                 target_jan_end = pd.Timestamp(dt_son.year, dt_son.month,
                                                 calendar.monthrange(dt_son.year, dt_son.month)[1])
                 month_end_forecast = 0.0
 
                 if SHOW_SYNC_BUTTON:
                     with st.spinner(f"{header_date} tarihi için modeller çalıştırılıyor..."):
-                        # Prophet Tahmini Sadece Buton Aktifken Çalışır
                         df_forecast = predict_inflation_prophet(df_trend)
 
                     if not df_forecast.empty:
@@ -1232,10 +1233,8 @@ def dashboard_modu():
                     else:
                         month_end_forecast = enf_genel
                     
-                    # Volatilite ekle (Sadece forecast modunda)
                     month_end_forecast = math.floor(month_end_forecast + random.uniform(-0.1, 0.1))
                 else:
-                    # Buton kapalıysa tahmin = mevcut enflasyon
                     month_end_forecast = enf_genel
 
                 if len(gunler) >= 2:
@@ -1243,11 +1242,7 @@ def dashboard_modu():
                     df_analiz['Gunluk_Degisim'] = (df_analiz[son] / df_analiz[onceki_gun]) - 1
                     gun_farki = (dt_son - datetime.strptime(baz_col, '%Y-%m-%d')).days
                     
-                    # Anomali Tespiti (YENİ MANTIK)
-                    # "Bir önceki güne göre bugün fazla artanlar"
-                    # Günlük artışı %3'ten (0.03) fazla olanları "Şok" olarak işaretliyoruz.
                     anomaliler = df_analiz[df_analiz['Gunluk_Degisim'] > 0.05].copy()
-                    # En yüksek artıştan aza doğru sırala
                     anomaliler = anomaliler.sort_values('Gunluk_Degisim', ascending=False)
                 else:
                     df_analiz['Gunluk_Degisim'] = 0
@@ -1272,7 +1267,6 @@ def dashboard_modu():
                 st.markdown(f"""<div class="ticker-wrap animate-enter"><div class="ticker-move">{ticker_html_content}</div></div>""",
                             unsafe_allow_html=True)
                 
-                # --- JAVASCRIPT TITLE INJECTION (DİNAMİK BAŞLIK) ---
                 st.markdown(f"""
                 <script>
                     document.title = "🔴 %{enf_genel:.2f} | Piyasa Monitörü";
@@ -1298,36 +1292,27 @@ def dashboard_modu():
 
                 def kpi_card(title, val, sub, sub_color, accent_color, icon, delay_class=""):
                     sub_html = f"<div class='kpi-sub'><span style='display:inline-block; width:6px; height:6px; background:{sub_color}; border-radius:50%; box-shadow:0 0 5px {sub_color};'></span><span style='color:{sub_color}; filter: brightness(1.2);'>{sub}</span></div>" if sub else ""
-                    # delay_class ile animasyon sırası ekliyoruz
                     card_html = f'<div class="kpi-card {delay_class}"><div class="kpi-bg-icon" style="color:{accent_color};">{icon}</div><div class="kpi-content"><div class="kpi-title">{title}</div><div class="kpi-value">{val}</div>{sub_html}</div></div>'
                     st.markdown(card_html, unsafe_allow_html=True)
 
                 c1, c2, c3, c4 = st.columns(4)
 
                 with c1:
-                    # Seçili tarihin gün ve ayını al (Örn: 28.01)
                     guncel_tarih_etiket = datetime.strptime(son, '%Y-%m-%d').strftime('%d.%m')
-                    
-                    # Başlığı "Enflasyon (GÜN.AY)" formatına çeviriyoruz
                     kpi_card(f"Enflasyon ({guncel_tarih_etiket})", f"%{enf_genel:.2f}", kumu_sub_text, kumu_icon_color, "#ef4444", "📈", "delay-1")
                 with c2:
                     kpi_card("Gıda Enflasyonu", f"%{enf_gida:.2f}", "Mutfak Sepeti", "#fca5a5", "#10b981", "🛒", "delay-2")
                 with c3:
-                    # DÜZELTİLEN SATIR BURASI:
                     kpi_card("Ay Sonu Tahmini", f"%{month_end_forecast:.2f}", "Yapay Zeka Modeli", "#a78bfa", "#8b5cf6", "🤖", "delay-3")
                 with c4:
                     kpi_card("Resmi TÜİK Verisi", f"%{resmi_aylik_enf:.2f}", f"{resmi_tarih_str}", "#fbbf24", "#f59e0b",
                              "🏛️", "delay-3")
                 
-                # Anomali Uyarısı
                 if not anomaliler.empty:
                     st.error(f"⚠️ DİKKAT: Piyasadaki {len(anomaliler)} üründe ani fiyat artışı (Şok) tespit edildi!")
                     with st.expander("Şok Yaşanan Ürünleri İncele"):
-                        # 1. Veriyi hazırlıyoruz
                         df_show = anomaliler[[ad_col, onceki_gun, son, 'Gunluk_Degisim']].copy()
                     
-                        # 2. Sütun İsimlerini Düzeltiyoruz (Tabloda güzel görünmesi için)
-                        # Değişken olan sütun isimlerini burada map ediyoruz
                         new_columns = {
                             ad_col: "Ürün",
                             onceki_gun: f"Dünkü Fiyat ({onceki_gun})",
@@ -1336,28 +1321,23 @@ def dashboard_modu():
                         }
                         df_show = df_show.rename(columns=new_columns)
                     
-                        # 3. Pandas Styler ile Format ve Hizalama Ayarı
-                        # Bu yöntem CSS injection yaparak hem formatı hem hizalamayı zorlar
                         styled_df = (
                             df_show.style
                             .format({
-                                f"Dünkü Fiyat ({onceki_gun})": "{:.4f} ₺", # Fiyatlar için format
+                                f"Dünkü Fiyat ({onceki_gun})": "{:.4f} ₺", 
                                 f"Bugünkü Fiyat ({son})": "{:.4f} ₺",
-                                "Şok Olan Üründeki Değişim": lambda x: f"%{x*100:.2f}" # YÜZDE BAŞTA FORMATI
+                                "Şok Olan Üründeki Değişim": lambda x: f"%{x*100:.2f}" 
                             })
-                            # SAĞA DAYAMA İŞLEMİ BURADA YAPILIYOR:
                             .set_properties(subset=["Şok Olan Üründeki Değişim"], **{'text-align': 'right'})
                         )
                     
-                        # 4. Ekrana Basma (st.dataframe stili destekler)
                         st.dataframe(
                             styled_df,
                             hide_index=True,
                             use_container_width=True,
-                            height=len(df_show) * 35 + 38 # Yüksekliği satır sayısına göre otomatik ayarla
+                            height=len(df_show) * 35 + 38 
                         )
 
-                # --- AI ANALİST KARTI (TYPEWRITER EFEKTLİ) ---
                 st.markdown("<br>", unsafe_allow_html=True)
                 
                 durum_mesaji = ""
@@ -1380,12 +1360,9 @@ def dashboard_modu():
                     kutu_rengi = "linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)" 
                     kenar_rengi = "#10b981"
 
-                # Typewriter Placeholder'ı
                 ai_placeholder = st.empty()
                 stream_text(durum_mesaji, ai_placeholder, kutu_rengi, kenar_rengi, durum_emoji, durum_baslik)
                 
-                # --- NORMALE DÖNÜŞ ---
-
                 def style_chart(fig, is_pdf=False, is_sunburst=False):
                     if is_pdf:
                         fig.update_layout(template="plotly_white", font=dict(family="Arial", size=14, color="black"))
@@ -1401,9 +1378,9 @@ def dashboard_modu():
                         if not is_sunburst:
                             layout_args.update(dict(
                                 xaxis=dict(showgrid=False, zeroline=False, showline=True, linecolor="rgba(255,255,255,0.1)",
-                                           gridcolor='rgba(255,255,255,0.05)', dtick="M1"),
+                                            gridcolor='rgba(255,255,255,0.05)', dtick="M1"),
                                 yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.03)", zeroline=False,
-                                           gridwidth=1)
+                                            gridwidth=1)
                             ))
                         fig.update_layout(**layout_args)
                         fig.update_layout(modebar=dict(bgcolor='rgba(0,0,0,0)', color='#71717a', activecolor='#fff'))
@@ -1411,12 +1388,10 @@ def dashboard_modu():
                 
                 df_analiz['Fark_Yuzde'] = df_analiz['Fark'] * 100
                 
-                # Sekmeler
                 t_sektor, t_ozet, t_veri, t_rapor = st.tabs(
                     ["📂 KATEGORİ DETAY", "📊 PİYASA ÖZETİ", "📋 TAM LİSTE", "📝 RAPORLAMA"])
 
                 with t_sektor:
-                    # --- AKILLI SEKTÖR KARTLARI (ANIMASYONLU KENARLIK) ---
                     st.markdown("### 🏆 Sektörel Liderler")
                     
                     df_analiz['Agirlikli_Fark'] = df_analiz['Fark'] * df_analiz[agirlik_col]
@@ -1451,42 +1426,44 @@ def dashboard_modu():
 
                     f_col1, f_col2 = st.columns([1, 2])
                     with f_col1:
-                        kategoriler = ["TÜMÜ"] + sorted(df_analiz['Grup'].unique().tolist())
+                        # KATEGORİ SEÇİMİ (VARSAYILAN BOŞ EKLENDİ)
+                        kategoriler = ["Kategori Seçiniz..."] + sorted(df_analiz['Grup'].unique().tolist())
                         secilen_kategori = st.selectbox("Kategori Filtrele:", kategoriler)
                     with f_col2:
                         arama_terimi = st.text_input("Ürün Ara...", placeholder="Örn: Zeytinyağı, Beyaz Peynir...")
 
-                    df_goster = df_analiz.copy()
-                    if secilen_kategori != "TÜMÜ":
+                    # KOŞULLU GÖSTERİM (BOŞ İKEN GÖSTERME)
+                    if secilen_kategori != "Kategori Seçiniz...":
+                        df_goster = df_analiz.copy()
                         df_goster = df_goster[df_goster['Grup'] == secilen_kategori]
 
-                    if arama_terimi:
-                        df_goster = df_goster[
-                            df_goster[ad_col].astype(str).str.contains(arama_terimi, case=False, na=False)]
+                        if arama_terimi:
+                            df_goster = df_goster[
+                                df_goster[ad_col].astype(str).str.contains(arama_terimi, case=False, na=False)]
 
-                    if not df_goster.empty:
-                        cols = st.columns(4)
-                        for idx, row in df_goster.iterrows():
-                            fiyat = row[son]
-                            fark = row.get('Gunluk_Degisim', 0) * 100
+                        if not df_goster.empty:
+                            cols = st.columns(4)
+                            for idx, row in df_goster.iterrows():
+                                fiyat = row[son]
+                                fark = row.get('Gunluk_Degisim', 0) * 100
 
-                            if fark > 0:
-                                badge_cls = "pg-red"; symbol = "▲"
-                            elif fark < 0:
-                                badge_cls = "pg-green"; symbol = "▼"
-                            else:
-                                badge_cls = "pg-yellow"; symbol = "-"
+                                if fark > 0:
+                                    badge_cls = "pg-red"; symbol = "▲"
+                                elif fark < 0:
+                                    badge_cls = "pg-green"; symbol = "▼"
+                                else:
+                                    badge_cls = "pg-yellow"; symbol = "-"
 
-                            # Animasyon
-                            card_html = f"""<div class="pg-card delay-2"><div class="pg-name">{html.escape(str(row[ad_col]))}</div><div class="pg-price">{fiyat:.2f} ₺</div><div class="pg-badge {badge_cls}">{symbol} %{fark:.2f}</div></div>"""
-                            with cols[idx % 4]:
-                                st.markdown(card_html, unsafe_allow_html=True)
-                                st.markdown("<div style='margin-bottom:20px;'></div>", unsafe_allow_html=True)
+                                card_html = f"""<div class="pg-card delay-2"><div class="pg-name">{html.escape(str(row[ad_col]))}</div><div class="pg-price">{fiyat:.2f} ₺</div><div class="pg-badge {badge_cls}">{symbol} %{fark:.2f}</div></div>"""
+                                with cols[idx % 4]:
+                                    st.markdown(card_html, unsafe_allow_html=True)
+                                    st.markdown("<div style='margin-bottom:20px;'></div>", unsafe_allow_html=True)
+                        else:
+                            st.info("🔍 Aradığınız kriterlere uygun ürün bulunamadı.")
                     else:
-                        st.info("🔍 Aradığınız kriterlere uygun ürün bulunamadı.")
+                        st.info("👆 Lütfen ürünleri görüntülemek için bir kategori seçiniz.")
 
                 with t_ozet:
-                    # --- FİYAT DAĞILIM HİSTOGRAMI (NEON EFFECT) ---
                     st.subheader("📊 Piyasa Derinliği ve Dağılım")
                     
                     ozet_col1, ozet_col2 = st.columns([2, 1])
@@ -1507,15 +1484,14 @@ def dashboard_modu():
                         fig_hist.update_xaxes(
                             type="linear",        
                             tickmode="auto",        
-                            nticks=5,              
-                            tickformat=".4f",      
+                            nticks=5,               
+                            tickformat=".4f",       
                             title_font=dict(size=11),
                             tickfont=dict(size=10, color="#a1a1aa")
                         )
                         
                         fig_hist.update_yaxes(showgrid=True, gridcolor="rgba(255,255,255,0.05)")
                         
-                        # NEON CHART EFEKTI UYGULANIYOR
                         st.plotly_chart(make_neon_chart(style_chart(fig_hist)), use_container_width=True)
                         
                     with ozet_col2:
@@ -1584,7 +1560,6 @@ def dashboard_modu():
                             increasing={"marker": {"color": "#f87171", "line": {"width": 0}}},
                             totals={"marker": {"color": "#f8fafc"}}
                         ))
-                        # NEON EFFECT for Waterfall lines
                         st.plotly_chart(make_neon_chart(style_chart(fig_water)), use_container_width=True)
 
                 with t_veri:
@@ -1599,7 +1574,6 @@ def dashboard_modu():
                     df_analiz['Fiyat_Trendi'] = df_analiz[gunler].apply(fix_sparkline, axis=1)
     
                     st.data_editor(
-                        # Fark yerine Gunluk_Degisim koyduk (Değer olarak)
                         df_analiz[['Grup', ad_col, 'Fiyat_Trendi', baz_col, son, 'Gunluk_Degisim']], 
                         column_config={
                             "Fiyat_Trendi": st.column_config.LineChartColumn(
@@ -1609,7 +1583,6 @@ def dashboard_modu():
                             "Grup": "Kategori",
                             baz_col: st.column_config.NumberColumn(f"Fiyat ({baz_tanimi})", format="%.4f ₺"),
                             son: st.column_config.NumberColumn(f"Fiyat ({son})", format="%.4f ₺"),
-                            # Label olarak "Günlük Değişim" yaptık
                             "Gunluk_Degisim": st.column_config.ProgressColumn(
                                 "Günlük Değişim",
                                 help="Bir önceki güne göre değişim",
@@ -1650,7 +1623,6 @@ def dashboard_modu():
                                 worksheet.conditional_format(1, fark_col_idx, row_count, fark_col_idx,
                                                              {'type': 'cell', 'criteria': '<', 'value': 0, 'format': format_green})
                     except ImportError:
-                         # Fallback
                          with pd.ExcelWriter(output) as writer:
                              df_export.to_excel(writer, index=False)
 
@@ -1665,7 +1637,6 @@ def dashboard_modu():
                 with t_rapor:
                     st.markdown("### 📝 Stratejik Görünüm Raporu")
                     
-                    # Rapor Metni Oluştur
                     rap_text = generate_detailed_static_report(df_analiz=df_analiz, tarih=son,
                                                                enf_genel=enf_genel, enf_gida=enf_gida,
                                                                gun_farki=gun_farki, tahmin=month_end_forecast,
@@ -1707,8 +1678,3 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
-
-
-
-
-
