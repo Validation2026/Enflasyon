@@ -1556,8 +1556,8 @@ def dashboard_modu():
                             ),
                             ad_col: "Ürün", 
                             "Grup": "Kategori",
-                            baz_col: st.column_config.NumberColumn(f"Fiyat ({baz_tanimi})", format="%.4f ₺"),
-                            son: st.column_config.NumberColumn(f"Fiyat ({son})", format="%.4f ₺"),
+                            baz_col: st.column_config.NumberColumn(f"Fiyat ({baz_tanimi})", format="%.2f ₺"),
+                            son: st.column_config.NumberColumn(f"Fiyat ({son})", format="%.2f ₺"),
                             "Gunluk_Degisim": st.column_config.ProgressColumn(
                                 "Günlük Değişim",
                                 help="Bir önceki güne göre değişim",
@@ -1653,5 +1653,6 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
