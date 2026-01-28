@@ -1537,6 +1537,8 @@ def dashboard_modu():
                     
                     def fix_sparkline(row):
                         vals = row.tolist()
+                        # Eğer tüm değerler aynıysa (örneğin hepsi 80), grafik hata vermesin diye
+                        # son değeri mikroskobik düzeyde değiştiriyoruz.
                         if vals and min(vals) == max(vals):
                             vals[-1] += 0.00001
                         return vals
@@ -1547,7 +1549,10 @@ def dashboard_modu():
                         df_analiz[['Grup', ad_col, 'Fiyat_Trendi', baz_col, son, 'Gunluk_Degisim']], 
                         column_config={
                             "Fiyat_Trendi": st.column_config.LineChartColumn(
-                                "Fiyat Grafiği", width="medium", help="Seçilen dönem içindeki fiyat hareketi"
+                                "Fiyat Grafiği", 
+                                width="medium", 
+                                help="Seçilen dönem içindeki fiyat hareketi",
+                                y_min=0  # <--- BURAYA BU SATIRI EKLEDİK (Grafiği 0'dan başlatır)
                             ),
                             ad_col: "Ürün", 
                             "Grup": "Kategori",
@@ -1648,4 +1653,5 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
 
