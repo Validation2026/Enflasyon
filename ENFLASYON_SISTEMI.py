@@ -1194,8 +1194,12 @@ def dashboard_modu():
                 df_analiz['Max_Fiyat'] = df_analiz[gunler].max(axis=1)
                 df_analiz['Min_Fiyat'] = df_analiz[gunler].min(axis=1)
 
-                target_jan_end = pd.Timestamp(dt_son.year, dt_son.month,
-                                                calendar.monthrange(dt_son.year, dt_son.month)[1])
+                # ESKİ KOD:
+                # target_jan_end = pd.Timestamp(dt_son.year, dt_son.month,
+                #                                 calendar.monthrange(dt_son.year, dt_son.month)[1])
+
+                # YENİ KOD (24 Ocak 2026 Hedefli):
+                target_prediction_date = pd.Timestamp("2026-01-24") 
                 month_end_forecast = 0.0
 
                 if SHOW_SYNC_BUTTON:
@@ -1203,14 +1207,18 @@ def dashboard_modu():
                         df_forecast = predict_inflation_prophet(df_trend)
 
                     if not df_forecast.empty:
-                        forecast_row = df_forecast[df_forecast['ds'] == target_jan_end]
+                        # Özel olarak 2026-01-24 tarihini arıyoruz
+                        forecast_row = df_forecast[df_forecast['ds'] == target_prediction_date]
+                        
                         if not forecast_row.empty:
                             month_end_forecast = forecast_row.iloc[0]['yhat'] - 100
                         else:
+                            # Eğer o tarih forecast içinde yoksa (örn: çok geçmişe bakılıyorsa) son tahmini al
                             month_end_forecast = df_forecast.iloc[-1]['yhat'] - 100
                     else:
                         month_end_forecast = enf_genel
                     
+                    # Random noise ekleme (mevcut kodunuzdaki gibi)
                     month_end_forecast = math.floor(month_end_forecast + random.uniform(-0.1, 0.1))
                 else:
                     month_end_forecast = enf_genel
@@ -1281,7 +1289,8 @@ def dashboard_modu():
                 with c2:
                     kpi_card("Gıda Enflasyonu", f"%{enf_gida:.2f}", "Mutfak Sepeti", "#fca5a5", "#10b981", "🛒", "delay-2")
                 with c3:
-                    kpi_card("Ay Sonu Tahmini", f"%{month_end_forecast:.2f}", "Yapay Zeka Modeli", "#a78bfa", "#8b5cf6", "🤖", "delay-3")
+                    # Başlık isteğinize göre güncellendi
+                    kpi_card("Sistem Ocak Tahmini (24.01)", f"%{month_end_forecast:.2f}", "Yapay Zeka Modeli", "#a78bfa", "#8b5cf6", "🤖", "delay-3")
                 with c4:
                     kpi_card("Resmi TÜİK Verisi", f"%{resmi_aylik_enf:.2f}", f"{resmi_tarih_str}", "#fbbf24", "#f59e0b",
                              "🏛️", "delay-3")
@@ -1656,3 +1665,4 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
