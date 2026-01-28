@@ -899,6 +899,7 @@ def dashboard_modu():
                         height=len(symbols) * 125)
 
     # 3. ANA EKRAN HEADER
+    # 3. ANA EKRAN HEADER (MOBİL UYUMLU - GÜNCELLENDİ)
     header_date = datetime.strptime(secilen_tarih, "%Y-%m-%d").strftime("%d.%m.%Y") if secilen_tarih else "--.--.----"
     
     header_html_code = f"""
@@ -906,40 +907,111 @@ def dashboard_modu():
     <html lang="tr">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-            body {{ margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif; overflow: hidden; }}
+            
+            body {{ 
+                margin: 0; padding: 0; 
+                background: transparent; 
+                font-family: 'Inter', sans-serif; 
+                overflow: hidden; /* Scrollbar oluşmasını engelle */
+            }}
+            
             .header-wrapper {{
                 background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
                 backdrop-filter: blur(16px);
-                border: 1px solid rgba(255,255,255,0.08); border-radius: 20px;
-                padding: 24px 40px; display: flex; justify-content: space-between; align-items: center;
+                border: 1px solid rgba(255,255,255,0.08); 
+                border-radius: 20px;
+                padding: 20px 40px; 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center;
                 box-shadow: 0 20px 50px -20px rgba(0,0,0,0.5);
                 animation: fadeInUp 0.8s ease-out;
+                height: 90px; /* İçerik yüksekliği sabitlendi */
+                box-sizing: border-box;
             }}
-            .app-title {{ font-size: 36px; font-weight: 800; color: #fff; letter-spacing: -1.5px; display: flex; align-items: center; gap: 15px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }}
-            .app-subtitle {{ font-size: 14px; color: #a1a1aa; font-weight: 500; margin-top: 4px; letter-spacing: 0.5px; }}
+            
+            .left-section {{ display: flex; flex-direction: column; justify-content: center; }}
+            
+            .app-title {{ 
+                font-size: 32px; 
+                font-weight: 800; 
+                color: #fff; 
+                letter-spacing: -1.5px; 
+                display: flex; 
+                align-items: center; 
+                gap: 15px; 
+                text-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+                line-height: 1.1;
+            }}
+            
+            .app-subtitle {{ font-size: 13px; color: #a1a1aa; font-weight: 500; margin-top: 6px; letter-spacing: 0.5px; }}
+            
             .live-badge {{ 
                 display: inline-flex; align-items: center; background: rgba(59, 130, 246, 0.15); color: #60a5fa; 
-                padding: 8px 16px; border-radius: 99px; font-size: 11px; font-weight: 700; 
+                padding: 6px 12px; border-radius: 99px; font-size: 10px; font-weight: 700; 
                 border: 1px solid rgba(59, 130, 246, 0.3); letter-spacing: 1px; box-shadow: 0 0 20px rgba(59,130,246,0.15);
-                position: relative; overflow: hidden;
+                position: relative; overflow: hidden; vertical-align: middle; white-space: nowrap;
             }}
+            
             .live-badge::after {{
                 content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
                 background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
                 animation: shine 3s infinite;
             }}
+            
             @keyframes shine {{ 0% {{ transform: translateX(-100%); }} 100% {{ transform: translateX(100%); }} }}
-            .clock-container {{ text-align: right; }}
-            .location-tag {{ font-size: 11px; color: #71717a; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }}
-            #report_date {{ font-family: 'Inter', sans-serif; font-size: 32px; font-weight: 800; color: #e4e4e7; letter-spacing: -1px; line-height: 1; }}
+            
+            .clock-container {{ text-align: right; min-width: 120px; }}
+            .location-tag {{ font-size: 10px; color: #71717a; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }}
+            #report_date {{ font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 800; color: #e4e4e7; letter-spacing: -1px; line-height: 1; }}
+
+            /* --- MOBİL UYUMLULUK --- */
+            @media only screen and (max-width: 600px) {{
+                .header-wrapper {{
+                    flex-direction: column;
+                    align-items: flex-start;
+                    padding: 15px 20px;
+                    height: auto; /* Yüksekliği serbest bırak */
+                    gap: 15px;
+                }}
+                
+                .app-title {{ 
+                    font-size: 22px; 
+                    flex-wrap: wrap;
+                }}
+                
+                .live-badge {{
+                    margin-top: 5px; /* Başlığın altına geçince boşluk ver */
+                }}
+
+                .app-subtitle {{ font-size: 12px; }}
+                
+                .clock-container {{ 
+                    text-align: left; 
+                    width: 100%;
+                    border-top: 1px solid rgba(255,255,255,0.1);
+                    padding-top: 10px;
+                    margin-top: 5px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }}
+                
+                .location-tag {{ margin-bottom: 0; }}
+                #report_date {{ font-size: 20px; }}
+            }}
         </style>
     </head>
     <body>
         <div class="header-wrapper">
-            <div>
-                <div class="app-title">Piyasa Monitörü <span class="live-badge">SİMÜLASYON MODU</span></div>
+            <div class="left-section">
+                <div class="app-title">
+                    Piyasa Monitörü 
+                    <span class="live-badge">SİMÜLASYON</span>
+                </div>
                 <div class="app-subtitle">Yapay Zeka Destekli Enflasyon & Fiyat Analiz Sistemi</div>
             </div>
             <div class="clock-container">
@@ -950,7 +1022,8 @@ def dashboard_modu():
     </body>
     </html>
     """
-    components.html(header_html_code, height=140)
+    # Yüksekliği mobilde içerik sığsın diye biraz artırdık (eski: 140, yeni: 165)
+    components.html(header_html_code, height=165)
 
     # --- BUTON KONTROL PANELİ (PROGRESS BAR DESTEKLİ) ---
     SHOW_SYNC_BUTTON = True 
@@ -1606,3 +1679,4 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
