@@ -1182,23 +1182,23 @@ def dashboard_modu():
                 df_analiz['Min_Fiyat'] = df_analiz[gunler].min(axis=1)
 
                 # --- AY SONU TAHMİNİ (SABİT TARİH: 24.01.2026) ---
-                target_fixed_date = "2026-01-24"
+                # --- AY SONU TAHMİNİ (SABİT TARİH: 31.01.2026) ---
+                target_fixed_date = "2026-01-31"  # <-- TARİH GÜNCELLENDİ
                 month_end_forecast = 0.0
 
-                # Pivot tablodaki (yani Excel'deki) tüm tarihleri kullanarak 24 Ocak'a kadar olan sütunları bulalım
-                # tum_gunler_sirali değişkeni pivot.columns'dan geliyor, yani tüm veri seti.
+                # Pivot tablodaki tüm tarihleri kullanarak 31 Ocak'a kadar olan sütunları bulalım
                 fixed_cols = [c for c in tum_gunler_sirali if c.startswith("2026-01") and c <= target_fixed_date]
 
                 if fixed_cols:
-                    # 24 Ocak (veya öncesi) için aylık geometrik ortalamayı hesapla
-                    df_analiz['Fixed_Ortalama_24Jan'] = df_analiz[fixed_cols].apply(geometrik_ortalama_hesapla, axis=1)
+                    # 31 Ocak (veya öncesi) için aylık geometrik ortalamayı hesapla
+                    df_analiz['Fixed_Ortalama_Target'] = df_analiz[fixed_cols].apply(geometrik_ortalama_hesapla, axis=1)
                     
-                    # Enflasyon hesabı (Card 1 mantığıyla aynı)
-                    gecerli_fixed = df_analiz.dropna(subset=['Fixed_Ortalama_24Jan', baz_col])
+                    # Enflasyon hesabı
+                    gecerli_fixed = df_analiz.dropna(subset=['Fixed_Ortalama_Target', baz_col])
                     
                     if not gecerli_fixed.empty:
                         w_f = gecerli_fixed[agirlik_col]
-                        p_rel_f = gecerli_fixed['Fixed_Ortalama_24Jan'] / gecerli_fixed[baz_col]
+                        p_rel_f = gecerli_fixed['Fixed_Ortalama_Target'] / gecerli_fixed[baz_col]
                         fixed_endeks = (w_f * p_rel_f).sum() / w_f.sum() * 100
                         month_end_forecast = fixed_endeks - 100
                     else:
@@ -1272,8 +1272,8 @@ def dashboard_modu():
                 with c2:
                     kpi_card("Gıda Enflasyonu", f"%{enf_gida:.2f}", "Mutfak Sepeti", "#fca5a5", "#10b981", "🛒", "delay-2")
                 with c3:
-                    # ARTIK 24 OCAK REFERANS DEĞERİNİ BASIYOR
-                    kpi_card("Ocak Tahmini (24.01.2026)", f"%{month_end_forecast:.2f}", "Nihai Tahmin", "#a78bfa", "#8b5cf6", "🤖", "delay-3")
+                    # ARTIK 31 OCAK REFERANS DEĞERİNİ BASIYOR
+                    kpi_card("Ocak Tahmini (31.01.2026)", f"%{month_end_forecast:.2f}", "Nihai Tahmin", "#a78bfa", "#8b5cf6", "🤖", "delay-3")
                 with c4:
                     kpi_card("Resmi TÜİK Verisi", f"%{resmi_aylik_enf:.2f}", f"{resmi_tarih_str}", "#fbbf24", "#f59e0b",
                              "🏛️", "delay-3")
