@@ -1075,16 +1075,31 @@ def dashboard_modu():
                 dt_son = datetime.strptime(son, '%Y-%m-%d')
                 simdi_yil = dt_son.year
 
-                # --- GÜNCELLEME: REFERANS ARTIK OCAK SONU ---
-                # Fiyat veritabanındaki mevcut yıla ait son Ocak verisini buluyoruz.
-                ocak_prefix = f"{simdi_yil}-01"
-                ocak_cols = [c for c in gunler if c.startswith(ocak_prefix)]
+                # --- GÜNCELLEME: DİNAMİK REFERANS MANTIĞI ---
+                # Eğer içinde bulunduğumuz ay Şubat veya sonrasıysa (Yeni Veriler) -> Baz: OCAK 2026
+                # Eğer içinde bulunduğumuz ay Ocak ise (Geçmiş Veriler) -> Baz: ARALIK 2025
+                
+                target_cols = []
+                baz_tanimi_text = ""
 
-                if ocak_cols:
-                    baz_col = ocak_cols[-1] # Ocak ayının listedeki en son tarihi (Örn: 2026-01-31)
-                    baz_tanimi = f"Ocak {simdi_yil}"
+                # Şubat 2026 ve sonrası için mantık (Yeni dönem)
+                if dt_son.year == 2026 and dt_son.month >= 2:
+                    ocak_prefix = f"{simdi_yil}-01"
+                    target_cols = [c for c in gunler if c.startswith(ocak_prefix)]
+                    baz_tanimi_text = f"Ocak {simdi_yil}"
+                
+                # Ocak 2026 ve öncesi için mantık (Eski dönem)
                 else:
-                    # Eğer henüz Ocak verisi yoksa veya yıl başındaysak listenin en başını al
+                    onceki_yil_aralik_prefix = f"{simdi_yil - 1}-12"
+                    target_cols = [c for c in gunler if c.startswith(onceki_yil_aralik_prefix)]
+                    baz_tanimi_text = f"Aralık {simdi_yil - 1}"
+
+                # Sütunu Seçme İşlemi
+                if target_cols:
+                    baz_col = target_cols[-1] # İlgili ayın en son verisini al
+                    baz_tanimi = baz_tanimi_text
+                else:
+                    # Eğer istenen baz ayı verisi yoksa (örn. yeni yılın ilk günü), listenin en başını al
                     baz_col = gunler[0]
                     baz_tanimi = f"Başlangıç ({baz_col})"
                 # ---------------------------------------------
@@ -1657,6 +1672,7 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
 
 
 
