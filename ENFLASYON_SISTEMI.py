@@ -1009,6 +1009,7 @@ def dashboard_modu():
         st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # 4. HESAPLAMA MOTORU (FİNAL DÜZELTME - ZİNCİRLEME ENDEKS)
+    # 4. HESAPLAMA MOTORU (ZİNCİRLEME ENDEKS & SIFIR NOKTASI AYARI)
     if not df_f.empty and not df_s.empty:
         try:
             # --- 1. CONFIG VE SÜTUN AYARLARI ---
@@ -1024,22 +1025,18 @@ def dashboard_modu():
             df_f['Kod'] = df_f['Kod'].astype(str).apply(kod_standartlastir)
             df_s['Kod'] = df_s[kod_col].astype(str).apply(kod_standartlastir)
             
-            # --- !!! KRİTİK DÜZELTME 1: SEPETİ TEKİLLEŞTİR !!! ---
-            # Aynı koddan birden fazla varsa, tekrar edenleri sil (İlkini tut)
+            # --- SEPETİ TEKİLLEŞTİR ---
             df_s = df_s.drop_duplicates(subset=['Kod'], keep='first')
 
             # --- 2. FİYAT VERİSİ HAZIRLIĞI ---
             df_f['Fiyat'] = pd.to_numeric(df_f['Fiyat'], errors='coerce')
             df_f = df_f[df_f['Fiyat'] > 0] 
             
-            # --- !!! KRİTİK DÜZELTME 2: FİYATLARI GRUPLA !!! ---
-            # Aynı ürün için aynı günde birden fazla fiyat varsa ortalamasını al
+            # Aynı gün çift fiyat varsa ortalama al (Duplicate Fix)
             df_f = df_f.groupby(['Kod', 'Tarih_Str'])['Fiyat'].mean().reset_index()
             
             # Pivot Tablo (Kod x Tarih)
             pivot = df_f.pivot_table(index='Kod', columns='Tarih_Str', values='Fiyat')
-            
-            # Veri boşluklarını doldur
             pivot = pivot.ffill(axis=1).bfill(axis=1).reset_index()
 
             if not pivot.empty:
@@ -1062,21 +1059,14 @@ def dashboard_modu():
                     idx = tum_gunler_sirali.index(secilen_tarih)
                     gunler = tum_gunler_sirali[:idx+1]
                 else:
-                    if tum_tarihler:
-                        son_tarih = tum_tarihler[0]
-                        if son_tarih in tum_gunler_sirali:
-                             idx = tum_gunler_sirali.index(son_tarih)
-                             gunler = tum_gunler_sirali[:idx+1]
-                        else:
-                             gunler = tum_gunler_sirali 
-                    else:
-                        gunler = tum_gunler_sirali 
+                    # Tarih seçilmediyse veya liste boşsa tüm günleri al
+                    gunler = tum_gunler_sirali 
 
                 if not gunler:
                     st.error("Veri seti oluşturulamadı.")
                     return
 
-                # Fiyat sütunlarını sayıya çevir (HATA FIX)
+                # Fiyat sütunlarını sayıya çevir
                 for col in gunler:
                     df_analiz[col] = pd.to_numeric(df_analiz[col], errors='coerce')
 
@@ -1084,7 +1074,7 @@ def dashboard_modu():
                 dt_son = datetime.strptime(son, '%Y-%m-%d')
                 
                 # ============================================================
-                # 🧠 ZİNCİRLEME ENDEKS VE AKILLI TAMAMLAMA
+                # 🧠 ZİNCİRLEME ENDEKS & SIFIR NOKTASI (ZERO POINT)
                 # ============================================================
                 
                 ZINCIR_TARIHI = datetime(2026, 2, 1)
@@ -1093,24 +1083,35 @@ def dashboard_modu():
                 baz_tanimi = "" 
                 
                 if dt_son >= ZINCIR_TARIHI:
-                    # YENİ DÖNEM (2026)
+                    # --- YENİ DÖNEM (2026) ---
                     aktif_agirlik_col = col_w26
-                    # Baz Ayı Bul: Ocak 2026
+                    
+                    # 1. Önce Ocak 2026 var mı diye bak
                     ocak_2026_cols = [c for c in tum_gunler_sirali if c.startswith("2026-01")]
                     
+                    # 2. 2026 yılında elimizde olan TÜM günler
+                    gunler_2026 = [c for c in tum_gunler_sirali if c >= "2026-01-01"]
+                    
                     if ocak_2026_cols:
+                        # İdeal Senaryo: Ocak verisi var
                         baz_col = ocak_2026_cols[-1]
                         baz_tanimi = "Ocak 2026"
+                    elif gunler_2026:
+                        # KURTARMA SENARYOSU: Ocak yoksa, 2026'nın İLK verisini baz al.
+                        # Bugün ilk veriyse, baz = bugün olur.
+                        baz_col = gunler_2026[0]
+                        baz_tanimi = f"Başlangıç ({baz_col})"
                     else:
+                        # Hiçbiri yoksa
                         baz_col = gunler[0]
-                        baz_tanimi = "Başlangıç (Ocak 2026 Verisi Yok)"
+                        baz_tanimi = "Başlangıç"
                         
                     # Akıllı Tamamlama: Baz fiyat yoksa, bugünkü fiyatı baz kabul et
                     if baz_col in df_analiz.columns:
                         df_analiz[baz_col] = df_analiz[baz_col].fillna(df_analiz[son])
                         
                 else:
-                    # ESKİ DÖNEM (2025)
+                    # --- ESKİ DÖNEM (2025) ---
                     aktif_agirlik_col = col_w25
                     aralik_2025_cols = [c for c in tum_gunler_sirali if c.startswith("2025-12")]
                     if aralik_2025_cols:
@@ -1123,7 +1124,7 @@ def dashboard_modu():
                     if baz_col in df_analiz.columns:
                         df_analiz[baz_col] = df_analiz[baz_col].fillna(df_analiz[son])
 
-                # --- !!! KRİTİK DÜZELTME 3: AĞIRLIK NaN TEMİZLİĞİ !!! ---
+                # --- AĞIRLIK TEMİZLİĞİ ---
                 if aktif_agirlik_col in df_analiz.columns:
                      df_analiz[aktif_agirlik_col] = pd.to_numeric(df_analiz[aktif_agirlik_col], errors='coerce').fillna(0)
                 else:
@@ -1164,6 +1165,7 @@ def dashboard_modu():
                     else:
                         enf_genel = 0.0
 
+                    # Gıda Endeksi
                     gida_df = gecerli_veri[gecerli_veri['Kod'].astype(str).str.startswith("01")]
                     if not gida_df.empty:
                         w_g = gida_df[aktif_agirlik_col]
@@ -1630,3 +1632,4 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
