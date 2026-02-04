@@ -1009,6 +1009,7 @@ def dashboard_modu():
         st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # 4. HESAPLAMA MOTORU (ZİNCİRLEME ENDEKS - HATA KORUMALI)
+    # 4. HESAPLAMA MOTORU (ZİNCİRLEME ENDEKS & AKILLI TAMAMLAMA)
     if not df_f.empty and not df_s.empty:
         try:
             # --- 1. CONFIG VE SÜTUN AYARLARI ---
@@ -1016,7 +1017,7 @@ def dashboard_modu():
             kod_col = next((c for c in df_s.columns if c.lower() == 'kod'), 'Kod')
             ad_col = next((c for c in df_s.columns if 'ad' in c.lower()), 'Madde_Adi')
             
-            # Ağırlık Sütunları (Excel'deki İsimler)
+            # Ağırlık Sütunları
             col_w25 = 'Agirlik_2025'
             col_w26 = 'Agirlik_2026'
 
@@ -1024,9 +1025,9 @@ def dashboard_modu():
             df_f['Kod'] = df_f['Kod'].astype(str).apply(kod_standartlastir)
             df_s['Kod'] = df_s[kod_col].astype(str).apply(kod_standartlastir)
             
-            # --- 2. FİYAT VERİSİ HAZIRLIĞI (HATA FIX: ZORLA SAYIYA ÇEVİR) ---
+            # --- 2. FİYAT VERİSİ HAZIRLIĞI ---
             df_f['Fiyat'] = pd.to_numeric(df_f['Fiyat'], errors='coerce')
-            df_f = df_f[df_f['Fiyat'] > 0] # 0 ve hatalı kayıtları temizle
+            df_f = df_f[df_f['Fiyat'] > 0] 
             
             # Pivot Tablo (Kod x Tarih)
             pivot = df_f.pivot_table(index='Kod', columns='Tarih_Str', values='Fiyat', aggfunc='last')
@@ -1035,7 +1036,7 @@ def dashboard_modu():
             pivot = pivot.ffill(axis=1).bfill(axis=1).reset_index()
 
             if not pivot.empty:
-                # Grup Bilgisi Yoksa Koddan Üret
+                # Grup Bilgisi
                 if 'Grup' not in df_s.columns:
                      grup_map = {"01": "Gıda", "02": "Alkol-Tütün", "03": "Giyim", "04": "Konut",
                                 "05": "Ev Eşyası", "06": "Sağlık", "07": "Ulaşım", "08": "Haberleşme", 
@@ -1068,8 +1069,7 @@ def dashboard_modu():
                     st.error("Veri seti oluşturulamadı.")
                     return
 
-                # !!! KRİTİK DÜZELTME: Tüm fiyat sütunlarını tekrar sayıya çevir !!!
-                # Bu işlem 'float' / 'str' hatasını kesin olarak çözer.
+                # Fiyat sütunlarını sayıya çevir
                 for col in gunler:
                     df_analiz[col] = pd.to_numeric(df_analiz[col], errors='coerce')
 
@@ -1077,40 +1077,46 @@ def dashboard_modu():
                 dt_son = datetime.strptime(son, '%Y-%m-%d')
                 
                 # ============================================================
-                # 🧠 ZİNCİRLEME ENDEKS MANTIĞI (Chain Linking)
+                # 🧠 ZİNCİRLEME ENDEKS VE AKILLI TAMAMLAMA
                 # ============================================================
                 
-                # Kural: 1 Şubat 2026 ve sonrası -> Yeni Sepet
                 ZINCIR_TARIHI = datetime(2026, 2, 1)
-                
                 aktif_agirlik_col = ""
                 baz_col = ""
-                baz_tanimi = ""
                 
                 if dt_son >= ZINCIR_TARIHI:
-                    # --- YENİ DÖNEM (2026) ---
+                    # YENİ DÖNEM (2026)
                     aktif_agirlik_col = col_w26
-                    # Baz Ayı: Ocak 2026
+                    # Baz Ayı Bul: Ocak 2026
                     ocak_2026_cols = [c for c in tum_gunler_sirali if c.startswith("2026-01")]
+                    
                     if ocak_2026_cols:
                         baz_col = ocak_2026_cols[-1]
-                        baz_tanimi = "Ocak 2026"
                     else:
+                        # Eğer Ocak verisi HİÇ yoksa, eldeki en eski veriyi baz al
                         baz_col = gunler[0]
-                        baz_tanimi = "Başlangıç"
+                        
+                    # --- AKILLI TAMAMLAMA (Smart Backfill) ---
+                    # Eğer ürünün Baz Fiyatı (Ocak) yoksa ama şu anki fiyatı varsa,
+                    # Baz fiyatı = Şu anki fiyat kabul et (Yeni giren ürün varsayımı)
+                    # Bu işlem NaN oluşumunu engeller.
+                    if baz_col in df_analiz.columns:
+                        df_analiz[baz_col] = df_analiz[baz_col].fillna(df_analiz[son])
+                        
                 else:
-                    # --- ESKİ DÖNEM (2025) ---
+                    # ESKİ DÖNEM (2025)
                     aktif_agirlik_col = col_w25
-                    # Baz Ayı: Aralık 2025
                     aralik_2025_cols = [c for c in tum_gunler_sirali if c.startswith("2025-12")]
                     if aralik_2025_cols:
                         baz_col = aralik_2025_cols[-1]
-                        baz_tanimi = "Aralık 2025"
                     else:
                         baz_col = gunler[0]
-                        baz_tanimi = "Başlangıç"
+                    
+                    # Eski dönem için de tamamlama yap
+                    if baz_col in df_analiz.columns:
+                        df_analiz[baz_col] = df_analiz[baz_col].fillna(df_analiz[son])
 
-                # Ağırlıkları Sayıya Çevir (Hata önleme)
+                # Ağırlıkları Hazırla
                 df_analiz[aktif_agirlik_col] = pd.to_numeric(df_analiz[aktif_agirlik_col], errors='coerce').fillna(0)
                 
                 # Sadece sepette olanları al (Ağırlık > 0)
@@ -1129,7 +1135,7 @@ def dashboard_modu():
 
                 gecerli_veri_ham['Aylik_Ortalama'] = gecerli_veri_ham[bu_ay_cols].apply(geometrik_ortalama_hesapla, axis=1)
                 
-                # Final Veri Seti
+                # Final Veri Seti - NaN olanları temizle ama yukarıdaki backfill sayesinde sayıları çok azalacak
                 gecerli_veri = gecerli_veri_ham.dropna(subset=['Aylik_Ortalama', baz_col])
 
                 enf_genel = 0.0
@@ -1141,14 +1147,22 @@ def dashboard_modu():
                     w = gecerli_veri[aktif_agirlik_col]
                     p_relative = gecerli_veri['Aylik_Ortalama'] / gecerli_veri[baz_col]
                     
-                    genel_endeks = (w * p_relative).sum() / w.sum() * 100
-                    enf_genel = genel_endeks - 100
+                    toplam_agirlik = w.sum()
+                    
+                    # Eğer toplam ağırlık 0'sa (imkansız ama tedbir) NaN çıkmaması için kontrol
+                    if toplam_agirlik > 0:
+                        genel_endeks = (w * p_relative).sum() / toplam_agirlik * 100
+                        enf_genel = genel_endeks - 100
+                    else:
+                        enf_genel = 0.0
 
+                    # Gıda Endeksi (01 kodlu grup)
                     gida_df = gecerli_veri[gecerli_veri['Kod'].astype(str).str.startswith("01")]
                     if not gida_df.empty:
                         w_g = gida_df[aktif_agirlik_col]
                         p_rel_g = gida_df['Aylik_Ortalama'] / gida_df[baz_col]
-                        enf_gida = ((w_g * p_rel_g).sum() / w_g.sum() * 100) - 100
+                        if w_g.sum() > 0:
+                            enf_gida = ((w_g * p_rel_g).sum() / w_g.sum() * 100) - 100
                     
                     df_analiz['Fark'] = 0.0
                     df_analiz.loc[gecerli_veri.index, 'Fark'] = (gecerli_veri['Aylik_Ortalama'] / gecerli_veri[baz_col]) - 1
@@ -1166,7 +1180,8 @@ def dashboard_modu():
                     if not gecerli_prev.empty:
                         w_p = gecerli_prev[aktif_agirlik_col]
                         p_rel_p = gecerli_prev['Onceki_Ort'] / gecerli_prev[baz_col]
-                        enf_onceki = ((w_p * p_rel_p).sum() / w_p.sum() * 100) - 100
+                        if w_p.sum() > 0:
+                            enf_onceki = ((w_p * p_rel_p).sum() / w_p.sum() * 100) - 100
 
                 kumu_fark = enf_genel - enf_onceki
                 kumu_icon_color = "#ef4444" if kumu_fark > 0 else "#10b981"
@@ -1174,8 +1189,12 @@ def dashboard_modu():
 
                 if len(gunler) >= 2:
                     onceki_gun = gunler[-2]
+                    # Günlük değişim hesaplarken 0'a bölme hatasını engelle
+                    df_analiz[onceki_gun] = df_analiz[onceki_gun].replace(0, np.nan)
                     df_analiz['Gunluk_Degisim'] = (df_analiz[son] / df_analiz[onceki_gun]) - 1
-                    gun_farki = (dt_son - datetime.strptime(baz_col, '%Y-%m-%d')).days
+                    df_analiz['Gunluk_Degisim'] = df_analiz['Gunluk_Degisim'].fillna(0) # NaNları 0 yap
+                    
+                    gun_farki = (dt_son - datetime.strptime(baz_col, '%Y-%m-%d')).days if baz_col in gunler else 0
                     
                     anomaliler = df_analiz[
                         (df_analiz['Gunluk_Degisim'].abs() > 0.05) & 
@@ -1198,7 +1217,8 @@ def dashboard_modu():
                      if not gecerli_tahmin.empty:
                          w_f = gecerli_tahmin[aktif_agirlik_col]
                          p_rel_f = gecerli_tahmin['Fixed_Ort'] / gecerli_tahmin[baz_col]
-                         month_end_forecast = ((w_f * p_rel_f).sum() / w_f.sum() * 100) - 100
+                         if w_f.sum() > 0:
+                             month_end_forecast = ((w_f * p_rel_f).sum() / w_f.sum() * 100) - 100
 
                 # --- EKRAN GÖSTERGELERİ ---
                 df_ticker = df_analiz[df_analiz[aktif_agirlik_col] > 0]
@@ -1604,3 +1624,4 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
