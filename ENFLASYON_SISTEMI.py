@@ -799,7 +799,9 @@ def dashboard_modu():
         df_f['Tarih_Str'] = df_f['Tarih_DT'].dt.strftime('%Y-%m-%d')
         
         raw_dates = df_f['Tarih_Str'].unique().tolist()
-        BASLANGIC_LIMITI = "2026-01-02"
+        
+        # --- TARİH GÜNCELLEMESİ YAPILDI ---
+        BASLANGIC_LIMITI = "2026-02-04" 
         tum_tarihler = sorted([d for d in raw_dates if d >= BASLANGIC_LIMITI], reverse=True)
     else:
         tum_tarihler = []
@@ -845,7 +847,8 @@ def dashboard_modu():
         else:
             secilen_tarih = None
             if 'df_f' in locals() and not df_f.empty:
-                st.warning("2026-01-02 tarihinden sonrasına ait veri henüz oluşmadı.")
+                # --- UYARI GÜNCELLENDİ ---
+                st.warning("2026-02-04 tarihinden sonrasına ait veri henüz oluşmadı.")
             else:
                 st.error("Veri bulunamadı.")
 
@@ -1077,7 +1080,8 @@ def dashboard_modu():
                 # 🧠 ZİNCİRLEME ENDEKS & SIFIR NOKTASI (ZERO POINT)
                 # ============================================================
                 
-                ZINCIR_TARIHI = datetime(2026, 2, 1)
+                # --- GÜNCELLENDİ: ZİNCİR TARİHİ 4 ŞUBAT ---
+                ZINCIR_TARIHI = datetime(2026, 2, 4)
                 aktif_agirlik_col = ""
                 baz_col = ""
                 baz_tanimi = "" 
@@ -1086,7 +1090,7 @@ def dashboard_modu():
                     # --- YENİ DÖNEM (2026) ---
                     aktif_agirlik_col = col_w26
                     
-                    # 1. Önce Ocak 2026 var mı diye bak
+                    # 1. Önce Ocak 2026 var mı diye bak (ARTIK DEVRE DIŞI GİBİ ÇÜNKÜ BAŞLANGIÇ 4 ŞUBAT)
                     ocak_2026_cols = [c for c in tum_gunler_sirali if c.startswith("2026-01")]
                     
                     # 2. 2026 yılında elimizde olan TÜM günler
@@ -1098,7 +1102,7 @@ def dashboard_modu():
                         baz_tanimi = "Ocak 2026"
                     elif gunler_2026:
                         # KURTARMA SENARYOSU: Ocak yoksa, 2026'nın İLK verisini baz al.
-                        # Bugün ilk veriyse, baz = bugün olur.
+                        # Başlangıç limiti 4 Şubat olduğu için burası 4 Şubat'ı seçecektir.
                         baz_col = gunler_2026[0]
                         baz_tanimi = f"Başlangıç ({baz_col})"
                     else:
@@ -1432,8 +1436,8 @@ def dashboard_modu():
                         
                         fig_hist.update_xaxes(
                             type="linear",        
-                            tickmode="auto",        
-                            nticks=5,                
+                            tickmode="auto",      
+                            nticks=5,              
                             tickformat=".4f",        
                             title_font=dict(size=11),
                             tickfont=dict(size=10, color="#a1a1aa")
@@ -1632,4 +1636,3 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
-
