@@ -25,6 +25,7 @@ import html
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+import unicodedata
 
 # --- İMPORT KONTROLLERİ ---
 try:
@@ -468,56 +469,134 @@ def get_official_inflation():
 # --- 6. SCRAPER (PROGRESS BAR DESTEKLİ) ---
 def temizle_fiyat(t):
     if not t: return None
-    t = str(t).replace('TL', '').replace('₺', '').strip()
-    t = t.replace('.', '').replace(',', '.') if ',' in t and '.' in t else t.replace(',', '.')
+    # HTML entity'leri ve unicode karakterleri normalize et (örn: &nbsp; -> boşluk)
+    t = unicodedata.normalize("NFKD", str(t))
+    # TL, TRY ve sembolleri temizle
+    t = t.replace('TL', '').replace('tl', '').replace('TRY', '').replace('₺', '').strip()
+    
+    # Virgül/Nokta karmaşasını çöz
+    # Örn: 1.250,50 -> 1250.50 veya 12,50 -> 12.50
+    if ',' in t and '.' in t:
+        t = t.replace('.', '') # Binlik ayırıcıyı at
+        t = t.replace(',', '.') # Ondalık ayırıcıyı nokta yap
+    elif ',' in t:
+        t = t.replace(',', '.')
+        
     try:
-        return float(re.sub(r'[^\d.]', '', t))
+        # Sadece rakam ve noktayı bırak
+        clean_val = re.sub(r'[^\d.]', '', t)
+        val = float(clean_val)
+        return val if val > 0 else None
     except:
         return None
 
 def kod_standartlastir(k): return str(k).replace('.0', '').strip().zfill(7)
 
 def fiyat_bul_siteye_gore(soup, url):
-    fiyat = 0;
-    kaynak = "";
+    fiyat = 0
+    kaynak = ""
     domain = url.lower() if url else ""
+
+    # --- STRATEJİ 1: JSON-LD (EN GÜVENİLİR YÖNTEM) ---
+    # Google için bırakılan yapısal veriyi oku
+    scripts = soup.find_all('script', type='application/ld+json')
+    for script in scripts:
+        try:
+            data = json.loads(script.string)
+            # Veri liste ise veya tekil ise döngüye sok
+            if isinstance(data, dict): data = [data]
+            for item in data:
+                # Ürün şeması mı?
+                if item.get('@type') in ['Product', 'SoftwareApplication']:
+                    offers = item.get('offers')
+                    if isinstance(offers, dict):
+                        p = offers.get('price')
+                        if p: 
+                            fiyat = float(str(p).replace(',', '.'))
+                            kaynak = "JSON-LD"
+                            return fiyat, kaynak
+                    elif isinstance(offers, list): # Birden fazla satıcı varsa ilki
+                        p = offers[0].get('price')
+                        if p:
+                            fiyat = float(str(p).replace(',', '.'))
+                            kaynak = "JSON-LD(List)"
+                            return fiyat, kaynak
+        except:
+            continue
+
+    # --- STRATEJİ 2: META TAGLER ---
+    # Facebook/Twitter paylaşım verileri (OG Tags)
+    meta_price = soup.find("meta", property="product:price:amount") or \
+                 soup.find("meta", property="og:price:amount") or \
+                 soup.find("meta", itemprop="price")
+    
+    if meta_price:
+        content = meta_price.get("content")
+        if v := temizle_fiyat(content):
+            return v, "Meta-Tag"
+
+    # --- STRATEJİ 3: DOMAIN BAZLI CSS (ESKİ MANTIK - GÜÇLENDİRİLMİŞ) ---
     if "migros" in domain:
-        garbage = ["sm-list-page-item", ".horizontal-list-page-items-container", "app-product-carousel",
-                   ".similar-products", "div.badges-wrapper"]
-        for g in garbage:
+        # Migros özelinde çöp classları temizle
+        garbage = ["sm-list-page-item", ".similar-products", "div.badges-wrapper"]
+        for g in garbage: 
             for x in soup.select(g): x.decompose()
-        main_wrapper = soup.select_one(".name-price-wrapper")
-        if main_wrapper:
-            for sel, k in [(".price.subtitle-1", "Migros(N)"), (".single-price-amount", "Migros(S)"),
-                           ("#sale-price, .sale-price", "Migros(I)")]:
-                if el := main_wrapper.select_one(sel):
-                    if val := temizle_fiyat(el.get_text()): return val, k
-        if fiyat == 0:
-            if el := soup.select_one("fe-product-price .subtitle-1, .single-price-amount"):
-                if val := temizle_fiyat(el.get_text()): fiyat = val; kaynak = "Migros(G)"
-            if fiyat == 0:
-                if el := soup.select_one("#sale-price"):
-                    if val := temizle_fiyat(el.get_text()): fiyat = val; kaynak = "Migros(GI)"
-    elif "cimri" in domain:
-        for sel in ["div.rTdMX", ".offer-price", "div.sS0lR", ".min-price-val"]:
-            if els := soup.select(sel):
-                vals = [v for v in [temizle_fiyat(e.get_text()) for e in els] if v and v > 0]
-                if vals:
-                    if len(vals) > 4: vals.sort(); vals = vals[1:-1]
-                    fiyat = sum(vals) / len(vals);
-                    kaynak = f"Cimri({len(vals)})";
-                    break
-        if fiyat == 0:
-            if m := re.findall(r'(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)\s*(?:TL|₺)', soup.get_text()[:10000]):
-                ff = sorted([temizle_fiyat(x) for x in m if temizle_fiyat(x)])
-                if ff: fiyat = sum(ff[:max(1, len(ff) // 2)]) / max(1, len(ff) // 2); kaynak = "Cimri(Reg)"
-    if fiyat == 0 and "migros" not in domain:
-        for sel in [".product-price", ".price", ".current-price", "span[itemprop='price']"]:
+            
+        # Öncelikli fiyat alanları
+        selectors = [
+            ("#sale-price", "Migros(Indirim)"),
+            (".price.subtitle-1", "Migros(Normal)"),
+            (".single-price-amount", "Migros(Tek)"),
+            ("fe-product-price .subtitle-1", "Migros(FE)"),
+            (".amount", "Migros(Genel)")
+        ]
+        for sel, k in selectors:
             if el := soup.select_one(sel):
-                if v := temizle_fiyat(el.get_text()): fiyat = v; kaynak = "Genel(CSS)"; break
-    if fiyat == 0 and "migros" not in domain and "cimri" not in domain:
-        if m := re.search(r'(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)\s*(?:TL|₺)', soup.get_text()[:5000]):
-            if v := temizle_fiyat(m.group(1)): fiyat = v; kaynak = "Regex"
+                if val := temizle_fiyat(el.get_text()): return val, k
+
+    elif "cimri" in domain:
+        # Cimri için min fiyatı yakala
+        selectors = [".min-price-val", ".offer-price", "div.rTdMX"]
+        for sel in selectors:
+            if els := soup.select(sel):
+                # İlk geçerli fiyatı al
+                for e in els:
+                    if val := temizle_fiyat(e.get_text()): return val, "Cimri"
+
+    # --- STRATEJİ 4: GENEL CSS (DİĞER SİTELER İÇİN) ---
+    if fiyat == 0:
+        generic_selectors = [
+            ".product-price", ".price", ".current-price", ".sale-price", 
+            ".indirimli-fiyat", ".tutar", "span[class*='price']", "div[class*='price']"
+        ]
+        for sel in generic_selectors:
+            if el := soup.select_one(sel):
+                if v := temizle_fiyat(el.get_text()): 
+                    fiyat = v; kaynak = "Genel(CSS)"; break
+
+    # --- STRATEJİ 5: REGEX (SON ÇARE - İYİLEŞTİRİLMİŞ) ---
+    if fiyat == 0:
+        # Hem "100 TL" hem "₺100" hem de sadece "100,50" formatını yakalar
+        # Ancak HTML tagleri temizlenmiş metinde arar.
+        clean_text = soup.get_text()[:5000] # Sadece ilk 5000 karakter (header/body başı)
+        
+        # Desen: (Para birimi başta opsiyonel) + (Sayı) + (Para birimi sonda opsiyonel)
+        regex_pattern = r'(?:₺|TL|TRY)?\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)\s*(?:₺|TL|TRY)?'
+        
+        matches = re.findall(regex_pattern, clean_text)
+        valid_prices = []
+        for m in matches:
+            # Sadece boş olmayan ve mantıklı sayıları al
+            if val := temizle_fiyat(m):
+                # Aşırı küçük veya yıl gibi görünen sayıları ele (Örn: 2024, 2025 gibi)
+                if 1 < val < 100000 and val != 2025 and val != 2026: 
+                    valid_prices.append(val)
+        
+        if valid_prices:
+            # Genelde sayfada ilk geçen mantıklı fiyat doğrudur veya en sık tekrar eden
+            fiyat = valid_prices[0]
+            kaynak = "Regex(Smart)"
+
     return fiyat, kaynak
 
 def html_isleyici(progress_callback):
@@ -1646,4 +1725,5 @@ def dashboard_modu():
         
 if __name__ == "__main__":
     dashboard_modu()
+
 
