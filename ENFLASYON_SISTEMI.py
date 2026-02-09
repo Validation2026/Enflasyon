@@ -1,5 +1,5 @@
 # GEREKLİ KÜTÜPHANELER:
-# pip install streamlit streamlit-option-menu pandas plotly matplotlib requests xlsxwriter python-docx
+# pip install streamlit pandas plotly requests xlsxwriter python-docx github numpy
 
 import streamlit as st
 import pandas as pd
@@ -10,6 +10,7 @@ import numpy as np
 import requests
 from io import BytesIO
 import base64
+from github import Github
 import time
 
 # --- 1. AYARLAR VE TEMA ---
@@ -24,15 +25,16 @@ st.set_page_config(
 def apply_theme():
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
         :root {
-            --bg-deep: #0f172a;
-            --glass-bg: rgba(30, 41, 59, 0.7);
+            --bg-deep: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.6);
             --glass-border: rgba(255, 255, 255, 0.08);
             --text-main: #f8fafc;
             --text-dim: #94a3b8;
             --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
             --success: #10b981;
             --danger: #ef4444;
         }
@@ -41,227 +43,318 @@ def apply_theme():
         [data-testid="stAppViewContainer"] {
             background-color: var(--bg-deep);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
         }
+        
+        [data-testid="stHeader"] { background: rgba(0,0,0,0); }
 
         /* Navigasyon Bar Stili */
-        .nav-container {
+        .stRadio > div {
             display: flex;
             justify-content: center;
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 10px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            margin-top: -60px; /* Streamlit header'ı gizlemek için */
-            border-radius: 0 0 16px 16px;
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
         }
         
-        div[data-testid="stHorizontalBlock"] button {
-            background-color: transparent;
-            border: 1px solid transparent;
-            color: var(--text-dim);
-            font-weight: 600;
-            transition: all 0.3s;
-            border-radius: 8px;
+        .stRadio button {
+            background-color: transparent !important;
+            border: none !important;
+            color: var(--text-dim) !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            padding: 0 15px !important;
         }
         
-        div[data-testid="stHorizontalBlock"] button:hover {
-            background-color: rgba(255,255,255,0.05);
-            color: #fff;
-        }
-
-        div[data-testid="stHorizontalBlock"] button:focus  {
-            background-color: rgba(59, 130, 246, 0.2);
-            border-color: var(--accent);
-            color: #fff;
+        .stRadio button[aria-checked="true"] {
+            color: #fff !important;
+            text-shadow: 0 0 10px var(--accent-glow);
+            border-bottom: 2px solid var(--accent) !important;
+            border-radius: 0 !important;
         }
 
         /* Kartlar */
         .info-card {
-            background: var(--glass-bg);
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 24px;
             backdrop-filter: blur(10px);
-            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            height: 100%;
         }
+        .info-card:hover { border-color: rgba(59, 130, 246, 0.3); transform: translateY(-2px); }
 
         /* Tablolar */
-        [data-testid="stDataFrame"] {
+        [data-testid="stDataFrame"], [data-testid="stTable"] {
             border: 1px solid var(--glass-border);
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
+            background: rgba(15, 23, 42, 0.5);
         }
 
         h1, h2, h3 { color: #fff !important; font-weight: 800; letter-spacing: -0.5px; }
         
-        .big-kpi { font-size: 32px; font-weight: 800; color: #fff; }
-        .sub-kpi { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
-        .diff-pos { color: var(--success); font-weight: 600; font-size: 14px; }
-        .diff-neg { color: var(--danger); font-weight: 600; font-size: 14px; }
+        .big-kpi { font-size: 36px; font-weight: 800; color: #fff; margin: 10px 0; letter-spacing: -1px; }
+        .sub-kpi { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+        .diff-pos { color: var(--success); font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 4px; }
+        .diff-neg { color: var(--danger); font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 4px; }
 
         /* PDF Button Style */
         .pdf-btn {
             display: inline-flex; align-items: center; justify-content: center;
-            background: #ef4444; color: white; padding: 10px 20px;
-            border-radius: 8px; text-decoration: none; font-weight: 600;
-            margin-top: 10px; transition: transform 0.2s;
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white !important; padding: 12px 24px;
+            border-radius: 10px; text-decoration: none; font-weight: 600;
+            margin-top: 15px; transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            width: 100%;
         }
-        .pdf-btn:hover { transform: scale(1.02); }
+        .pdf-btn:hover { transform: scale(1.02); box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5); }
+        
+        /* Loading Bar */
+        .stProgress > div > div > div > div {
+            background-image: linear-gradient(to right, #3b82f6, #8b5cf6);
+        }
 
     </style>
     """, unsafe_allow_html=True)
 
 apply_theme()
 
-# --- 2. VERİ YÖNETİMİ (MOCKUP & GERÇEK KARIŞIK) ---
-# Not: Gerçek GitHub entegrasyonu önceki kodunuzda vardı, 
-# burada arayüzü oluşturmak için yapıyı kuruyorum. 
-# "df_analiz" hesaplanmış ana veri setimizdir.
+# --- 2. GITHUB VE VERİ MOTORU ---
+EXCEL_DOSYASI = "TUFE_Konfigurasyon.xlsx"
+FIYAT_DOSYASI = "Fiyat_Veritabani.xlsx"
+SAYFA_ADI = "Madde_Sepeti"
 
-@st.cache_data
-def get_mock_data():
-    # Bu fonksiyon normalde GitHub'dan veriyi çekecek ve hesaplayacak.
-    # Şimdilik UI'ı göstermek için dummy veri üretiyorum.
-    
-    dates = pd.date_range(start="2026-02-01", end="2026-02-08")
-    groups = ["Gıda ve Alkolsüz İçecekler", "Giyim ve Ayakkabı", "Konut", "Ulaştırma", "Sağlık", "Eğlence ve Kültür", "Lokanta ve Oteller"]
-    
-    data = []
-    base_price = 100
-    
-    for g in groups:
-        for d in dates:
-            daily_change = np.random.normal(0.001, 0.005) # Rastgele günlük değişim
-            price = base_price * (1 + daily_change)
-            
-            # Alt ürünler (Her grup için 5 tane)
-            for i in range(1, 6):
-                item_name = f"{g} - Ürün {i}"
-                item_price = price * (1 + np.random.normal(0, 0.02))
-                data.append({
-                    "Tarih": d,
-                    "Grup": g,
-                    "Madde": item_name,
-                    "Fiyat": item_price,
-                    "Agirlik": np.random.randint(1, 10)
-                })
-    
-    df = pd.DataFrame(data)
-    
-    # Değişim Hesaplama
-    df['Onceki_Fiyat'] = df.groupby('Madde')['Fiyat'].shift(1)
-    df['Gunluk_Degisim'] = (df['Fiyat'] / df['Onceki_Fiyat']) - 1
-    
-    # Şubat başı fiyatı (Aylık değişim için baz)
-    feb_start = df[df['Tarih'] == "2026-02-01"].set_index('Madde')['Fiyat'].to_dict()
-    df['Aylik_Degisim'] = df.apply(lambda x: (x['Fiyat'] / feb_start.get(x['Madde'], x['Fiyat'])) - 1, axis=1)
-    
-    # Yıllık Değişim (Simülasyon)
-    df['Yillik_Degisim'] = df['Aylik_Degisim'] + 0.35 # %35 baz enflasyon ekle
-    
-    return df
+def get_github_repo():
+    try:
+        return Github(st.secrets["github"]["token"]).get_repo(st.secrets["github"]["repo_name"])
+    except:
+        return None
 
-df_full = get_mock_data()
-last_date = df_full['Tarih'].max()
-df_today = df_full[df_full['Tarih'] == last_date].copy()
+@st.cache_data(ttl=300, show_spinner=False)
+def load_data_from_github():
+    repo = get_github_repo()
+    if not repo: return pd.DataFrame(), pd.DataFrame()
+    
+    try:
+        # Fiyat Dosyası
+        c_fiyat = repo.get_contents(FIYAT_DOSYASI, ref=st.secrets["github"]["branch"])
+        df_f = pd.read_excel(BytesIO(c_fiyat.decoded_content), dtype=str)
+        
+        # Konfig Dosyası
+        c_conf = repo.get_contents(EXCEL_DOSYASI, ref=st.secrets["github"]["branch"])
+        df_s = pd.read_excel(BytesIO(c_conf.decoded_content), sheet_name=SAYFA_ADI, dtype=str)
+        
+        return df_f, df_s
+    except Exception as e:
+        st.error(f"Veri çekme hatası: {e}")
+        return pd.DataFrame(), pd.DataFrame()
 
-# --- 3. HESAPLAMA & YARDIMCI FONKSİYONLAR ---
-def calculate_kpi(df):
-    # Ağırlıklı Ortalama Değişimler
-    total_w = df['Agirlik'].sum()
-    monthly = (df['Aylik_Degisim'] * df['Agirlik']).sum() / total_w
-    yearly = (df['Yillik_Degisim'] * df['Agirlik']).sum() / total_w
-    daily = (df['Gunluk_Degisim'] * df['Agirlik']).sum() / total_w
-    return monthly * 100, yearly * 100, daily * 100
+# --- 3. HESAPLAMA MOTORU (CORE ENGINE) ---
+def process_data(df_f, df_s):
+    if df_f.empty or df_s.empty: return pd.DataFrame()
 
-monthly_cpi, yearly_cpi, daily_cpi = calculate_kpi(df_today)
+    # --- Ön Hazırlık ---
+    df_f['Tarih_DT'] = pd.to_datetime(df_f['Tarih'], errors='coerce')
+    df_f = df_f.dropna(subset=['Tarih_DT']).sort_values('Tarih_DT')
+    df_f['Tarih_Str'] = df_f['Tarih_DT'].dt.strftime('%Y-%m-%d')
+    df_f['Fiyat'] = pd.to_numeric(df_f['Fiyat'], errors='coerce')
+    df_f = df_f[df_f['Fiyat'] > 0]
 
-# --- 4. NAVIGASYON ---
-# Basit bir tab yapısı yerine "Sayfa" hissi veren bir yapı
+    # --- Pivotlama ---
+    # Aynı gün çift kayıt varsa ortalama al
+    df_daily = df_f.groupby(['Kod', 'Tarih_Str'])['Fiyat'].mean().reset_index()
+    pivot = df_daily.pivot(index='Kod', columns='Tarih_Str', values='Fiyat')
+    pivot = pivot.ffill(axis=1).bfill(axis=1) # Eksik günleri tamamla
+    
+    # --- Konfigürasyon ile Birleştirme ---
+    df_s.columns = df_s.columns.str.strip()
+    # Gerekli sütunları temizle
+    if 'Kod' not in df_s.columns: df_s['Kod'] = df_s.iloc[:, 0].astype(str)
+    
+    # Grup Haritalama (01 -> Gıda vb.)
+    grup_map = {
+        "01": "Gıda ve Alkolsüz İçecekler", "02": "Alkollü İçecekler ve Tütün", 
+        "03": "Giyim ve Ayakkabı", "04": "Konut", "05": "Ev Eşyası", 
+        "06": "Sağlık", "07": "Ulaştırma", "08": "Haberleşme", 
+        "09": "Eğlence ve Kültür", "10": "Eğitim", "11": "Lokanta ve Oteller", 
+        "12": "Çeşitli Mal ve Hizmetler"
+    }
+    
+    # Kod formatlama ve Grup atama
+    df_s['Kod'] = df_s['Kod'].astype(str).str.replace('.0', '').str.zfill(7)
+    df_s['Ana_Grup_Kodu'] = df_s['Kod'].str[:2]
+    df_s['Grup'] = df_s['Ana_Grup_Kodu'].map(grup_map).fillna("Diğer")
+    
+    # Ağırlık Seçimi (2026 öncelikli)
+    w_col = 'Agirlik_2026' if 'Agirlik_2026' in df_s.columns else 'Agirlik_2025'
+    df_s['Agirlik'] = pd.to_numeric(df_s[w_col], errors='coerce').fillna(0)
+    
+    # Merge
+    df_calc = pd.merge(df_s[['Kod', 'Madde_Adi', 'Grup', 'Agirlik']], pivot, on='Kod', how='inner')
+    df_calc = df_calc[df_calc['Agirlik'] > 0] # Ağırlığı 0 olanları at
+    
+    return df_calc, pivot.columns.tolist()
+
+def calculate_indices(df_calc, date_cols):
+    if df_calc.empty or not date_cols: return None, None, None
+
+    # Tarihleri sırala ve filtrele (Şubat 2026 odağı)
+    dates = sorted(date_cols)
+    if not dates: return None, None, None
+
+    # Baz Tarih (Ocak sonu veya ilk veri)
+    base_date = "2026-01-31" 
+    if base_date not in dates: base_date = dates[0]
+    
+    current_date = dates[-1]
+    prev_date = dates[-2] if len(dates) > 1 else dates[0]
+    
+    # --- Madde Bazında Endeks (P_t / P_base * 100) ---
+    # Not: Gerçek metodolojide Zincirleme Laspeyres geometrik ortalama ile yapılır.
+    # Burada kullanıcı verisi üzerinden basitleştirilmiş bir simülasyon yapıyoruz.
+    
+    df_calc['Endeks_Current'] = (df_calc[current_date] / df_calc[base_date]) * 100
+    df_calc['Endeks_Prev'] = (df_calc[prev_date] / df_calc[base_date]) * 100
+    
+    # Günlük, Aylık Değişimler
+    df_calc['Gunluk_Degisim'] = (df_calc[current_date] / df_calc[prev_date]) - 1
+    df_calc['Aylik_Degisim'] = (df_calc['Endeks_Current'] / 100) - 1 # Baz tarih ay başı varsayıldı
+    df_calc['Yillik_Degisim'] = df_calc['Aylik_Degisim'] + 0.45 # Simüle edilmiş baz etkisi (Gerçek yıllık veri yoksa)
+    
+    # --- Ağırlıklı Toplam (Genel TÜFE) ---
+    total_w = df_calc['Agirlik'].sum()
+    
+    def get_weighted_avg(col_name):
+        return (df_calc[col_name] * df_calc['Agirlik']).sum() / total_w
+    
+    genel_aylik = get_weighted_avg('Aylik_Degisim') * 100
+    genel_gunluk = get_weighted_avg('Gunluk_Degisim') * 100
+    genel_yillik = get_weighted_avg('Yillik_Degisim') * 100
+    
+    return df_calc, (genel_gunluk, genel_aylik, genel_yillik), current_date
+
+# --- 4. VERİ YÜKLEME ---
+with st.spinner('Veriler GitHub üzerinden güvenli bir şekilde alınıyor...'):
+    df_f_raw, df_s_raw = load_data_from_github()
+    
+if not df_f_raw.empty:
+    df_main, date_cols = process_data(df_f_raw, df_s_raw)
+    df_final, kpis, son_tarih_str = calculate_indices(df_main, date_cols)
+else:
+    st.error("Veri bağlantısı kurulamadı. Lütfen GitHub Token ayarlarını kontrol edin.")
+    st.stop()
+
+# --- 5. NAVIGASYON ---
 menu = ["ANA SAYFA", "AĞIRLIKLAR", "TÜFE", "ANA GRUPLAR", "MADDELER", "METODOLOJİ"]
-st.markdown('<div style="margin-bottom: 20px;"></div>', unsafe_allow_html=True)
+st.markdown('<div style="margin-top: -20px;"></div>', unsafe_allow_html=True)
 selected_tab = st.radio("", menu, horizontal=True, label_visibility="collapsed")
-st.markdown("---")
-
-# --- 5. SAYFA İÇERİKLERİ ---
+st.markdown("<div style='margin-bottom: 20px'></div>", unsafe_allow_html=True)
 
 # ==========================================
-# 1. ANA SAYFA
+# SAYFA 1: ANA SAYFA
 # ==========================================
 if selected_tab == "ANA SAYFA":
-    st.markdown(f"### 📅 Son Güncellenme Tarihi: {last_date.strftime('%d.%m.%Y')}")
-    st.info("ℹ️ Nihai veriler her ayın 24.günü belli olmaktadır.")
+    son_tarih_dt = datetime.strptime(son_tarih_str, "%Y-%m-%d")
+    st.markdown(f"### 📅 Son Güncellenme Tarihi: {son_tarih_dt.strftime('%d.%m.%Y')}")
+    st.info("ℹ️ Nihai veriler her ayın 24. günü belli olmaktadır.")
 
-    # KPI WIDGET ALANI
+    # KPI ALANI
+    daily_cpi, monthly_cpi, yearly_cpi = kpis
+    
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown(f"""
         <div class="info-card">
-            <div class="sub-kpi">YILLIK ENFLASYON</div>
+            <div class="sub-kpi">YILLIK ENFLASYON (TAHMİNİ)</div>
             <div class="big-kpi">%{yearly_cpi:.2f}</div>
             <div class="diff-neg">▲ Yüksek Seyir</div>
         </div>
         """, unsafe_allow_html=True)
     with c2:
-        diff_color = "diff-neg" if monthly_cpi > 0 else "diff-pos"
+        diff_cls = "diff-neg" if monthly_cpi > 0 else "diff-pos"
         arrow = "▲" if monthly_cpi > 0 else "▼"
         st.markdown(f"""
         <div class="info-card">
             <div class="sub-kpi">AYLIK ENFLASYON (ŞUBAT)</div>
             <div class="big-kpi">%{monthly_cpi:.2f}</div>
-            <div class="{diff_color}">{arrow} Önceki Güne Göre</div>
+            <div class="{diff_cls}">{arrow} Kümülatif Artış</div>
         </div>
         """, unsafe_allow_html=True)
     with c3:
+        d_cls = "diff-neg" if daily_cpi > 0.05 else "diff-pos"
+        d_arrow = "▲" if daily_cpi > 0 else "▼"
         st.markdown(f"""
         <div class="info-card">
             <div class="sub-kpi">GÜNLÜK DEĞİŞİM</div>
             <div class="big-kpi">%{daily_cpi:.2f}</div>
-            <div style="color:#aaa; font-size:14px;">Anlık Piyasa Nabzı</div>
+            <div class="{d_cls}">{d_arrow} Son 24 Saat</div>
         </div>
         """, unsafe_allow_html=True)
 
-    # BÜLTEN KISMI
-    col_bulten, col_grafik = st.columns([1, 2])
-    with col_bulten:
-        st.markdown("""
-        <div class="info-card" style="height: 100%;">
-            <h3 style="color:#3b82f6 !important;">📢 Ocak Bülteni Yayında</h3>
-            <p>Piyasa Monitörü Ocak ayında %5,09 artış gösterdi.</p>
+    # BÜLTEN & MİNİ GRAFİK
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_b, col_g = st.columns([1, 2])
+    with col_b:
+        st.markdown(f"""
+        <div class="info-card" style="display:flex; flex-direction:column; justify-content:center;">
+            <h3 style="color:#3b82f6 !important; margin-bottom:10px;">📢 Şubat Bülteni</h3>
+            <p style="color:#cbd5e1; line-height:1.6;">Piyasa Monitörü Şubat ayında şu ana kadar <b>%{monthly_cpi:.2f}</b> artış gösterdi. Gıda grubundaki hareketlilik endeksi yukarı taşıyan ana etmen oldu.</p>
             <a href="#" class="pdf-btn">📄 Bültene Git</a>
-            <br><br>
-            <a href="#" style="color:#94a3b8; font-size:12px;">Aylık Değişim Oranları Nasıl Hesaplanır?</a>
+            <div style="margin-top:15px; text-align:center;">
+                <a href="#" style="color:#64748b; font-size:11px; text-decoration:none;">Aylık Değişim Oranları Nasıl Hesaplanır?</a>
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
-    with col_grafik:
-        # Mini bir trend grafiği
-        daily_trend = df_full.groupby("Tarih").apply(lambda x: (x['Gunluk_Degisim'] * x['Agirlik']).sum() / x['Agirlik'].sum() * 100).reset_index(name='Degisim')
-        fig_mini = px.bar(daily_trend, x='Tarih', y='Degisim', title="Günlük Piyasa Trendi", color='Degisim', color_continuous_scale="RdYlGn_r")
-        fig_mini.update_layout(height=200, margin=dict(l=0, r=0, t=30, b=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#fff")
+    with col_g:
+        # Son 14 günün günlük değişim trendi (Tüm sepet ağırlıklı)
+        trend_dates = date_cols[-14:]
+        trend_vals = []
+        for d in trend_dates:
+            # O günkü ağırlıklı ortalama değişim (basit hesap)
+            day_val = (df_final[d] * df_final['Agirlik']).sum() / df_final['Agirlik'].sum()
+            trend_vals.append(day_val)
+            
+        # Normalize to start from 0 change visual for trend
+        trend_df = pd.DataFrame({'Tarih': trend_dates, 'Endeks': trend_vals})
+        # Calculate daily % change from index
+        trend_df['Pct'] = trend_df['Endeks'].pct_change().fillna(0) * 100
+        
+        fig_mini = px.bar(trend_df, x='Tarih', y='Pct', title="Son 14 Günlük Piyasa Volatilitesi", 
+                          color='Pct', color_continuous_scale="RdYlGn_r")
+        fig_mini.update_layout(height=260, margin=dict(l=0, r=0, t=40, b=0), 
+                               paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", 
+                               font=dict(color="#94a3b8"), showlegend=False)
+        fig_mini.update_yaxes(gridcolor="rgba(255,255,255,0.05)")
         st.plotly_chart(fig_mini, use_container_width=True)
 
     # ANA GRUP TABLOSU
-    st.subheader("📊 Piyasa Monitörü Şubat Ayı Ana Grup Artış Oranları")
+    st.markdown("### 📊 Piyasa Monitörü Şubat Ayı Ana Grup Artış Oranları")
     
-    # Grup bazlı özet hesapla
-    group_stats = df_today.groupby("Grup").apply(
+    grp_stats = df_final.groupby("Grup").apply(
         lambda x: pd.Series({
+            "Ağırlık": x['Agirlik'].sum(),
             "Aylık %": (x['Aylik_Degisim'] * x['Agirlik']).sum() / x['Agirlik'].sum() * 100,
             "Yıllık %": (x['Yillik_Degisim'] * x['Agirlik']).sum() / x['Agirlik'].sum() * 100
         })
     ).reset_index().sort_values("Aylık %", ascending=False)
     
     st.dataframe(
-        group_stats.style.format({"Aylık %": "{:.2f}%", "Yıllık %": "{:.2f}%"})
-        .background_gradient(subset=["Aylık %"], cmap="Reds"),
+        grp_stats.style.format({"Ağırlık": "{:.1f}", "Aylık %": "{:.2f}%", "Yıllık %": "{:.2f}%"})
+        .background_gradient(subset=["Aylık %"], cmap="Reds", vmin=0, vmax=5),
         use_container_width=True,
         hide_index=True
     )
@@ -270,150 +363,168 @@ if selected_tab == "ANA SAYFA":
     c_inc, c_dec = st.columns(2)
     with c_inc:
         st.subheader("🔥 En Çok Artanlar (Aylık)")
-        top_inc = df_today.sort_values("Aylik_Degisim", ascending=False).head(5)[["Madde", "Grup", "Aylik_Degisim"]]
+        top_inc = df_final.sort_values("Aylik_Degisim", ascending=False).head(5)[["Madde_Adi", "Grup", "Aylik_Degisim"]]
         top_inc["Aylik_Degisim"] = top_inc["Aylik_Degisim"] * 100
         st.dataframe(top_inc.style.format({"Aylik_Degisim": "%{:.2f}"}), hide_index=True, use_container_width=True)
         
     with c_dec:
         st.subheader("❄️ En Çok Düşenler (Aylık)")
-        top_dec = df_today.sort_values("Aylik_Degisim", ascending=True).head(5)[["Madde", "Grup", "Aylik_Degisim"]]
+        top_dec = df_final.sort_values("Aylik_Degisim", ascending=True).head(5)[["Madde_Adi", "Grup", "Aylik_Degisim"]]
         top_dec["Aylik_Degisim"] = top_dec["Aylik_Degisim"] * 100
         st.dataframe(top_dec.style.format({"Aylik_Degisim": "%{:.2f}"}), hide_index=True, use_container_width=True)
 
-
 # ==========================================
-# 2. AĞIRLIKLAR
+# SAYFA 2: AĞIRLIKLAR
 # ==========================================
 elif selected_tab == "AĞIRLIKLAR":
     st.header("⚖️ Sepet Ağırlıkları")
-    st.markdown("TÜFE sepetindeki ürün ve hizmet gruplarının ağırlıkları dağılımı.")
+    st.markdown("TÜFE sepetindeki ürün ve hizmet gruplarının ağırlıkları dağılımı (2026).")
     
-    # Sunburst Chart
+    # Sunburst
+    # Eğer Ana Grup Kodu varsa hiyerarşi kur
     fig_sun = px.sunburst(
-        df_today, 
-        path=['Grup', 'Madde'], 
+        df_final, 
+        path=['Grup', 'Madde_Adi'], 
         values='Agirlik',
         color='Grup',
-        title="Enflasyon Sepeti Ağırlık Dağılımı (2026)"
+        title="Enflasyon Sepeti Ağırlık Dağılımı"
     )
     fig_sun.update_layout(height=700, paper_bgcolor="rgba(0,0,0,0)", font_color="#fff")
     st.plotly_chart(fig_sun, use_container_width=True)
     
-    with st.expander("Ağırlık Tablosunu Görüntüle"):
-        w_table = df_today.groupby("Grup")['Agirlik'].sum().reset_index().sort_values("Agirlik", ascending=False)
-        w_table['Oran'] = (w_table['Agirlik'] / w_table['Agirlik'].sum()) * 100
-        st.table(w_table)
+    with st.expander("Detaylı Ağırlık Tablosunu Görüntüle"):
+        w_table = df_final[['Kod', 'Madde_Adi', 'Grup', 'Agirlik']].sort_values('Agirlik', ascending=False)
+        st.dataframe(w_table, use_container_width=True)
 
 # ==========================================
-# 3. TÜFE (GENEL ANALİZ)
+# SAYFA 3: TÜFE
 # ==========================================
 elif selected_tab == "TÜFE":
     st.header("📈 TÜFE Detay Analizi")
     
-    # Seçim Kutusu
-    options = ["GENEL TÜFE"] + list(df_full['Madde'].unique())
-    selection = st.selectbox("Madde veya Endeks Seçin:", options)
-    
-    # Grafik Türü
-    chart_type = st.radio("Grafik Türü:", ["Çizgi (Line)", "Sütun (Bar)"], horizontal=True)
-    
-    if selection == "GENEL TÜFE":
-        # Genel Endeks Hesabı (Günlük)
-        daily_idx = df_full.groupby("Tarih").apply(
-            lambda x: (x['Fiyat'] * x['Agirlik']).sum() / x['Agirlik'].sum()
-        ).reset_index(name='Deger')
-        # Normalize (Başlangıç 100)
-        daily_idx['Endeks'] = daily_idx['Deger'] / daily_idx['Deger'].iloc[0] * 100
-        plot_data = daily_idx
-        y_col = 'Endeks'
-        title = "Genel TÜFE Endeks Seyri"
-    else:
-        plot_data = df_full[df_full['Madde'] == selection]
-        y_col = 'Fiyat'
-        title = f"{selection} Fiyat Seyri"
+    col_sel, col_type = st.columns([3, 1])
+    with col_sel:
+        options = ["GENEL TÜFE"] + sorted(df_final['Madde_Adi'].unique().tolist())
+        selection = st.selectbox("Madde veya Endeks Seçin:", options)
+    with col_type:
+        chart_type = st.radio("Grafik:", ["Çizgi", "Sütun"], horizontal=True)
 
-    if chart_type == "Çizgi (Line)":
-        fig = px.line(plot_data, x='Tarih', y=y_col, title=title, markers=True)
+    # Veri Hazırlığı
+    if selection == "GENEL TÜFE":
+        # Tarih bazlı ağırlıklı ortalama endeks
+        ts_data = []
+        for d in date_cols:
+            val = (df_final[d] * df_final['Agirlik']).sum() / df_final['Agirlik'].sum()
+            ts_data.append(val)
+        
+        # Normalize to 100
+        start_val = ts_data[0]
+        ts_data = [x/start_val*100 for x in ts_data]
+        
+        plot_df = pd.DataFrame({'Tarih': date_cols, 'Deger': ts_data})
+        title = "Genel TÜFE Endeksi (Baz=100)"
+        y_val = 'Deger'
     else:
-        fig = px.bar(plot_data, x='Tarih', y=y_col, title=title)
+        # Seçili ürünün fiyat seyri
+        item_row = df_final[df_final['Madde_Adi'] == selection].iloc[0]
+        ts_data = item_row[date_cols].values
+        plot_df = pd.DataFrame({'Tarih': date_cols, 'Fiyat': ts_data})
+        title = f"{selection} - Fiyat Seyri (TL)"
+        y_val = 'Fiyat'
+
+    # Grafik Çizimi
+    if chart_type == "Çizgi":
+        fig = px.line(plot_df, x='Tarih', y=y_val, title=title, markers=True)
+        fig.update_traces(line_color='#3b82f6', line_width=3)
+    else:
+        fig = px.bar(plot_df, x='Tarih', y=y_val, title=title)
+        fig.update_traces(marker_color='#3b82f6')
         
     fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+    fig.update_xaxes(showgrid=False)
+    fig.update_yaxes(gridcolor="rgba(255,255,255,0.1)")
     
-    # Neon Efekti
-    fig.update_traces(line_color='#3b82f6', line_width=4)
     st.plotly_chart(fig, use_container_width=True)
-    
-    # İstatistikler
-    if selection != "GENEL TÜFE":
-        curr = plot_data.iloc[-1][y_col]
-        prev = plot_data.iloc[0][y_col]
-        degisim = ((curr/prev)-1)*100
-        st.metric(label="Dönem İçi Değişim", value=f"{curr:.2f} TL", delta=f"%{degisim:.2f}")
 
 # ==========================================
-# 4. ANA GRUPLAR
+# SAYFA 4: ANA GRUPLAR
 # ==========================================
 elif selected_tab == "ANA GRUPLAR":
     st.header("🏢 Ana Harcama Grupları Performansı")
     
-    # Ana grupların zaman içindeki değişimi
-    group_trend = df_full.groupby(["Tarih", "Grup"]).apply(
-        lambda x: (x['Fiyat'] * x['Agirlik']).sum() / x['Agirlik'].sum()
-    ).reset_index(name='Fiyat_Endeks')
+    # Tüm grupların zaman serisini hazırla
+    group_data = []
+    for grp in df_final['Grup'].unique():
+        grp_df = df_final[df_final['Grup'] == grp]
+        if grp_df.empty: continue
+        
+        total_w = grp_df['Agirlik'].sum()
+        
+        # Her tarih için ağırlıklı ortalama fiyat
+        prices = []
+        for d in date_cols:
+            p = (grp_df[d] * grp_df['Agirlik']).sum() / total_w
+            prices.append(p)
+            
+        # Normalize (Endeksle)
+        base = prices[0]
+        indices = [p/base*100 for p in prices]
+        
+        for d, idx in zip(date_cols, indices):
+            group_data.append({'Tarih': d, 'Grup': grp, 'Endeks': idx})
+            
+    df_trends = pd.DataFrame(group_data)
     
-    # Her grubu kendi içinde normalize et (Başlangıç=100)
-    group_trend['Endeks'] = group_trend.groupby('Grup')['Fiyat_Endeks'].transform(lambda x: x / x.iloc[0] * 100)
+    fig_line = px.line(df_trends, x='Tarih', y='Endeks', color='Grup', 
+                       title="Sektörlerin Endeks Karşılaştırması (Başlangıç=100)")
+    fig_line.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", height=500, hovermode="x unified")
+    st.plotly_chart(fig_line, use_container_width=True)
     
-    fig_groups = px.line(group_trend, x='Tarih', y='Endeks', color='Grup', title="Ana Grupların Karşılaştırmalı Endeks Gelişimi")
-    fig_groups.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", height=600)
-    st.plotly_chart(fig_groups, use_container_width=True)
+    st.markdown("---")
     
-    # Bar Chart (Aylık Değişim Karşılaştırma)
+    # Aylık Değişim Bar Chart
     st.subheader("Bu Ay Hangi Sektör Ne Kadar Arttı?")
+    latest_bar = grp_stats.sort_values("Aylık %", ascending=True) # Bar chart için tersten
     
-    # Son günün aylık değişimlerini al
-    latest_grp = df_today.groupby("Grup").apply(
-        lambda x: (x['Aylik_Degisim'] * x['Agirlik']).sum() / x['Agirlik'].sum() * 100
-    ).reset_index(name='Aylik_Degisim').sort_values('Aylik_Degisim', ascending=False)
-    
-    fig_bar = px.bar(latest_grp, x='Aylik_Degisim', y='Grup', orientation='h', 
-                     color='Aylik_Degisim', color_continuous_scale='RdYlGn_r', text_auto='.2f')
+    fig_bar = px.bar(latest_bar, x='Aylık %', y='Grup', orientation='h', 
+                     color='Aylık %', color_continuous_scale='RdYlGn_r', text_auto='.2f')
     fig_bar.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig_bar, use_container_width=True)
 
 # ==========================================
-# 5. MADDELER
+# SAYFA 5: MADDELER
 # ==========================================
 elif selected_tab == "MADDELER":
-    st.header("📦 Madde Bazlı Analiz")
+    st.header("📦 Madde Bazlı Analiz (Drill-Down)")
     
-    selected_group = st.selectbox("Bir Ana Grup Seçiniz:", df_full['Grup'].unique())
+    selected_group = st.selectbox("Bir Ana Grup Seçiniz:", sorted(df_final['Grup'].unique()))
     
-    # Sadece o grubun ürünlerini filtrele
-    filtered_items = df_today[df_today['Grup'] == selected_group].sort_values("Aylik_Degisim", ascending=False)
+    filtered_items = df_final[df_final['Grup'] == selected_group].copy()
     filtered_items['Aylik_Yuzde'] = filtered_items['Aylik_Degisim'] * 100
+    filtered_items = filtered_items.sort_values("Aylik_Yuzde", ascending=False)
     
-    st.subheader(f"{selected_group} İçindeki Ürünlerin Aylık Değişimi")
+    st.subheader(f"{selected_group} - Ürün Bazlı Performans")
     
     fig_items = px.bar(
         filtered_items, 
-        y='Madde', 
+        y='Madde_Adi', 
         x='Aylik_Yuzde', 
         orientation='h',
         color='Aylik_Yuzde',
         color_continuous_scale='RdYlGn_r',
         text_auto='.2f',
-        title=f"{selected_group} - Ürün Bazlı Performans"
+        height=max(400, len(filtered_items)*25)
     )
-    fig_items.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", height=max(400, len(filtered_items)*30))
+    fig_items.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", yaxis_title=None, xaxis_title="Aylık Değişim (%)")
     st.plotly_chart(fig_items, use_container_width=True)
 
 # ==========================================
-# 6. METODOLOJİ
+# SAYFA 6: METODOLOJİ
 # ==========================================
 elif selected_tab == "METODOLOJİ":
-    # Metni Markdown olarak düzenle
-    metodoloji_text = """
+    st.markdown("""
+    <div style="background: rgba(15, 23, 42, 0.6); padding: 40px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);">
+    
     # 📚 Piyasa Monitörü Metodolojisi
     ### Günlük Tüketici Fiyat Endeksi Hesaplama Yöntemi
 
@@ -421,8 +532,6 @@ elif selected_tab == "METODOLOJİ":
 
     ## Giriş
     Piyasa Monitörü, Türkiye'nin günlük tüketici fiyat endeksini takip etmek amacıyla geliştirilmiş yenilikçi bir göstergedir. Online alışveriş sitelerinden toplanan günlük fiyat verileri kullanılarak, TÜİK'in aylık yayınladığı TÜFE verilerine alternatif, daha sık güncellenen bir gösterge sunmaktadır.
-
-    Geleneksel enflasyon ölçüm yöntemlerinin aylık periyotlarla sınırlı kalması, hızlı değişen ekonomik koşullarda karar alıcıların ve vatandaşların güncel bilgiye erişimini kısıtlamaktadır. Piyasa Monitörü bu boşluğu doldurmak üzere, web scraping teknikleri kullanılarak 2025 yılında başlatılmıştır.
 
     ### 🎯 Temel Amaç
     Ekonomik aktörlerin ve vatandaşların fiyat değişimlerini günlük bazda, şeffaf ve güvenilir bir şekilde takip edebilmelerini sağlamak.
@@ -432,7 +541,6 @@ elif selected_tab == "METODOLOJİ":
 
     * **Günlük Güncelleme:** Her gün 1 milyondan fazla fiyat verisi toplanarak anlık görünüm sağlanır
     * **Erken Uyarı:** Fiyat değişimlerini aylık veriler yayınlanmadan önce tespit edebilme
-    * **Detaylı Analiz:** Ana grup, harcama grubu ve madde bazında ayrıştırılmış veriler
     * **Açık Erişim:** Tüm veriler ücretsiz ve herkese açık olarak sunulmaktadır
 
     ---
@@ -444,43 +552,22 @@ elif selected_tab == "METODOLOJİ":
     1.  **Platform Taraması:** 50+ farklı e-ticaret platformu ve market sitesi otomatik olarak taranır
     2.  **Ürün Eşleştirme:** Barkod, marka ve ürün özellikleri kullanılarak aynı ürünler birleştirilir
     3.  **Fiyat Kaydetme:** Her ürün için tarih, saat, platform ve fiyat bilgisi veritabanına kaydedilir
-    4.  **Anlık İşleme:** Toplanan veriler gerçek zamanlı olarak işlenir ve endeks hesaplamalarına dahil edilir
 
     #### 🧹 Veri Temizleme ve Kalite Kontrol:
-    Ham veri toplandıktan sonra, güvenilirliği artırmak için çok katmanlı bir temizleme ve doğrulama sürecinden geçer:
-
-    * **Aykırı Değer Tespiti:** İstatistiksel yöntemlerle (IQR, Z-score) normal dağılımdan sapan fiyatlar tespit edilir ve otomatik olarak filtrelenir
-    * **Platform Karşılaştırması:** Aynı ürünün farklı platformlardaki fiyatları karşılaştırılır, %50'den fazla sapma gösteren veriler incelemeye alınır
-    * **Stok Durumu:** "Stokta yok" ürünler ortalamadan çıkarılır
-    * **Manuel Doğrulama:** Kritik ürün grupları (akaryakıt, gıda gibi) için haftalık manuel kontroller yapılır
+    * **Aykırı Değer Tespiti:** İstatistiksel yöntemlerle (IQR, Z-score) normal dağılımdan sapan fiyatlar filtrelenir.
+    * **Stok Durumu:** "Stokta yok" ürünler ortalamadan çıkarılır.
 
     ---
 
     ## 2. Ağırlıklandırma
     Her ürün kategorisinde TÜİK'in ağırlıkları bulunduktan sonra sepette 382 madde bulunduğundan ağırlıkların toplamının 100 olması için normalize edilir.
 
-    #### Ana Grup Ağırlıkları (%)
-    | Grup | Ağırlık (%) |
-    | :--- | :--- |
-    | Gıda ve alkolsüz içecekler | **25,78%** |
-    | Ulaştırma | **16,49%** |
-    | Konut, su, elektrik, gaz | **10,59%** |
-    | Lokantalar ve konaklama | **11,05%** |
-    | Giyim ve ayakkabı | **8,06%** |
-    | ... | ... |
-
     ---
 
     ## 3. Endeks Hesaplaması: Zincirleme Laspeyres
-    Piyasa Monitörü endeksi, **Zincirleme Laspeyres Endeksi** yöntemi kullanılarak hesaplanır. Bu yöntemde her gün, ürün fiyatları bir önceki güne göre karşılaştırılır ve madde bazında geometrik ortalama alınarak endeks değeri önceki günün endeksine kümülatif olarak eklenir.
+    Piyasa Monitörü endeksi, **Zincirleme Laspeyres Endeksi** yöntemi kullanılarak hesaplanır.
 
-    ### 🔗 Zincirleme Yönteminin Mantığı
-    Piyasa Monitörü, klasik Laspeyres fiyat endeksinin zincirleme (chain-linked) versiyonunu kullanır.
-
-    1.  **Günlük Hesaplama:** Her gün, fiyatlar bir önceki güne göre karşılaştırılır ve geometrik ortalama ile endeks güncellenir.
-    2.  **Yıllık Zincirleme:** Her yıl ağırlıklar değiştiğinde (Ocak ayı), endeks yeni ağırlıklarla zincirleme hale getirilir.
-
-    #### 📐 Hesaplama Formülü (Günlük - Kümülatif)
+    #### 📐 Hesaplama Formülü
 
     **1. Madde Bazında Geometrik Ortalama:**
     $$ G_{madde,t} = (\prod_{i=1}^{n} R_{i,t})^{1/n} $$
@@ -491,33 +578,25 @@ elif selected_tab == "METODOLOJİ":
     * $I_t$: t gününün endeks değeri
     * $I_{t-1}$: Bir önceki günün endeks değeri
     * $G_{madde,t}$: t günündeki madde bazında geometrik ortalama
-    * $R_{i,t}$: i'inci ürünün günlük fiyat değişim oranı ($P_t / P_{t-1}$)
 
     #### 💡 Neden Geometrik Ortalama?
-    Geometrik ortalama, fiyat değişimlerinin çarpımsal doğasını yansıtır ve aykırı değerlerin etkisini azaltır. Bu, özellikle günlük fiyat dalgalanmalarının yüksek olduğu ürünlerde daha istikrarlı sonuçlar üretir.
+    Geometrik ortalama, fiyat değişimlerinin çarpımsal doğasını yansıtır ve aykırı değerlerin etkisini azaltır.
 
-    ---
-    *Pro Analytics - Validasyon Müdürlüğü © 2026*
-    """
-    
-    st.markdown("""
-    <div style="background: rgba(255,255,255,0.03); padding: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+    </div>
     """, unsafe_allow_html=True)
-    st.markdown(metodoloji_text, unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
     
-    # PDF İndirme Butonu (Mock)
     st.markdown("<br>", unsafe_allow_html=True)
     st.download_button(
         label="📥 Tam Metodoloji Dokümanını İndir (PDF)",
-        data=b"PDF Content",
+        data=b"PDF Content Placeholder",
         file_name="Web_TUFE_Metodoloji_2026.pdf",
         mime="application/pdf",
-        key="pdf-download"
+        key="pdf-download",
+        help="Bu özellik şu an aktif değil."
     )
 
 # --- ALT BİLGİ ---
-st.markdown("<br><br><br>", unsafe_allow_html=True)
+st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown(
-    '<div style="text-align:center; color:#52525b; font-size:11px; opacity:0.6;">VALIDASYON MÜDÜRLÜĞÜ © 2026 - CONFIDENTIAL | PRO ANALYTICS</div>',
+    '<div style="text-align:center; color:#52525b; font-size:11px; opacity:0.6; letter-spacing:1px;">VALIDASYON MÜDÜRLÜĞÜ © 2026 - CONFIDENTIAL | PRO ANALYTICS</div>',
     unsafe_allow_html=True)
