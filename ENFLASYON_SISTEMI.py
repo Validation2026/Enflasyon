@@ -958,7 +958,7 @@ def sayfa_ana_sayfa():
     st.markdown("""
     <div style="text-align:center; padding: 60px 20px;">
         <h1 style="font-size: 56px; font-weight: 800; margin-bottom: 20px; background: -webkit-linear-gradient(45deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-            WebTufe Simülasyonu
+            Piyasa Monitörü Simülasyonu
         </h1>
         <p style="font-size: 20px; color: #a1a1aa; max-width: 800px; margin: 0 auto; line-height: 1.6;">
             Yapay zeka destekli algoritmalarımızla binlerce ürünün fiyatını günlük olarak takip ediyor, 
@@ -1144,7 +1144,7 @@ def main():
     st.markdown("""
         <div class="header-wrapper">
             <div class="left-section">
-                <div class="app-title">WebTufe <span class="live-badge">SİMÜLASYON</span></div>
+                <div class="app-title">Piyasa Monitörü <span class="live-badge">SİMÜLASYON</span></div>
                 <div class="app-subtitle">Yapay Zeka Destekli Enflasyon Analiz Platformu</div>
             </div>
             <div class="clock-container">
@@ -1207,6 +1207,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
