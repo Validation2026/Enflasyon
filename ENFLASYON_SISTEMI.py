@@ -76,7 +76,7 @@ def apply_theme():
 
         /* --- SAYFA ÜST BOŞLUĞUNU KALDIRMA --- */
         .block-container {{
-            padding-top: 1.5rem !important; /* En üstteki boşluğu kıstık */
+            padding-top: 1rem !important; 
             padding-bottom: 1rem !important;
         }}
         
@@ -85,7 +85,7 @@ def apply_theme():
         [data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
         [data-testid="stToolbar"] {{ display: none; }}
 
-        /* --- MOBİL UYUMLULUK VE SIDEBAR GİZLEME --- */
+        /* --- MOBİL UYUMLULUK --- */
         @media only screen and (max-width: 768px) {{
             section[data-testid="stSidebar"] {{
                 display: none !important;
@@ -104,9 +104,9 @@ def apply_theme():
                 gap: 10px !important;
                 text-align: center !important;
                 padding: 15px !important;
+                height: auto !important;
             }}
             .mh-right {{ text-align: center !important; }}
-            
             .kpi-card {{ margin-bottom: 10px !important; padding: 16px !important; }}
             .kpi-value {{ font-size: 24px !important; }}
             
@@ -666,6 +666,31 @@ def render_skeleton():
     with c4: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="skeleton" style="height:300px; margin-top:20px;"></div>', unsafe_allow_html=True)
 
+def stream_text(text, container, kutu_rengi, kenar_rengi, durum_emoji, durum_baslik, delay=0.015):
+    for i in range(len(text) + 1):
+        curr_text = text[:i]
+        container.markdown(f"""
+        <div class="delay-2 animate-enter" style="
+            background: {kutu_rengi}; 
+            border-left: 4px solid {kenar_rengi}; 
+            border-radius: 12px; 
+            padding: 24px; 
+            margin-bottom: 30px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                <span style="font-size:24px;">{durum_emoji}</span>
+                <span style="font-weight:700; color:#fff; letter-spacing:1px; font-size:14px; font-family:'Inter', sans-serif;">AI MARKET ANALİSTİ: <span style="color:{kenar_rengi}">{durum_baslik}</span> <span class="blink">|</span></span>
+            </div>
+            <div style="font-size:14px; color:#d4d4d8; line-height:1.6; font-style:italic; padding-left:42px;">
+                "{curr_text}"
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        time.sleep(delay)
+
 def style_chart(fig, is_pdf=False, is_sunburst=False):
     if is_pdf:
         fig.update_layout(template="plotly_white", font=dict(family="Arial", size=14, color="black"))
@@ -952,7 +977,7 @@ def sayfa_piyasa_ozeti(ctx):
             title_text="Değişim Oranı (%)",
             tickangle=-45,          
             tickformat=".1f", 
-            nticks=10, # Sadece 10 etiket göster, kalabalığı önle
+            nticks=0, # Sadece 10 etiket göster, kalabalığı önle
             tickfont=dict(size=10, color="#a1a1aa")      
         )
         st.plotly_chart(style_chart(fig_hist), use_container_width=True, key="ozet_histogram")
@@ -1065,160 +1090,160 @@ def sayfa_raporlama(ctx):
 def sayfa_metodoloji():
     # HTML İçeriği Sola Dayalı (Indent Sorunu Çözüldü)
     html_content = """
-    <style>
-        .method-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 40px;
-            font-family: 'Inter', sans-serif;
-            color: #e4e4e7;
-            line-height: 1.7;
-        }
-        .method-header {
-            font-size: 26px;
-            font-weight: 800;
-            color: #fff;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: -webkit-linear-gradient(0deg, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .step-box {
-            margin-bottom: 35px;
-            padding-left: 25px;
-            border-left: 4px solid #3b82f6;
-            position: relative;
-        }
-        .step-title {
-            color: #60a5fa;
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            letter-spacing: 0.5px;
-        }
-        .formula-box {
-            background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(20,20,25,0.6) 100%);
-            border: 1px solid rgba(251, 191, 36, 0.2);
-            border-radius: 12px;
-            padding: 25px;
-            text-align: center;
-            margin: 25px 0;
-            font-family: 'Times New Roman', serif;
-            font-size: 22px;
-            font-style: italic;
-            color: #fbbf24;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-        }
-        .list-item {
-            margin-bottom: 12px;
-            display: flex;
-            align-items: start;
-            gap: 12px;
-            font-size: 15px;
-            color: #d1d5db;
-            background: rgba(255,255,255,0.02);
-            padding: 10px;
-            border-radius: 8px;
-        }
-        .bullet {
-            color: #10b981;
-            font-weight: bold;
-            font-size: 18px;
-            line-height: 1;
-            margin-top: 2px;
-        }
-        .highlight {
-            color: #fff;
-            font-weight: 600;
-        }
-    </style>
+<style>
+    .method-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 40px;
+        font-family: 'Inter', sans-serif;
+        color: #e4e4e7;
+        line-height: 1.7;
+    }
+    .method-header {
+        font-size: 26px;
+        font-weight: 800;
+        color: #fff;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: -webkit-linear-gradient(0deg, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .step-box {
+        margin-bottom: 35px;
+        padding-left: 25px;
+        border-left: 4px solid #3b82f6;
+        position: relative;
+    }
+    .step-title {
+        color: #60a5fa;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: 0.5px;
+    }
+    .formula-box {
+        background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(20,20,25,0.6) 100%);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 12px;
+        padding: 25px;
+        text-align: center;
+        margin: 25px 0;
+        font-family: 'Times New Roman', serif;
+        font-size: 22px;
+        font-style: italic;
+        color: #fbbf24;
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+    .list-item {
+        margin-bottom: 12px;
+        display: flex;
+        align-items: start;
+        gap: 12px;
+        font-size: 15px;
+        color: #d1d5db;
+        background: rgba(255,255,255,0.02);
+        padding: 10px;
+        border-radius: 8px;
+    }
+    .bullet {
+        color: #10b981;
+        font-weight: bold;
+        font-size: 18px;
+        line-height: 1;
+        margin-top: 2px;
+    }
+    .highlight {
+        color: #fff;
+        font-weight: 600;
+    }
+</style>
 
-    <div class="method-card animate-enter">
-        <div class="method-header">
-            <span>📐</span> Metodoloji ve Akademik Çerçeve
+<div class="method-card animate-enter">
+    <div class="method-header">
+        <span>📐</span> Metodoloji ve Akademik Çerçeve
+    </div>
+
+    <div class="step-box" style="border-left-color: #3b82f6;">
+        <div class="step-title" style="color: #60a5fa;">
+            <span>1.</span> Veri Toplama (Web Scraping)
         </div>
+        <p style="color:#cbd5e1;">
+            Piyasa Monitörü, Türkiye'nin en büyük zincir marketleri ve e-ticaret platformlarından 
+            <span class="highlight">Python tabanlı botlar</span> (Selenium, BeautifulSoup, Playwright) aracılığıyla günlük veri toplar. 
+            Botlarımız, "User-Agent Rotation" ve "Rate Limiting" prensiplerine uygun olarak, hedef sunucuları yormadan çalışır. 
+            Her ürün için benzersiz bir ürün kodu (Barkod/SKU) ve URL eşleştirmesi kullanılır.
+        </p>
+    </div>
 
-        <div class="step-box" style="border-left-color: #3b82f6;">
-            <div class="step-title" style="color: #60a5fa;">
-                <span>1.</span> Veri Toplama (Web Scraping)
-            </div>
-            <p style="color:#cbd5e1;">
-                Piyasa Monitörü, Türkiye'nin en büyük zincir marketleri ve e-ticaret platformlarından 
-                <span class="highlight">Python tabanlı botlar</span> (Selenium, BeautifulSoup, Playwright) aracılığıyla günlük veri toplar. 
-                Botlarımız, "User-Agent Rotation" ve "Rate Limiting" prensiplerine uygun olarak, hedef sunucuları yormadan çalışır. 
-                Her ürün için benzersiz bir ürün kodu (Barkod/SKU) ve URL eşleştirmesi kullanılır.
-            </p>
+    <div class="step-box" style="border-left-color: #8b5cf6;">
+        <div class="step-title" style="color: #a78bfa;">
+            <span>2.</span> Veri Temizleme ve Kalite Kontrol
         </div>
-
-        <div class="step-box" style="border-left-color: #8b5cf6;">
-            <div class="step-title" style="color: #a78bfa;">
-                <span>2.</span> Veri Temizleme ve Kalite Kontrol
-            </div>
-            <p style="color:#cbd5e1; margin-bottom:15px;">Ham veriler işlenmeden önce aşağıdaki filtrelerden geçer:</p>
-            
-            <div class="list-item">
-                <span class="bullet">➤</span>
-                <div>
-                    <span class="highlight">Anomali Tespiti:</span> Bir önceki güne göre %50'den fazla fiyat değişimi olan ürünler "Şüpheli" olarak işaretlenir ve manuel kontrole düşer.
-                </div>
-            </div>
-            <div class="list-item">
-                <span class="bullet">➤</span>
-                <div>
-                    <span class="highlight">Birim Dönüşümü:</span> Kg, Litre, Adet gibi birimler standartlaştırılır (Örn: 750gr -> 0.75kg).
-                </div>
-            </div>
-            <div class="list-item">
-                <span class="bullet">➤</span>
-                <div>
-                    <span class="highlight">Stok Kontrolü:</span> Stokta olmayan ürünlerin fiyatları, endeks hesaplamasında "sabit fiyat" (carry-forward) yöntemiyle taşınır.
-                </div>
+        <p style="color:#cbd5e1; margin-bottom:15px;">Ham veriler işlenmeden önce aşağıdaki filtrelerden geçer:</p>
+        
+        <div class="list-item">
+            <span class="bullet">➤</span>
+            <div>
+                <span class="highlight">Anomali Tespiti:</span> Bir önceki güne göre %50'den fazla fiyat değişimi olan ürünler "Şüpheli" olarak işaretlenir ve manuel kontrole düşer.
             </div>
         </div>
-
-        <div class="step-box" style="border-left-color: #f59e0b;">
-            <div class="step-title" style="color: #fbbf24;">
-                <span>3.</span> Endeks Hesaplama Formülü
+        <div class="list-item">
+            <span class="bullet">➤</span>
+            <div>
+                <span class="highlight">Birim Dönüşümü:</span> Kg, Litre, Adet gibi birimler standartlaştırılır (Örn: 750gr -> 0.75kg).
             </div>
-            <p style="color:#cbd5e1;">
-                Sistemimiz, <strong>Zincirleme Laspeyres Fiyat Endeksi</strong> yöntemini kullanır. Formül şu şekildedir:
-            </p>
-            
-            <div class="formula-box">
-                I = Σ (Pn / P0) * W
-            </div>
-            
-            <p style="font-size:13px; color:#9ca3af; text-align:center; margin-top:-10px; margin-bottom:20px;">
-                (I: Endeks, Pn: Güncel Fiyat, P0: Baz Fiyat, W: Ağırlık)
-            </p>
-            
-            <p style="color:#cbd5e1;">
-                Bu yöntemde, her bir ürünün sepetteki ağırlığı (W), hanehalkı tüketim anketlerine ve TÜİK ağırlıklarına göre belirlenir. 
-                Aylık fiyat ortalaması alınırken <span class="highlight">Geometrik Ortalama</span> tercih edilerek uç değerlerin etkisi azaltılır.
-            </p>
         </div>
-
-        <div class="step-box" style="border-left-color: #10b981;">
-             <div class="step-title" style="color: #34d399;">
-                <span>4.</span> Eşleştirme ve İkame (Substitution)
+        <div class="list-item">
+            <span class="bullet">➤</span>
+            <div>
+                <span class="highlight">Stok Kontrolü:</span> Stokta olmayan ürünlerin fiyatları, endeks hesaplamasında "sabit fiyat" (carry-forward) yöntemiyle taşınır.
             </div>
-            <p style="color:#cbd5e1;">
-                Takip edilen bir ürün piyasadan kalktığında, sistem otomatik olarak "En Yakın Benzer Ürün" algoritmasını çalıştırır. 
-                Aynı marka, aynı gramaj ve aynı kategorideki en yakın ikame ürün (Substitute) sepete dahil edilir ve 
-                fiyat serisi düzeltme katsayısı ile bağlanır.
-            </p>
         </div>
     </div>
-    """
+
+    <div class="step-box" style="border-left-color: #f59e0b;">
+        <div class="step-title" style="color: #fbbf24;">
+            <span>3.</span> Endeks Hesaplama Formülü
+        </div>
+        <p style="color:#cbd5e1;">
+            Sistemimiz, <strong>Zincirleme Laspeyres Fiyat Endeksi</strong> yöntemini kullanır. Formül şu şekildedir:
+        </p>
+        
+        <div class="formula-box">
+            I = Σ (Pn / P0) * W
+        </div>
+        
+        <p style="font-size:13px; color:#9ca3af; text-align:center; margin-top:-10px; margin-bottom:20px;">
+            (I: Endeks, Pn: Güncel Fiyat, P0: Baz Fiyat, W: Ağırlık)
+        </p>
+        
+        <p style="color:#cbd5e1;">
+            Bu yöntemde, her bir ürünün sepetteki ağırlığı (W), hanehalkı tüketim anketlerine ve TÜİK ağırlıklarına göre belirlenir. 
+            Aylık fiyat ortalaması alınırken <span class="highlight">Geometrik Ortalama</span> tercih edilerek uç değerlerin etkisi azaltılır.
+        </p>
+    </div>
+
+    <div class="step-box" style="border-left-color: #10b981;">
+            <div class="step-title" style="color: #34d399;">
+            <span>4.</span> Eşleştirme ve İkame (Substitution)
+        </div>
+        <p style="color:#cbd5e1;">
+            Takip edilen bir ürün piyasadan kalktığında, sistem otomatik olarak "En Yakın Benzer Ürün" algoritmasını çalıştırır. 
+            Aynı marka, aynı gramaj ve aynı kategorideki en yakın ikame ürün (Substitute) sepete dahil edilir ve 
+            fiyat serisi düzeltme katsayısı ile bağlanır.
+        </p>
+    </div>
+</div>
+"""
     st.markdown(html_content, unsafe_allow_html=True)
 
 # --- ANA YÖNLENDİRİCİ ---
