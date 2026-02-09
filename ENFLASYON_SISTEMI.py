@@ -1269,6 +1269,7 @@ ul.styled-list li::before {
 
   <div class="method-card theme-purple">
     <h2 class="section-title">2. Veri Temizleme ve Kalite Kontrol</h2>
+    
     <p>
       Ham fiyat verileri, endeks hesaplamasına dahil edilmeden önce çok aşamalı bir kalite kontrol
       sürecinden geçirilir. Bu süreç, fiyat serilerindeki gürültüyü azaltmayı ve metodolojik
@@ -1304,6 +1305,7 @@ ul.styled-list li::before {
 
   <div class="method-card theme-yellow">
     <h2 class="section-title">3. Endeks Hesaplama Metodolojisi</h2>
+    
     <p>
       Piyasa Monitörü fiyat endeksi, Zincirleme Laspeyres Fiyat Endeksi yaklaşımı kullanılarak
       hesaplanmaktadır. Bu yöntem, kısa dönemli fiyat hareketlerini doğru şekilde yansıtması ve
@@ -1493,6 +1495,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
