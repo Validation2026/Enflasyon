@@ -74,6 +74,17 @@ def apply_theme():
             --card-radius: 16px;
         }}
 
+        /* --- SAYFA ÜST BOŞLUĞUNU KALDIRMA --- */
+        .block-container {{
+            padding-top: 1.5rem !important; /* En üstteki boşluğu kıstık */
+            padding-bottom: 1rem !important;
+        }}
+        
+        /* Header Gizleme */
+        header {{visibility: hidden;}}
+        [data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
+        [data-testid="stToolbar"] {{ display: none; }}
+
         /* --- MOBİL UYUMLULUK VE SIDEBAR GİZLEME --- */
         @media only screen and (max-width: 768px) {{
             section[data-testid="stSidebar"] {{
@@ -84,74 +95,25 @@ def apply_theme():
                 display: none !important;
             }}
             .block-container {{
-                padding-top: 1rem !important;
                 padding-left: 0.5rem !important;
                 padding-right: 0.5rem !important;
                 max-width: 100% !important;
             }}
-            .header-wrapper {{
+            .monitor-header {{
                 flex-direction: column !important;
-                align-items: flex-start !important;
-                padding: 15px 20px !important;
-                height: auto !important;
-                gap: 15px !important;
+                gap: 10px !important;
+                text-align: center !important;
+                padding: 15px !important;
             }}
-            .app-title {{ 
-                font-size: 24px !important; 
-                flex-direction: column !important; 
-                align-items: flex-start !important; 
-                gap: 5px !important;
-            }}
-            .clock-container {{ 
-                text-align: left !important; 
-                width: 100% !important; 
-                margin-top: 10px !important; 
-                padding-top: 10px !important; 
-                border-top: 1px solid rgba(255,255,255,0.1); 
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }}
-            .kpi-card {{
-                margin-bottom: 10px !important;
-                padding: 16px !important;
-                height: auto !important;
-            }}
-            .kpi-value {{ font-size: 28px !important; margin-bottom: 4px !important; }}
-            .kpi-title {{ font-size: 10px !important; margin-bottom: 8px !important; }}
-            .pg-card {{
-                width: 100% !important;
-                height: auto !important;
-                min-height: 70px !important;
-                margin-bottom: 10px !important;
-                flex-direction: row !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                text-align: left !important;
-                padding: 12px 16px !important;
-                gap: 10px;
-            }}
-            .pg-name {{ 
-                font-size: 13px !important; 
-                -webkit-line-clamp: 1 !important; 
-                margin-bottom: 0 !important;
-                flex: 1; 
-                text-align: left !important;
-            }}
-            .pg-price {{ font-size: 15px !important; margin: 0 !important; white-space: nowrap; }}
-            .pg-badge {{ font-size: 9px !important; padding: 2px 6px !important; }}
+            .mh-right {{ text-align: center !important; }}
+            
+            .kpi-card {{ margin-bottom: 10px !important; padding: 16px !important; }}
+            .kpi-value {{ font-size: 24px !important; }}
+            
             .stTabs [data-baseweb="tab-list"] {{
-                flex-wrap: nowrap !important;
                 overflow-x: auto !important;
                 justify-content: flex-start !important;
-                padding-bottom: 5px !important;
             }}
-            .stTabs [data-baseweb="tab"] {{
-                flex: 0 0 auto !important;
-                padding: 0 15px !important;
-            }}
-            .stPlotlyChart {{ width: 100% !important; }}
-            .ticker-wrap {{ font-size: 10px !important; padding: 8px 0 !important; }}
         }}
 
         /* --- GENEL STİLLER --- */
@@ -169,19 +131,12 @@ def apply_theme():
         @keyframes fadeInUp {{ from {{ opacity: 0; transform: translate3d(0, 20px, 0); }} to {{ opacity: 1; transform: translate3d(0, 0, 0); }} }}
         @keyframes border-flow {{ 0% {{ background-position: 0% 50%; }} 50% {{ background-position: 100% 50%; }} 100% {{ background-position: 0% 50%; }} }}
         .animate-enter {{ animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }}
-        .delay-1 {{ animation-delay: 0.1s; }} .delay-2 {{ animation-delay: 0.2s; }} .delay-3 {{ animation-delay: 0.3s; }}
-        .blink {{ animation: blinker 1s linear infinite; }} @keyframes blinker {{ 50% {{ opacity: 0; }} }}
-
+        
         [data-testid="stAppViewContainer"] {{
             background-color: var(--bg-deep);
             background-image: radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.06), transparent 25%), radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.06), transparent 25%);
             background-attachment: fixed; font-family: 'Inter', sans-serif !important; color: var(--text-main) !important;
         }}
-        ::-webkit-scrollbar {{ width: 8px; height: 8px; }}
-        ::-webkit-scrollbar-track {{ background: #02040a; }}
-        ::-webkit-scrollbar-thumb {{ background: #3b82f6; border-radius: 4px; }}
-        [data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
-        [data-testid="stToolbar"] {{ display: none; }}
         
         section[data-testid="stSidebar"] {{
             background: linear-gradient(180deg, rgba(5, 5, 10, 0.95) 0%, rgba(0, 0, 0, 0.98) 100%) !important;
@@ -190,75 +145,54 @@ def apply_theme():
         
         .stSelectbox > div > div, .stTextInput > div > div {{
             background-color: rgba(255, 255, 255, 0.03) !important; border: 1px solid var(--glass-border) !important;
-            color: var(--text-main) !important; border-radius: 10px !important; transition: all 0.3s ease;
+            color: var(--text-main) !important; border-radius: 10px !important;
         }}
-        .stSelectbox > div > div:hover, .stTextInput > div > div:focus-within {{
-            border-color: var(--accent-blue) !important; background-color: rgba(255, 255, 255, 0.06) !important;
-        }}
+        
         [data-testid="stDataEditor"], [data-testid="stDataFrame"] {{
             border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(10, 10, 15, 0.4) !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: fadeInUp 0.8s ease-out;
         }}
+        
         .stTabs [data-baseweb="tab-list"] {{
-            gap: 8px; background: rgba(255,255,255,0.02); padding: 8px; border-radius: 12px; border: 1px solid var(--glass-border);
+            gap: 8px; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 12px; border: 1px solid var(--glass-border); margin-top: 10px;
         }}
         .stTabs [data-baseweb="tab"] {{
-            height: 40px; border-radius: 8px; padding: 0 20px; color: var(--text-dim) !important; font-weight: 500; border: none !important; transition: all 0.2s ease;
+            height: 36px; border-radius: 8px; padding: 0 15px; color: var(--text-dim) !important; font-weight: 500; border: none !important;
         }}
         .stTabs [aria-selected="true"] {{
-            background-color: rgba(255,255,255,0.1) !important; color: #fff !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            background-color: rgba(255,255,255,0.1) !important; color: #fff !important;
         }}
-        div.stButton > button {{
-            background: linear-gradient(145deg, rgba(40,40,45,0.8), rgba(20,20,25,0.9)); border: 1px solid var(--glass-border);
-            color: #fff; border-radius: 10px; font-weight: 600; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }}
-        div.stButton > button:hover {{ border-color: var(--accent-blue); box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); transform: translateY(-1px); }}
 
         .kpi-card {{
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             border: 1px solid var(--glass-border); border-radius: var(--card-radius);
-            padding: 24px; position: relative; overflow: hidden; backdrop-filter: blur(10px); transition: all 0.3s ease;
+            padding: 20px; position: relative; overflow: hidden; backdrop-filter: blur(10px);
             animation: fadeInUp 0.6s ease-out both; z-index: 1;
         }}
-        .kpi-card::before, .pg-card::before, .smart-card::before {{
-            content: ""; position: absolute; inset: -1px; z-index: -1;
-            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
-            background-size: 400% 400%; animation: border-flow 10s ease infinite; border-radius: inherit; opacity: 0; transition: opacity 0.3s ease;
-        }}
-        .kpi-card:hover::before, .pg-card:hover::before, .smart-card:hover::before {{ opacity: 0.6; filter: blur(10px); }}
-        .kpi-card:hover {{
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
-            border-color: var(--glass-highlight); transform: translateY(-4px);
-        }}
-        .kpi-bg-icon {{ position: absolute; right: -15px; bottom: -25px; font-size: 100px; opacity: 0.04; transform: rotate(-15deg); filter: blur(1px); pointer-events: none; }}
-        .kpi-title {{ font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1.5px; margin-bottom: 12px; }}
-        .kpi-value {{ font-size: 36px; font-weight: 700; color: #fff; margin-bottom: 8px; letter-spacing: -1.5px; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }}
-        .kpi-sub {{ font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 8px; color: var(--text-dim); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 6px; width: fit-content; }}
+        .kpi-title {{ font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 8px; }}
+        .kpi-value {{ font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 5px; letter-spacing: -1px; }}
+        .kpi-sub {{ font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 6px; color: var(--text-dim); background: rgba(0,0,0,0.2); padding: 3px 6px; border-radius: 4px; width: fit-content; }}
 
         .pg-card {{
             background: rgba(20, 20, 25, 0.4); border: 1px solid var(--glass-border); border-radius: 12px;
-            padding: 16px; height: 150px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-            text-align: center; transition: all 0.2s ease; animation: fadeInUp 0.5s ease-out both; position: relative; z-index: 1;
+            padding: 12px; height: 140px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+            text-align: center; position: relative; z-index: 1;
         }}
-        .pg-card:hover {{ background: rgba(40, 40, 45, 0.6); border-color: rgba(255,255,255,0.2); transform: scale(1.03); }}
-        .pg-name {{ font-size: 12px; font-weight: 500; color: #d4d4d8; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 32px; }}
-        .pg-price {{ font-size: 18px; font-weight: 700; color: #fff; margin: 8px 0; }}
-        .pg-badge {{ padding: 3px 10px; border-radius: 99px; font-size: 10px; font-weight: 700; border: 1px solid transparent; }}
-        .pg-red {{ background: rgba(239, 68, 68, 0.1); color: #fca5a5; border-color: rgba(239, 68, 68, 0.2); }}
-        .pg-green {{ background: rgba(16, 185, 129, 0.1); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.2); }}
+        .pg-name {{ font-size: 12px; font-weight: 500; color: #d4d4d8; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }}
+        .pg-price {{ font-size: 16px; font-weight: 700; color: #fff; margin: 6px 0; }}
+        .pg-badge {{ padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; }}
+        .pg-red {{ background: rgba(239, 68, 68, 0.1); color: #fca5a5; }}
+        .pg-green {{ background: rgba(16, 185, 129, 0.1); color: #6ee7b7; }}
         .pg-yellow {{ background: rgba(255, 255, 255, 0.05); color: #ffd966; }}
 
-        .ticker-wrap {{ width: 100%; overflow: hidden; background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(20,20,30,0.5) 15%, rgba(20,20,30,0.5) 85%, rgba(0,0,0,0) 100%); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); padding: 12px 0; margin-bottom: 30px; white-space: nowrap; }}
-        .ticker-move {{ display: inline-block; padding-left: 100%; animation: marquee 45s linear infinite; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.5px; }}
+        .ticker-wrap {{ width: 100%; overflow: hidden; background: rgba(0,0,0,0.2); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); padding: 8px 0; margin-bottom: 20px; white-space: nowrap; }}
+        .ticker-move {{ display: inline-block; padding-left: 100%; animation: marquee 45s linear infinite; font-family: 'JetBrains Mono', monospace; font-size: 11px; }}
         @keyframes marquee {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
 
-        .smart-card {{ background: rgba(30, 30, 35, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 5px; transition: all 0.2s; animation: fadeInUp 0.7s ease-out both; position: relative; z-index: 1; }}
-        .smart-card:hover {{ border-color: var(--accent-blue); transform: translateY(-2px); }}
-        .sc-title {{ font-size: 11px; color: #a1a1aa; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }}
-        .sc-val {{ font-size: 20px; color: #fff; font-weight:700; display:flex; align-items:center; gap:8px; }}
+        .smart-card {{ background: rgba(30, 30, 35, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }}
+        .sc-title {{ font-size: 10px; color: #a1a1aa; font-weight:600; text-transform:uppercase; }}
+        .sc-val {{ font-size: 18px; color: #fff; font-weight:700; }}
         
-        .skeleton {{ background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px; }}
-        @keyframes loading {{ 0% {{ background-position: 200% 0; }} 100% {{ background-position: -200% 0; }} }}
+        .skeleton {{ background: rgba(255,255,255,0.05); animation: blinker 1.5s infinite; border-radius: 8px; }}
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -732,31 +666,6 @@ def render_skeleton():
     with c4: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="skeleton" style="height:300px; margin-top:20px;"></div>', unsafe_allow_html=True)
 
-def stream_text(text, container, kutu_rengi, kenar_rengi, durum_emoji, durum_baslik, delay=0.015):
-    for i in range(len(text) + 1):
-        curr_text = text[:i]
-        container.markdown(f"""
-        <div class="delay-2 animate-enter" style="
-            background: {kutu_rengi}; 
-            border-left: 4px solid {kenar_rengi}; 
-            border-radius: 12px; 
-            padding: 24px; 
-            margin-bottom: 30px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            border-right: 1px solid rgba(255,255,255,0.05);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);">
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-                <span style="font-size:24px;">{durum_emoji}</span>
-                <span style="font-weight:700; color:#fff; letter-spacing:1px; font-size:14px; font-family:'Inter', sans-serif;">AI MARKET ANALİSTİ: <span style="color:{kenar_rengi}">{durum_baslik}</span> <span class="blink">|</span></span>
-            </div>
-            <div style="font-size:14px; color:#d4d4d8; line-height:1.6; font-style:italic; padding-left:42px;">
-                "{curr_text}"
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        time.sleep(delay)
-
 def style_chart(fig, is_pdf=False, is_sunburst=False):
     if is_pdf:
         fig.update_layout(template="plotly_white", font=dict(family="Arial", size=14, color="black"))
@@ -1035,17 +944,17 @@ def sayfa_piyasa_ozeti(ctx):
     # GRAFİKLER
     col_g1, col_g2 = st.columns([2, 1])
     with col_g1:
-        # --- HISTOGRAM DÜZELTMESİ ---
-        fig_hist = px.histogram(df, x="Fark_Yuzde", nbins=40, title="Fiyat Değişim Dağılımı", color_discrete_sequence=["#3b82f6"])
+        # --- HISTOGRAM DÜZELTMESİ (ÜST ÜSTE BİNME SORUNU ÇÖZÜLDÜ) ---
+        fig_hist = px.histogram(df, x="Fark_Yuzde", nbins=20, title="Fiyat Değişim Dağılımı", color_discrete_sequence=["#3b82f6"])
         fig_hist.update_layout(bargap=0.1)
         # X Ekseni Ayarları
         fig_hist.update_xaxes(
             title_text="Değişim Oranı (%)",
             tickangle=-45,          
-            tickformat=".1f",       
-            dtick=2.5,              
+            tickformat=".1f", 
+            nticks=10, # Sadece 10 etiket göster, kalabalığı önle
+            tickfont=dict(size=10, color="#a1a1aa")      
         )
-        # BURAYA 'key="ozet_histogram"' EKLEDİK - HATAYI ÇÖZER
         st.plotly_chart(style_chart(fig_hist), use_container_width=True, key="ozet_histogram")
 
     with col_g2:
@@ -1068,7 +977,6 @@ def sayfa_piyasa_ozeti(ctx):
     fig_tree = px.treemap(df, path=[px.Constant("Piyasa"), 'Grup', ctx['ad_col']], 
                          values=ctx['agirlik_col'], color='Fark', color_continuous_scale='RdYlGn_r')
     
-    # BURAYA 'key="ozet_treemap"' EKLEDİK - HATAYI ÇÖZER
     st.plotly_chart(style_chart(fig_tree, is_sunburst=True), use_container_width=True, key="ozet_treemap")
 
 def sayfa_kategori_detay(ctx):
@@ -1155,7 +1063,8 @@ def sayfa_raporlama(ctx):
     st.download_button("📥 Word Raporu İndir", data=word_buffer, file_name="Rapor.docx", type="primary")
 
 def sayfa_metodoloji():
-    st.markdown("""
+    # HTML İçeriği Sola Dayalı (Indent Sorunu Çözüldü)
+    html_content = """
     <style>
         .method-card {
             background: rgba(255, 255, 255, 0.02);
@@ -1185,17 +1094,6 @@ def sayfa_metodoloji():
             padding-left: 25px;
             border-left: 4px solid #3b82f6;
             position: relative;
-        }
-        .step-box::before {
-            content: '';
-            position: absolute;
-            left: -4px;
-            top: 0;
-            width: 4px;
-            height: 40px;
-            background: inherit; /* Border rengini alır */
-            filter: blur(8px);
-            opacity: 0.7;
         }
         .step-title {
             color: #60a5fa;
@@ -1320,72 +1218,75 @@ def sayfa_metodoloji():
             </p>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+    st.markdown(html_content, unsafe_allow_html=True)
 
 # --- ANA YÖNLENDİRİCİ ---
 
 def main():
-    # --- YENİ HEADER TASARIMI (Piyasa Monitörü) ---
+    # --- YENİ HEADER TASARIMI (COMPACT) ---
     st.markdown("""
         <style>
             .monitor-header {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 25px 35px;
+                padding: 15px 25px; /* Daha az boşluk */
                 background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 100%);
-                border: 1px solid rgba(255,255,255,0.1);
-                border-radius: 16px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                margin-bottom: 25px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                margin-bottom: 20px;
+                margin-top: -30px; /* Yukarıya daha da yaklaştır */
+            }
+            .mh-left {
+                display: flex;
+                flex-direction: column;
             }
             .mh-title {
                 font-family: 'Inter', sans-serif;
                 font-weight: 800;
-                font-size: 36px;
+                font-size: 24px; /* Font küçüldü */
                 color: #fff;
-                letter-spacing: -1px;
-                line-height: 1;
+                letter-spacing: -0.5px;
+                line-height: 1.1;
+                display: flex;
+                align-items: center;
+                gap: 10px;
             }
             .mh-badge {
-                background: rgba(16, 185, 129, 0.2);
+                background: rgba(16, 185, 129, 0.15);
                 color: #34d399;
-                font-size: 11px;
-                padding: 4px 10px;
-                border-radius: 6px;
+                font-size: 10px;
+                padding: 3px 8px;
+                border-radius: 4px;
+                border: 1px solid rgba(16, 185, 129, 0.2);
+                letter-spacing: 0.5px;
+                font-weight: 700;
                 vertical-align: middle;
-                margin-left: 10px;
-                border: 1px solid rgba(16, 185, 129, 0.3);
-                letter-spacing: 1px;
             }
             .mh-subtitle {
-                font-size: 14px;
+                font-size: 12px;
                 color: #94a3b8;
-                margin-top: 5px;
+                margin-top: 2px;
                 font-weight: 400;
             }
             .mh-right {
                 text-align: right;
             }
             .mh-location {
-                font-size: 12px;
+                font-size: 10px;
                 color: #64748b;
                 font-weight: 700;
-                letter-spacing: 2px;
+                letter-spacing: 1.5px;
                 text-transform: uppercase;
-                margin-bottom: 5px;
+                margin-bottom: 2px;
             }
             .mh-date {
-                font-size: 28px;
+                font-size: 20px; /* Font küçüldü */
                 font-weight: 700;
                 color: #e2e8f0;
                 font-family: 'JetBrains Mono', monospace;
-            }
-            
-            /* Mobil */
-            @media (max-width: 768px) {
-                .monitor-header { flex-direction: column; text-align: center; gap: 20px; }
-                .mh-right { text-align: center; }
             }
         </style>
 
