@@ -53,11 +53,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS MOTORU ---
-# --- CSS MOTORU ---
+# --- CSS MOTORU (DÜZELTİLMİŞ HALİ) ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
+    # NOT: f-string içinde CSS kullanırken süslü parantezleri {{ }} şeklinde çift yapmalıyız.
     final_css = f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -1538,10 +1538,10 @@ ul.styled-list li::before { content: "➤"; position: absolute; left: 0; top: 2p
     st.markdown(html_content, unsafe_allow_html=True)
 
 
-# --- ANA YÖNLENDİRİCİ ---
+# --- ANA YÖNLENDİRİCİ (Callback'li Navigasyon) ---
 
 def main():
-    # --- HEADER VE SENKRONİZASYON (Aynı kalacak) ---
+    # --- HEADER VE SENKRONİZASYON ---
     st.markdown("""
         <style>
             .monitor-header {
@@ -1605,7 +1605,7 @@ def main():
     with st.spinner("Piyasa verileri analiz ediliyor..."):
         ctx = veri_motoru_calistir()
 
-    # --- 2. GARANTİLİ NAVİGASYON YAPISI ---
+    # --- 2. NAVİGASYON ---
     
     sayfalar = [
         "🏠 ANA SAYFA", 
@@ -1618,36 +1618,32 @@ def main():
         "📐 METODOLOJİ"
     ]
 
-    # A. State Başlatma: Eğer hafızada aktif sayfa yoksa, ilkini ata
+    # Session State Başlatma (Callback için)
     if 'aktif_sayfa' not in st.session_state:
         st.session_state.aktif_sayfa = sayfalar[0]
 
-    # B. Callback Fonksiyonu: Kullanıcı tıkladığında state'i güncelle
     def menu_guncelle():
         st.session_state.aktif_sayfa = st.session_state.nav_widget
 
-    # C. İndex Bulma: Şu anki aktif sayfanın listedeki sırasını bul
     try:
-        # State'deki sayfa isminin listedeki sırasını (index) buluyoruz (0, 1, 2...)
         aktif_index = sayfalar.index(st.session_state.aktif_sayfa)
     except ValueError:
         aktif_index = 0
         st.session_state.aktif_sayfa = sayfalar[0]
 
-    # D. Widget Çizimi
     st.radio(
         "", 
         options=sayfalar, 
-        index=aktif_index,       # <--- İŞTE ÇÖZÜM: Buraya elle hesapladığımız indexi veriyoruz.
-        key="nav_widget",        # Widget'ın kendi anahtarı
-        on_change=menu_guncelle, # Değiştiği anda state'i güncelleyen fonksiyon çalışsın
+        index=aktif_index,       
+        key="nav_widget",        
+        on_change=menu_guncelle, 
         horizontal=True, 
         label_visibility="collapsed"
     )
 
     st.markdown("---")
 
-    # E. İçeriği Yükle (State'deki değere göre)
+    # --- 3. İÇERİĞİ YÜKLE ---
     secim = st.session_state.aktif_sayfa
 
     if ctx:
@@ -1674,13 +1670,7 @@ def main():
             err_msg = "<br><div style='text-align:center; padding:20px; background:rgba(255,0,0,0.1); border-radius:10px; color:#fff;'>⚠️ Veri seti yüklenemedi. Lütfen internet bağlantınızı kontrol edin.</div>"
             st.markdown(err_msg, unsafe_allow_html=True)
 
-    # Footer
     st.markdown('<div style="text-align:center; color:#52525b; font-size:11px; margin-top:50px; opacity:0.6;">VALIDASYON MUDURLUGU © 2026 - GİZLİ ANALİZ BELGESİ</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
