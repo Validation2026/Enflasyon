@@ -758,12 +758,10 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
 
 # --- SAYFA FONKSİYONLARI (ESTETİK GÜNCELLEMELER) ---
 def sayfa_ana_sayfa(ctx):
-    # Veri yoksa "..." göster, varsa değerleri al
     urun_sayisi = ctx["stats_urun"] if ctx else "..."
     kategori_sayisi = ctx["stats_kategori"] if ctx else "..."
     veri_noktasi = ctx["stats_veri_noktasi"] if ctx else "..."
     
-    # HTML İçeriği
     st.markdown(f"""
     <div style="text-align:center; padding: 40px 20px; animation: fadeInUp 0.8s ease;">
         <h1 style="font-size: 56px; font-weight: 800; margin-bottom: 20px; 
@@ -773,57 +771,50 @@ def sayfa_ana_sayfa(ctx):
         </h1>
         <p style="font-size: 20px; color: #a1a1aa; max-width: 800px; margin: 0 auto; line-height: 1.6;">
             Türkiye'nin en kapsamlı yapay zeka destekli fiyat takip sistemi. <br>
-            <strong>{kategori_sayisi}</strong> farklı kategorideki <strong>{urun_sayisi}</strong> ürünü anlık izliyor, resmi verilerle kıyaslıyoruz.
+            <strong>{kategori_sayisi}</strong> farklı kategorideki <strong>{urun_sayisi}</strong> ürünü anlık izliyor.
         </p>
         <br><br>
-        
+
         <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
-            <div class="kpi-card" style="flex: 1; min-width: 200px; max-width: 250px; text-align:center; padding:30px;">
+            <div class="kpi-card" style="width:250px; text-align:center; padding:30px;">
                 <div style="font-size:42px; margin-bottom:10px;">📦</div>
                 <div class="kpi-value">{urun_sayisi}</div>
                 <div style="color:#a1a1aa; font-size:14px; font-weight:600;">TAKİP EDİLEN ÜRÜN</div>
             </div>
-            <div class="kpi-card" style="flex: 1; min-width: 200px; max-width: 250px; text-align:center; padding:30px;">
+            <div class="kpi-card" style="width:250px; text-align:center; padding:30px;">
                 <div style="font-size:42px; margin-bottom:10px;">📊</div>
                 <div class="kpi-value">{kategori_sayisi}</div>
                 <div style="color:#a1a1aa; font-size:14px; font-weight:600;">ANA KATEGORİ</div>
             </div>
-            <div class="kpi-card" style="flex: 1; min-width: 200px; max-width: 250px; text-align:center; padding:30px;">
+            <div class="kpi-card" style="width:250px; text-align:center; padding:30px;">
                 <div style="font-size:42px; margin-bottom:10px;">⚡</div>
                 <div class="kpi-value">{veri_noktasi}+</div>
                 <div style="color:#a1a1aa; font-size:14px; font-weight:600;">İŞLENEN VERİ NOKTASI</div>
             </div>
         </div>
-        
         <br><br>
-        
+
         <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); 
              padding: 15px; border-radius: 99px; display: inline-block; animation: pulseGlow 3s infinite;">
             <span style="color: #60a5fa; font-weight: bold;">🚀 SİSTEM DURUMU:</span> 
-            <span style="color: #d1d5db;">Veri botları aktif. Fiyatlar <strong id="live_clock" style="color:#fff;">--:--</strong> itibarıyla güncel.</span>
-            <p style="color: #94a3b8; font-size: 12px; font-style: italic; margin-top: 5px;">
-                Bu platformda sunulan veriler deneysel ve akademik çalışma amaçlıdır. 
-                Resmi enflasyon verilerinin yerine geçmez ve yatırım tavsiyesi niteliği taşımaz.
-            </p>
+            <span style="color: #d1d5db;">Veri botları aktif. Saat: <strong id="live_clock" style="color:#fff; font-family:'JetBrains Mono';">--:--:--</strong></span>
         </div>
 
         <script>
             function updateClock() {{
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('tr-TR', {{hour: '2-digit', minute: '2-digit'}});
-                const clockElement = document.getElementById('live_clock');
-                if (clockElement) {{
-                    clockElement.innerText = timeString;
+                var now = new Date();
+                var timeString = now.toLocaleTimeString('tr-TR', {{hour: '2-digit', minute: '2-digit', second: '2-digit'}});
+                var element = document.getElementById('live_clock');
+                if (element) {{
+                    element.innerHTML = timeString;
                 }}
             }}
-            // İlk açılışta çalıştır
-            updateClock();
-            // Her 1 saniyede bir güncelle
             setInterval(updateClock, 1000);
+            updateClock();
         </script>
-        
-    </div>""", unsafe_allow_html=True)
 
+    </div>""", unsafe_allow_html=True)
+    
 def sayfa_piyasa_ozeti(ctx):
     # --- 1. KPI KARTLARI ---
     c1, c2, c3, c4 = st.columns(4)
@@ -1114,6 +1105,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
