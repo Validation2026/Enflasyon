@@ -26,7 +26,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import unicodedata
-from streamlit_option_menu import option_menu # Modern Menü İçin
+from streamlit_option_menu import option_menu
 
 # --- İMPORT KONTROLLERİ ---
 try:
@@ -54,12 +54,12 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS MOTORU ---
-# --- CSS MOTORU (DÜZELTİLMİŞ) ---
+# --- CSS MOTORU (Optimize Edildi) ---
 def apply_theme():
-    st.session_state.plotly_template = "plotly_dark"
+    # Plotly temasını session state'e kaydet
+    if 'plotly_template' not in st.session_state:
+        st.session_state.plotly_template = "plotly_dark"
 
-    # NOT: f-string içinde CSS kullanırken TÜM süslü parantezler {{ }} şeklinde çift olmalıdır!
     final_css = f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -77,10 +77,10 @@ def apply_theme():
             --card-radius: 16px;
         }}
 
-        /* --- SAYFA ÜST BOŞLUĞUNU KALDIRMA --- */
+        /* --- SAYFA ÜST BOŞLUĞUNU DÜZENLEME --- */
         .block-container {{
             padding-top: 1rem !important; 
-            padding-bottom: 1rem !important;
+            padding-bottom: 3rem !important;
         }}
         
         /* Header Gizleme */
@@ -88,19 +88,16 @@ def apply_theme():
         [data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
         [data-testid="stToolbar"] {{ display: none; }}
 
-        /* --- GENEL STİLLER --- */
+        /* --- ARKA PLAN VE GENEL --- */
         [data-testid="stAppViewContainer"]::before {{
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: 
                 radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
-                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
-                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
-            background-size: 550px 550px, 350px 350px, 250px 250px;
-            background-position: 0 0, 40 60, 130 270;
-            opacity: 0.07; z-index: 0; animation: star-move 200s linear infinite; pointer-events: none;
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px);
+            background-size: 550px 550px, 350px 350px;
+            background-position: 0 0, 40 60;
+            opacity: 0.07; z-index: 0; pointer-events: none;
         }}
-        @keyframes star-move {{ from {{ transform: translateY(0); }} to {{ transform: translateY(-2000px); }} }}
-        @keyframes fadeInUp {{ from {{ opacity: 0; transform: translate3d(0, 20px, 0); }} to {{ opacity: 1; transform: translate3d(0, 0, 0); }} }}
         
         [data-testid="stAppViewContainer"] {{
             background-color: var(--bg-deep);
@@ -113,25 +110,29 @@ def apply_theme():
             border-right: 1px solid var(--glass-border); backdrop-filter: blur(20px); z-index: 99;
         }}
         
+        /* Inputlar */
         .stSelectbox > div > div, .stTextInput > div > div {{
             background-color: rgba(255, 255, 255, 0.03) !important; border: 1px solid var(--glass-border) !important;
             color: var(--text-main) !important; border-radius: 10px !important;
         }}
         
+        /* Tablolar */
         [data-testid="stDataEditor"], [data-testid="stDataFrame"] {{
             border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(10, 10, 15, 0.4) !important;
         }}
 
+        /* KPI Kartları */
         .kpi-card {{
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
             border: 1px solid var(--glass-border); border-radius: var(--card-radius);
             padding: 20px; position: relative; overflow: hidden; backdrop-filter: blur(10px);
-            animation: fadeInUp 0.6s ease-out both; z-index: 1;
+            z-index: 1; margin-bottom: 20px;
         }}
         .kpi-title {{ font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 8px; }}
         .kpi-value {{ font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 5px; letter-spacing: -1px; }}
         .kpi-sub {{ font-size: 11px; font-weight: 500; display: flex; align-items: center; gap: 6px; color: var(--text-dim); background: rgba(0,0,0,0.2); padding: 3px 6px; border-radius: 4px; width: fit-content; }}
 
+        /* Ürün Kartları */
         .pg-card {{
             background: rgba(20, 20, 25, 0.4); border: 1px solid var(--glass-border); border-radius: 12px;
             padding: 12px; height: 140px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;
@@ -144,6 +145,7 @@ def apply_theme():
         .pg-green {{ background: rgba(16, 185, 129, 0.1); color: #6ee7b7; }}
         .pg-yellow {{ background: rgba(255, 255, 255, 0.05); color: #ffd966; }}
 
+        /* Haber Bandı */
         .ticker-wrap {{ width: 100%; overflow: hidden; background: rgba(0,0,0,0.2); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); padding: 8px 0; margin-bottom: 20px; white-space: nowrap; }}
         .ticker-move {{ display: inline-block; padding-left: 100%; animation: marquee 45s linear infinite; font-family: 'JetBrains Mono', monospace; font-size: 11px; }}
         @keyframes marquee {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(-100%, 0); }} }}
@@ -152,32 +154,19 @@ def apply_theme():
         .sc-title {{ font-size: 10px; color: #a1a1aa; font-weight:600; text-transform:uppercase; }}
         .sc-val {{ font-size: 18px; color: #fff; font-weight:700; }}
         
-        .skeleton {{ background: rgba(255,255,255,0.05); animation: blinker 1.5s infinite; border-radius: 8px; }}
-        
         /* BUTON STİLİ */
         div.stButton > button {{
             background: linear-gradient(145deg, rgba(40,40,45,0.8), rgba(20,20,25,0.9)); border: 1px solid var(--glass-border);
             color: #fff; border-radius: 10px; font-weight: 600; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         div.stButton > button:hover {{ border-color: var(--accent-blue); box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); transform: translateY(-1px); }}
-
-        /* --- TİTREME ENGELLEME VE GÖRSEL İYİLEŞTİRMELER (DÜZELTİLDİ: Çift Parantez) --- */
-        .stApp, [data-testid="stAppViewContainer"], .main, .block-container {{
-            transition: none !important;
-            opacity: 1 !important;
-            filter: none !important; 
-            transform: none !important;
-        }}
-        [data-testid="stStatusWidget"] {{ visibility: hidden !important; display: none !important; }}
-        div[data-stale="true"] {{ opacity: 1 !important; transition: none !important; }}
-        .stProgress > div > div > div > div {{ background-color: transparent !important; }}
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
 
 apply_theme()
 
-# --- 2. GITHUB & VERİ MOTORU ---
+# --- 2. GITHUB & VERİ MOTORU (OPTIMIZE EDİLMİŞ) ---
 EXCEL_DOSYASI = "TUFE_Konfigurasyon.xlsx"
 FIYAT_DOSYASI = "Fiyat_Veritabani.xlsx"
 SAYFA_ADI = "Madde_Sepeti"
@@ -192,7 +181,7 @@ def load_lottieurl(url: str):
     except:
         return None
 
-# --- 3. WORD MOTORU ---
+# --- 3. WORD MOTORU (ORİJİNAL) ---
 def create_word_report(text_content, tarih, df_analiz=None):
     try:
         doc = Document()
@@ -300,12 +289,19 @@ def create_word_report(text_content, tarih, df_analiz=None):
         err_buffer.seek(0)
         return err_buffer
 
-# --- 4. GITHUB İŞLEMLERİ ---
-def get_github_repo():
+# --- 4. GITHUB İŞLEMLERİ (CACHE RESOURCE ILE) ---
+@st.cache_resource
+def get_github_connection():
     try:
-        return Github(st.secrets["github"]["token"]).get_repo(st.secrets["github"]["repo_name"])
+        return Github(st.secrets["github"]["token"])
     except:
         return None
+
+def get_github_repo():
+    g = get_github_connection()
+    if g:
+        return g.get_repo(st.secrets["github"]["repo_name"])
+    return None
 
 def github_json_oku(dosya_adi):
     repo = get_github_repo()
@@ -330,7 +326,8 @@ def github_json_yaz(dosya_adi, data, mesaj="Update JSON"):
     except:
         return False
 
-@st.cache_data(ttl=60, show_spinner=False)
+# Excel Okuma (Cache Data ile Hızlandırıldı)
+@st.cache_data(ttl=600, show_spinner=False)
 def github_excel_oku(dosya_adi, sayfa_adi=None):
     repo = get_github_repo()
     if not repo: return pd.DataFrame()
@@ -653,39 +650,6 @@ def make_neon_chart(fig):
     )
     return fig
 
-def render_skeleton():
-    c1, c2, c3, c4 = st.columns(4)
-    with c1: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
-    with c2: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
-    with c3: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
-    with c4: st.markdown('<div class="skeleton" style="height:120px;"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="skeleton" style="height:300px; margin-top:20px;"></div>', unsafe_allow_html=True)
-
-def stream_text(text, container, kutu_rengi, kenar_rengi, durum_emoji, durum_baslik, delay=0.015):
-    for i in range(len(text) + 1):
-        curr_text = text[:i]
-        container.markdown(f"""
-        <div class="delay-2 animate-enter" style="
-            background: {kutu_rengi}; 
-            border-left: 4px solid {kenar_rengi}; 
-            border-radius: 12px; 
-            padding: 24px; 
-            margin-bottom: 30px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            border-right: 1px solid rgba(255,255,255,0.05);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);">
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-                <span style="font-size:24px;">{durum_emoji}</span>
-                <span style="font-weight:700; color:#fff; letter-spacing:1px; font-size:14px; font-family:'Inter', sans-serif;">AI MARKET ANALİSTİ: <span style="color:{kenar_rengi}">{durum_baslik}</span> <span class="blink">|</span></span>
-            </div>
-            <div style="font-size:14px; color:#d4d4d8; line-height:1.6; font-style:italic; padding-left:42px;">
-                "{curr_text}"
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        time.sleep(delay)
-
 def style_chart(fig, is_pdf=False, is_sunburst=False):
     if is_pdf:
         fig.update_layout(template="plotly_white", font=dict(family="Arial", size=14, color="black"))
@@ -712,7 +676,7 @@ def style_chart(fig, is_pdf=False, is_sunburst=False):
 # --- 9. YENİ MODÜLER SİTE MİMARİSİ ---
 
 # 1. ADIM: AĞIR VERİ İŞLEME (ÖNBELLEKLİ - CACHE MEKANİZMASI)
-@st.cache_data(ttl=300, show_spinner=False) # 5 Dakika Cache
+@st.cache_data(ttl=600, show_spinner=False) # 10 Dakika Cache
 def verileri_getir_cache():
     """
     GitHub'dan veriyi çeker, temizler, merge ve pivot işlemlerini yapar.
@@ -1067,8 +1031,16 @@ def sayfa_kategori_detay(ctx):
         df_show = df_show[df_show[ctx['ad_col']].astype(str).str.contains(arama, case=False, na=False)]
         
     if not df_show.empty:
+        # Sayfalama
+        items_per_page = 16
+        page_num = st.number_input("Sayfa", min_value=1, max_value=max(1, len(df_show)//items_per_page + 1), step=1)
+        start_idx = (page_num - 1) * items_per_page
+        end_idx = start_idx + items_per_page
+        
+        batch = df_show.iloc[start_idx:end_idx]
+
         cols = st.columns(4)
-        for idx, row in enumerate(df_show.to_dict('records')):
+        for idx, row in enumerate(batch.to_dict('records')):
             fiyat = row[ctx['son']]
             fark = row.get('Gunluk_Degisim', 0) * 100
             cls = "pg-red" if fark > 0 else ("pg-green" if fark < 0 else "pg-yellow")
@@ -1352,6 +1324,7 @@ def main():
             progress_bar.empty()
             
             if "OK" in res:
+                # Cache temizlenmeli ki yeni veri görülsün
                 st.cache_data.clear()
                 st.toast('Sistem Senkronize Edildi!', icon='🚀') 
                 st.balloons() 
@@ -1427,4 +1400,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
