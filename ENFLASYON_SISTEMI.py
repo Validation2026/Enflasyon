@@ -53,6 +53,11 @@ def apply_theme():
             color: #ffffff;
         }
 
+        /* --- ÖNEMLİ: RENK KORUMA --- */
+        /* Ticker ve renkli span'ların beyaz olmasını engeller */
+        span[style*="color"] { color: inherit !important; }
+        .ticker-move span { color: inherit !important; }
+
         /* --- DROPDOWN (SELECT-BOX) DÜZELTMESİ --- */
         div[data-baseweb="select"] > div {
             color: #ffffff !important;
@@ -74,7 +79,6 @@ def apply_theme():
         .pg-red { color: #fca5a5 !important; }
         .pg-green { color: #6ee7b7 !important; }
         .pg-yellow { color: #fde047 !important; }
-        span[style*="color"] { color: inherit !important; }
 
         /* --- ANİMASYON TANIMLARI --- */
         @keyframes fadeInUp {
@@ -111,7 +115,7 @@ def apply_theme():
             border-right: 1px solid var(--border);
         }
 
-        /* --- YATAY MENÜ --- */
+        /* --- YATAY MENÜ (GÜNCELLENDİ: TEK SATIR & SİMETRİK) --- */
         [data-testid="stRadio"] > label {
             display: none !important;
         }
@@ -119,35 +123,43 @@ def apply_theme():
         [data-testid="stRadio"] > div {
             display: flex;
             flex-direction: row;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
+            flex-wrap: nowrap !important; /* ASLA ALT SATIRA GEÇMEZ */
+            overflow-x: auto; /* Sığmazsa kaydırılabilir olur */
+            justify-content: center; /* Ortalar */
+            align-items: center;
+            gap: 8px; /* Boşlukları düzenledik */
             background: rgba(30, 33, 40, 0.4);
-            padding: 10px;
+            padding: 8px;
             border-radius: 16px;
             border: 1px solid var(--border);
             margin-top: -20px;
+            white-space: nowrap; /* Metin kaymasını engeller */
         }
+        
+        /* Menü kaydırma çubuğunu güzelleştir (sığmayan ekranlar için) */
+        [data-testid="stRadio"] > div::-webkit-scrollbar { height: 4px; }
+        [data-testid="stRadio"] > div::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
 
         [data-testid="stRadio"] label {
             background-color: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
+            padding: 8px 12px; /* İç boşluğu optimize ettik */
             border-radius: 10px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             font-family: 'Inter', sans-serif;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px; /* Yazı boyutu ideal */
             color: #ffffff !important;
-            min-width: 100px;
+            min-width: auto; /* Sabit genişliği kaldırdık, içeriğe göre sığsın */
+            flex: 0 0 auto; /* Butonların büzüşmesini engeller */
             text-align: center;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         
-        [data-testid="stRadio"] label p { color: #ffffff !important; }
+        [data-testid="stRadio"] label p { color: #ffffff !important; margin: 0; }
 
         [data-testid="stRadio"] label:hover {
             background-color: rgba(59, 130, 246, 0.2);
@@ -280,7 +292,6 @@ def apply_theme():
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
-    
 apply_theme()
 
 # --- 2. GITHUB & VERİ MOTORU ---
@@ -1068,6 +1079,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
