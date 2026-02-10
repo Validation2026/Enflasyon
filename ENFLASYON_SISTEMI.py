@@ -934,45 +934,199 @@ def sayfa_trend_analizi(ctx):
 
 # --- YENİLENEN METODOLOJİ SAYFASI ---
 def sayfa_metodoloji(ctx=None):
+    # CSS: Grid yapısı, özel numaralar ve vurgular
+    st.markdown("""
+    <style>
+        .method-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 Kolonlu yapı */
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        /* Mobil uyumluluk için */
+        @media (max-width: 768px) {
+            .method-grid { grid-template-columns: 1fr; }
+        }
+
+        .method-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .method-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        /* Arkaplandaki Dev Numara */
+        .bg-number {
+            position: absolute;
+            top: -20px;
+            right: -10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 120px;
+            font-weight: 800;
+            opacity: 0.05;
+            line-height: 1;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* İçerik Başlıkları */
+        .method-head {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .method-icon {
+            font-size: 24px;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .method-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .method-body {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #94a3b8; /* Hafif gri metin, okunaklı */
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .method-body strong { color: #fff; }
+        .method-body ul { padding-left: 20px; margin-top: 10px; }
+        .method-body li { margin-bottom: 8px; }
+
+        /* Formül Kutusu */
+        .formula-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            color: #3b82f6;
+            margin: 15px 0;
+            font-size: 16px;
+        }
+
+        /* Renk Temaları */
+        .theme-blue .method-icon { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .theme-green .method-icon { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+        .theme-purple .method-icon { color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+        .theme-orange .method-icon { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+
+    </style>
+    """, unsafe_allow_html=True)
+
     html_content = """
-    <div style="max-width: 800px; margin: 0 auto;">
-        <h1 style="text-align: center; margin-bottom: 40px; background: -webkit-linear-gradient(45deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Metodoloji ve Teknik Çerçeve</h1>
+    <div class="method-container">
+        <div style="text-align: center; margin-bottom: 50px;">
+            <h1 style="font-size: 42px; font-weight: 800; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;">
+                Metodoloji ve Teknik Altyapı
+            </h1>
+            <p style="color: #64748b; font-size: 16px;">
+                Piyasa Monitörü, veriden karara giden süreçte şeffaf, denetlenebilir ve akademik standartlara uygun bir boru hattı (pipeline) kullanır.
+            </p>
+        </div>
         
-        <div class="method-card">
-            <h3>1. Veri Toplama (Web Scraping & Automation)</h3>
-            <p>Piyasa Monitörü, Türkiye'nin önde gelen zincir marketleri ve e-ticaret platformlarından günlük olarak fiyat verisi toplar. Bu süreç, Python tabanlı özel botlar tarafından yürütülür:</p>
-            <ul>
-                <li><strong>Hedef Kitle:</strong> Ulusal çapta faaliyet gösteren süpermarketlerin çevrimiçi mağazaları.</li>
-                <li><strong>Güvenlik Protokolleri:</strong> Hedef sunuculara yük bindirmemek için "Rate Limiting" (hız sınırlama) ve dinamik User-Agent rotasyonu uygulanır.</li>
-                <li><strong>Zamanlama:</strong> Veriler her gün 09:00 - 12:00 saatleri arasında toplanarak günlük kapanış fiyatı olarak kaydedilir.</li>
-            </ul>
-        </div>
-
-        <div class="method-card">
-            <h3>2. Veri Temizleme ve Kalite Kontrol (QA)</h3>
-            <p>Toplanan ham veriler, analize girmeden önce titiz bir temizlik sürecinden geçer:</p>
-            <ul>
-                <li><strong>Anomali Tespiti:</strong> Bir ürünün fiyatında gün içi %50'den fazla değişim olması durumunda veri "şüpheli" olarak işaretlenir ve manuel kontrole düşer.</li>
-                <li><strong>Eksik Veri Yönetimi (Imputation):</strong> Eğer bir ürünün fiyatı o gün çekilemediyse, bir önceki günün fiyatı "fill-forward" yöntemiyle taşınır. Ürün 3 gün boyunca bulunamazsa sepetten çıkarılır.</li>
-            </ul>
-        </div>
-
-        <div class="method-card">
-            <h3>3. Endeks Hesaplama Modeli</h3>
-            <p>Enflasyon oranı, uluslararası standartlara (ILO/IMF yönergeleri) uygun olarak <strong>Zincirleme Laspeyres Fiyat Endeksi</strong> formülü ile hesaplanır:</p>
-            <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; font-family: monospace; text-align: center; margin: 15px 0;">
-                I<sub>t</sub> = Σ ( P<sub>i,t</sub> / P<sub>i,0</sub> ) × W<sub>i</sub>
+        <div class="method-grid">
+            <div class="method-card theme-blue">
+                <div class="bg-number">01</div>
+                <div class="method-head">
+                    <div class="method-icon">🕷️</div>
+                    <div class="method-title">VERİ TOPLAMA (SCRAPING)</div>
+                </div>
+                <div class="method-body">
+                    <p>Türkiye'nin önde gelen zincir marketleri ve pazar yerlerinden, <strong>Python tabanlı özel botlar</strong> ile günlük veri akışı sağlanır.</p>
+                    <ul>
+                        <li><strong>Kapsam:</strong> Ulusal süpermarketler ve e-ticaret devleri.</li>
+                        <li><strong>Protokol:</strong> Rate Limiting ve User-Agent rotasyonu ile etik veri madenciliği.</li>
+                        <li><strong>Zamanlama:</strong> Her gün 09:00 - 12:00 arası eş zamanlı tarama.</li>
+                    </ul>
+                </div>
             </div>
-            <p>Burada <em>P<sub>i,t</sub></em> ürünün t anındaki fiyatını, <em>W<sub>i</sub></em> ise ürünün sepetteki ağırlığını temsil eder.</p>
+
+            <div class="method-card theme-green">
+                <div class="bg-number">02</div>
+                <div class="method-head">
+                    <div class="method-icon">🛡️</div>
+                    <div class="method-title">VERİ KALİTESİ (QA)</div>
+                </div>
+                <div class="method-body">
+                    <p>Toplanan milyonlarca veri noktası, analize girmeden önce yapay zeka destekli bir temizlik filtresinden geçer.</p>
+                    <ul>
+                        <li><strong>Anomali Tespiti:</strong> Gün içi >%50 fiyat değişimleri otomatik karantinaya alınır.</li>
+                        <li><strong>Eksik Veri (Imputation):</strong> Eksik günler için "Forward-Fill" yöntemi ile veri sürekliliği sağlanır.</li>
+                        <li><strong>Outlier Analizi:</strong> İstatistiksel sapmalar (Z-Score) elenir.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="method-card theme-purple">
+                <div class="bg-number">03</div>
+                <div class="method-head">
+                    <div class="method-icon">🧮</div>
+                    <div class="method-title">ENDEKS HESAPLAMA</div>
+                </div>
+                <div class="method-body">
+                    <p>Enflasyon oranı, ILO ve IMF standartlarına uygun <strong>Zincirleme Laspeyres</strong> formülü ile hesaplanır.</p>
+                    <div class="formula-box">
+                        I<sub>t</sub> = Σ ( P<sub>i,t</sub> / P<sub>i,0</sub> ) × W<sub>i</sub>
+                    </div>
+                    <p style="font-size:12px; text-align:center; opacity:0.7;">P: Fiyat, W: Ağırlık, t: Zaman</p>
+                </div>
+            </div>
+
+            <div class="method-card theme-orange">
+                <div class="bg-number">04</div>
+                <div class="method-head">
+                    <div class="method-icon">⚖️</div>
+                    <div class="method-title">AĞIRLIKLANDIRMA</div>
+                </div>
+                <div class="method-body">
+                    <p>Sistem, resmi enflasyon verileriyle karşılaştırılabilir olması için <strong>TÜİK Hanehalkı Bütçe Anketi (HBA)</strong> ağırlıklarını simüle eder.</p>
+                    <ul>
+                        <li><strong>Sepet Uyumu:</strong> Gıda, Konut, Giyim gibi ana harcama grupları resmi ağırlıklarla dengelenir.</li>
+                        <li><strong>Dinamik Revizyon:</strong> Her yıl başında ağırlıklar güncellenir.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
-        <div class="method-card">
-            <h3>4. Ağırlıklandırma Sistemi</h3>
-            <p>Sistemde kullanılan ürün ağırlıkları, <strong>TÜİK Hanehalkı Bütçe Anketi (HBA)</strong> sonuçlarına dayanmaktadır. Harcama gruplarının (Gıda, Konut, Ulaştırma vb.) genel endeks içindeki payı, resmi verilerle senkronize edilir.</p>
-        </div>
-        
-        <div style="margin-top: 40px; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; color: #94a3b8; font-size: 12px;">
-            <p><strong>Yasal Uyarı:</strong> Bu platformda sunulan veriler, deneysel ve akademik amaçlıdır. Resmi enflasyon verisi yerine geçmez ve yatırım tavsiyesi niteliği taşımaz.</p>
+        <div style="margin-top: 60px; padding: 25px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+            <p style="color: #64748b; font-size: 13px; max-width: 700px; margin: 0 auto;">
+                <strong>YASAL UYARI:</strong> Bu platformda sunulan veriler ve analizler, deneysel ve akademik çalışma amaçlıdır. 
+                Türkiye İstatistik Kurumu (TÜİK) tarafından açıklanan resmi enflasyon verilerinin yerine geçmez ve yatırım tavsiyesi niteliği taşımaz.
+            </p>
         </div>
     </div>
     """
@@ -1060,3 +1214,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
