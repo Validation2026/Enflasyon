@@ -1312,6 +1312,61 @@ def sayfa_metodoloji():
 
 def main():
     # --- HEADER ---
+    # --- RADYO BUTONUNU MENÜYE ÇEVİREN CSS ---
+    st.markdown("""
+    <style>
+        /* Radyo Butonu Konteynerini Düzenle */
+        [data-testid="stRadio"] > div {
+            background-color: transparent;
+            border: none;
+            padding: 0;
+            gap: 8px; /* Butonlar arası boşluk */
+        }
+    
+        /* Seçeneklerin Genel Görünümü */
+        [data-testid="stRadio"] label {
+            background-color: rgba(255, 255, 255, 0.03); /* Pasif buton rengi */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            color: #a1a1aa !important; /* Pasif yazı rengi */
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+    
+        /* Hover Efekti */
+        [data-testid="stRadio"] label:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff !important;
+            transform: translateX(5px); /* Sağa hafif kayma */
+        }
+    
+        /* SEÇİLİ OLAN Butonun Görünümü (Aktif Sekme) */
+        [data-testid="stRadio"] label[data-checked="true"] {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border: 1px solid #3b82f6;
+            color: #60a5fa !important; /* Aktif yazı rengi */
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+        }
+        
+        /* Radyo Yuvarlağını Gizle (En Önemli Kısım) */
+        [data-testid="stRadio"] div[role="radiogroup"] > :first-child {
+            display: none;
+        }
+        [data-testid="stMarkdownContainer"] p {
+            font-size: 14px;
+            margin: 0;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
     st.markdown(f"""
         <div style="display:flex; justify-content:space-between; padding:15px 25px; background:linear-gradient(90deg, #0f172a 0%, #1e1b4b 100%); border-radius:12px; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); margin-top:-30px;">
             <div>
@@ -1364,32 +1419,38 @@ def main():
         ctx = None
 
     # --- NAVİGASYON (RENKLİ & ŞIK - Option Menu Entegrasyonu) ---
-    secenekler = ["Ana Sayfa", "Piyasa Özeti", "Trendler", "Maddeler", "Kategori Detay", "Tam Liste", "Raporlama", "Metodoloji"]
-    ikonlar = ["house-fill", "activity", "graph-up-arrow", "box-seam-fill", "tags-fill", "table", "file-earmark-pdf-fill", "info-circle-fill"]
+    # --- YENİ HIZLI NAVİGASYON (NATIVE RADIO) ---
     
-    # Session State Başlatma
-    if 'secilen_sekme' not in st.session_state:
-        st.session_state.secilen_sekme = secenekler[0]
-    
-    # Menüyü Oluştur
-    secim = option_menu(
-        menu_title=None, 
-        options=secenekler, 
-        icons=ikonlar, 
-        default_index=secenekler.index(st.session_state.secilen_sekme) if st.session_state.secilen_sekme in secenekler else 0, 
-        orientation="horizontal",
-        styles={
-            "container": {"padding": "0!important", "background-color": "#0f172a", "border": "1px solid rgba(255,255,255,0.05)", "border-radius": "12px", "margin-bottom": "25px"},
-            "icon": {"color": "#a1a1aa", "font-size": "14px"},
-            "nav-link": {"font-size": "13px", "text-align": "center", "margin": "0px", "padding": "10px", "color": "#e2e8f0", "--hover-color": "#1e293b", "font-family": "'Inter', sans-serif", "font-weight": "500"},
-            "nav-link-selected": {"background-color": "#3b82f6", "color": "white", "border-radius": "8px", "font-weight": "700", "box-shadow": "0 0 15px rgba(59, 130, 246, 0.3)"}
-        }
-    )
-    
-    # Seçimi kaydet
-    st.session_state.secilen_sekme = secim
+    # Menü Seçenekleri (Başlarına emoji ekleyerek ikon hissi veriyoruz)
+    # Emojiler native olduğu için ekstra kütüphane yüklemez, anında açılır.
+    menu_items = {
+        "🏠 Ana Sayfa": "Ana Sayfa",
+        "📊 Piyasa Özeti": "Piyasa Özeti",
+        "📈 Trendler": "Trendler",
+        "📦 Maddeler": "Maddeler",
+        "🏷️ Kategori Detay": "Kategori Detay",
+        "📋 Tam Liste": "Tam Liste",
+        "📝 Raporlama": "Raporlama",
+        "ℹ️ Metodoloji": "Metodoloji"
+    }
+
+    with st.sidebar:
+        st.markdown("### 🧭 Menü") # Başlık
+        
+        # Seçilen değeri session state'den al veya varsayılanı ata
+        secilen_etiket = st.radio(
+            "Navigasyon",
+            options=list(menu_items.keys()),
+            label_visibility="collapsed", # "Navigasyon" yazısını gizle
+            key="nav_radio"
+        )
+
+    # Etiketten asıl değere dönüş (örn: "🏠 Ana Sayfa" -> "Ana Sayfa")
+    secim = menu_items[secilen_etiket]
 
     # --- 3. İÇERİĞİ YÜKLE ---
+    # (Burası senin kodundaki if/elif yapısıyla aynı mantıkta çalışır)
+    
     if ctx:
         if secim == "Ana Sayfa":
             sayfa_ana_sayfa(ctx)
@@ -1406,16 +1467,17 @@ def main():
         elif secim == "Raporlama":
             sayfa_raporlama(ctx)
         elif secim == "Metodoloji":
-            sayfa_metodoloji()
+            sayfa_metodoloji(ctx)
     else:
         if secim == "Metodoloji":
             sayfa_metodoloji()
         else:
-            err_msg = "<br><div style='text-align:center; padding:20px; background:rgba(255,0,0,0.1); border-radius:10px; color:#fff;'>⚠️ Veri seti yüklenemedi. Lütfen internet bağlantınızı kontrol edin.</div>"
+            st.error("Veri yüklenemedi.")
             st.markdown(err_msg, unsafe_allow_html=True)
 
     st.markdown('<div style="text-align:center; color:#52525b; font-size:11px; margin-top:50px; opacity:0.6;">VALIDASYON MUDURLUGU © 2026 - GİZLİ ANALİZ BELGESİ</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
+
 
