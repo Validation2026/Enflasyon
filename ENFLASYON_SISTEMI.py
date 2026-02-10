@@ -781,8 +781,8 @@ def sayfa_ana_sayfa(ctx):
     </div>
     """
 
-    # --- KRİTİK NOKTA BURASI ---
-    # unsafe_allow_html=True olmazsa kod çalışmaz, yazı olarak görünür.
+    # --- EN ÖNEMLİ KISIM BURASI ---
+    # Bu satırdaki ', unsafe_allow_html=True' kısmı olmazsa ekranda kod yazar!
     st.markdown(ana_sayfa_html, unsafe_allow_html=True)
 
 def sayfa_piyasa_ozeti(ctx):
@@ -1009,6 +1009,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
