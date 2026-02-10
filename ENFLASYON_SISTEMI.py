@@ -762,7 +762,6 @@ def sayfa_ana_sayfa(ctx):
     kategori_sayisi = ctx["stats_kategori"] if ctx else "..."
     veri_noktasi = ctx["stats_veri_noktasi"] if ctx else "..."
     
-    # HTML içeriği sola dayalı (girintisiz) yazılarak kod bloğu hatası engellendi
     html_content = f"""
 <div style="text-align:center; padding: 40px 20px; animation: fadeInUp 0.8s ease;">
     <h1 style="font-size: 56px; font-weight: 800; margin-bottom: 20px; 
@@ -775,6 +774,7 @@ def sayfa_ana_sayfa(ctx):
         <strong>{kategori_sayisi}</strong> farklı kategorideki <strong>{urun_sayisi}</strong> ürünü anlık izliyor, resmi verilerle kıyaslıyoruz.
     </p>
     <br><br>
+    
     <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
         <div class="kpi-card" style="width:250px; text-align:center; padding:30px;">
             <div style="font-size:42px; margin-bottom:10px;">📦</div>
@@ -793,28 +793,15 @@ def sayfa_ana_sayfa(ctx):
         </div>
     </div>
     <br><br>
-    <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); 
-            padding: 15px; border-radius: 99px; display: inline-block; animation: pulseGlow 3s infinite;">
-        <span style="color: #60a5fa; font-weight: bold;">🚀 SİSTEM DURUMU:</span> 
-        <span style="color: #d1d5db;">Veri botları aktif. Saat: <strong id="live_clock" style="color:#fff; font-family:'JetBrains Mono';">--:--:--</strong></span>
-        <p style="color: #94a3b8; font-size: 12px; font-style: italic; margin-top:5px;">
+
+    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); 
+            padding: 15px 30px; border-radius: 12px; display: inline-block; max-width: 800px;">
+        <p style="color: #94a3b8; font-size: 13px; font-style: italic; margin: 0;">
             Bu platformda sunulan veriler deneysel ve akademik çalışma amaçlıdır. 
             Resmi enflasyon verilerinin yerine geçmez ve yatırım tavsiyesi niteliği taşımaz.
         </p>
     </div>
 
-<script>
-    function updateClock() {{
-        var now = new Date();
-        var timeString = now.toLocaleTimeString('tr-TR', {{hour: '2-digit', minute: '2-digit', second: '2-digit'}});
-        var clockElement = document.getElementById('live_clock');
-        if (clockElement) {{
-            clockElement.innerHTML = timeString;
-        }}
-    }}
-    setInterval(updateClock, 1000);
-    updateClock();
-</script>
 </div>
 """
     st.markdown(html_content, unsafe_allow_html=True)
@@ -1109,6 +1096,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
