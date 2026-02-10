@@ -1,5 +1,5 @@
 # GEREKLİ KÜTÜPHANELER:
-# pip install streamlit-lottie python-docx plotly pandas xlsxwriter matplotlib
+# pip install streamlit-lottie python-docx plotly pandas xlsxwriter matplotlib streamlit-option-menu
 
 import streamlit as st
 import pandas as pd
@@ -26,7 +26,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import unicodedata
-from streamlit_option_menu import option_menu
+from streamlit_option_menu import option_menu # Modern Menü İçin
 
 # --- İMPORT KONTROLLERİ ---
 try:
@@ -54,11 +54,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- CSS MOTORU (DÜZELTİLMİŞ HALİ) ---
+# --- CSS MOTORU ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
-    # NOT: f-string içinde CSS kullanırken süslü parantezleri {{ }} şeklinde çift yapmalıyız.
     final_css = f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -87,37 +86,6 @@ def apply_theme():
         [data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
         [data-testid="stToolbar"] {{ display: none; }}
 
-        /* --- MOBİL UYUMLULUK --- */
-        @media only screen and (max-width: 768px) {{
-            section[data-testid="stSidebar"] {{
-                display: none !important;
-                width: 0px !important;
-            }}
-            div[data-testid="stSidebarCollapsedControl"] {{
-                display: none !important;
-            }}
-            .block-container {{
-                padding-left: 0.5rem !important;
-                padding-right: 0.5rem !important;
-                max-width: 100% !important;
-            }}
-            .monitor-header {{
-                flex-direction: column !important;
-                gap: 10px !important;
-                text-align: center !important;
-                padding: 15px !important;
-                height: auto !important;
-            }}
-            .mh-right {{ text-align: center !important; }}
-            .kpi-card {{ margin-bottom: 10px !important; padding: 16px !important; }}
-            .kpi-value {{ font-size: 24px !important; }}
-            
-            .stTabs [data-baseweb="tab-list"] {{
-                overflow-x: auto !important;
-                justify-content: flex-start !important;
-            }}
-        }}
-
         /* --- GENEL STİLLER --- */
         [data-testid="stAppViewContainer"]::before {{
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -131,8 +99,6 @@ def apply_theme():
         }}
         @keyframes star-move {{ from {{ transform: translateY(0); }} to {{ transform: translateY(-2000px); }} }}
         @keyframes fadeInUp {{ from {{ opacity: 0; transform: translate3d(0, 20px, 0); }} to {{ opacity: 1; transform: translate3d(0, 0, 0); }} }}
-        @keyframes border-flow {{ 0% {{ background-position: 0% 50%; }} 50% {{ background-position: 100% 50%; }} 100% {{ background-position: 0% 50%; }} }}
-        .animate-enter {{ animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }}
         
         [data-testid="stAppViewContainer"] {{
             background-color: var(--bg-deep);
@@ -152,16 +118,6 @@ def apply_theme():
         
         [data-testid="stDataEditor"], [data-testid="stDataFrame"] {{
             border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(10, 10, 15, 0.4) !important;
-        }}
-        
-        .stTabs [data-baseweb="tab-list"] {{
-            gap: 8px; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 12px; border: 1px solid var(--glass-border); margin-top: 10px;
-        }}
-        .stTabs [data-baseweb="tab"] {{
-            height: 36px; border-radius: 8px; padding: 0 15px; color: var(--text-dim) !important; font-weight: 500; border: none !important;
-        }}
-        .stTabs [aria-selected="true"] {{
-            background-color: rgba(255,255,255,0.1) !important; color: #fff !important;
         }}
 
         .kpi-card {{
@@ -203,67 +159,16 @@ def apply_theme():
         }}
         div.stButton > button:hover {{ border-color: var(--accent-blue); box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); transform: translateY(-1px); }}
 
-        /* --- RADIO BUTONU TAB GİBİ GÖSTERME (Navigasyon Düzeltmesi) --- */
-        [data-testid="stRadio"] > div {{
-            display: flex;
-            flex-wrap: wrap; /* Mobilde alt satıra geçsin */
-            gap: 10px;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px;
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-        }}
-        
-        [data-testid="stRadio"] label {{
-            background: transparent !important;
-            border: 1px solid transparent;
-            padding: 8px 16px !important;
-            border-radius: 8px !important;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            color: #a1a1aa !important;
-            font-weight: 600 !important;
-        }}
-
-        /* Seçili olan sekmenin stili */
-        [data-testid="stRadio"] label[data-checked="true"] {{
-            background: rgba(59, 130, 246, 0.2) !important; /* Mavi arka plan */
-            border: 1px solid rgba(59, 130, 246, 0.5) !important;
-            color: #fff !important;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
-        }}
-        
-        /* Radio yuvarlaklarını gizle */
-        [data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child {{
-            display: none !important;
-        }}
-        /* --- "YÜKLENİYOR" EFEKTİNİ VE ŞEFFAFLIĞI YOK ETME --- */
-        
-        /* Tüm sayfa kapsayıcılarının geçiş animasyonlarını ve opaklık değişimini kapat */
+        /* --- TİTREME ENGELLEME VE GÖRSEL İYİLEŞTİRMELER --- */
         .stApp, [data-testid="stAppViewContainer"], .main, .block-container {
             transition: none !important;
             opacity: 1 !important;
-            filter: none !important; /* Bulanıklaşmayı engelle */
+            filter: none !important; 
             transform: none !important;
         }
-
-        /* Sağ üstteki 'Running/Çalışıyor' animasyonunu ve Stop butonunu gizle */
-        [data-testid="stStatusWidget"] {
-            visibility: hidden !important;
-            display: none !important;
-        }
-        
-        /* Sayfa yüklenirken çıkan mavi ilerleme çubuğunu gizle (İsteğe bağlı) */
-        .stProgress > div > div > div > div {
-             background-color: transparent !important;
-        }
-
-        /* Elementler güncellenirken oluşan grileşme efektini kapat */
-        div[data-stale="true"] {
-            opacity: 1 !important;
-            transition: none !important;
-        }
+        [data-testid="stStatusWidget"] {{ visibility: hidden !important; display: none !important; }}
+        div[data-stale="true"] {{ opacity: 1 !important; transition: none !important; }}
+        .stProgress > div > div > div > div {{ background-color: transparent !important; }}
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -804,8 +709,7 @@ def style_chart(fig, is_pdf=False, is_sunburst=False):
 
 # --- 9. YENİ MODÜLER SİTE MİMARİSİ ---
 
-# 1. ADIM: VERİ VE HESAPLAMA MOTORU (Arayüzden Bağımsız)
-# --- 1. ADIM: AĞIR VERİ İŞLEME (ÖNBELLEKLİ) ---
+# 1. ADIM: AĞIR VERİ İŞLEME (ÖNBELLEKLİ - CACHE MEKANİZMASI)
 @st.cache_data(ttl=300, show_spinner=False) # 5 Dakika Cache
 def verileri_getir_cache():
     """
@@ -857,7 +761,7 @@ def verileri_getir_cache():
     return df_analiz_base, raw_dates, ad_col
 
 
-# --- 2. ADIM: ARAYÜZ VE HESAPLAMA (HIZLI) ---
+# 2. ADIM: ARAYÜZ VE HESAPLAMA (HIZLI)
 def context_hazirla(df_analiz_base, raw_dates, ad_col):
     """
     Cache'ten gelen veriyi alır, Sidebar seçimlerine göre filtreler ve hesaplar.
@@ -885,7 +789,7 @@ def context_hazirla(df_analiz_base, raw_dates, ad_col):
 
     secilen_tarih = st.sidebar.selectbox("Rapor Tarihi:", options=tum_tarihler, index=0)
     
-    # --- TRADINGVIEW SIDEBAR (Aynen korundu) ---
+    # --- TRADINGVIEW SIDEBAR ---
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 🌍 Piyasalar")
     symbols = [
@@ -900,12 +804,12 @@ def context_hazirla(df_analiz_base, raw_dates, ad_col):
         <div class="tradingview-widget-container" style="border-radius:12px; overflow:hidden; margin-bottom:10px;">
           <div class="tradingview-widget-container__widget"></div>
           <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-          {{ "symbol": "{sym['s']}", "width": "100%", "height": 100, "locale": "tr", "dateRange": "1D", "colorTheme": "dark", "isTransparent": true, "autosize": true, "largeChartUrl": "" }}
+          {{ "symbol": "{sym['s']}", "width": "100%", "height": 80, "locale": "tr", "dateRange": "1D", "colorTheme": "dark", "isTransparent": true, "autosize": true, "largeChartUrl": "" }}
           </script>
         </div>
         """
         with st.sidebar:
-            components.html(widget_code, height=110)
+            components.html(widget_code, height=90)
     # ---------------------------------------------
 
     # Veriyi kopyala ki orijinali bozulmasın
@@ -1102,11 +1006,11 @@ def sayfa_piyasa_ozeti(ctx):
             title="Fiyat Değişim Dağılımı",
             color_discrete_sequence=["#3b82f6"]
         )
-    
+        
         fig_hist.update_layout(
             bargap=0.1
         )
-    
+        
         # --- X EKSENİ TAMAMEN KAPALI ---
         fig_hist.update_xaxes(
             title_text=None,        # Başlık yok
@@ -1115,7 +1019,7 @@ def sayfa_piyasa_ozeti(ctx):
             showgrid=False,         # Grid yok
             visible=False           # Eksen komple yok
         )
-    
+        
         st.plotly_chart(
             style_chart(fig_hist),
             use_container_width=True,
@@ -1373,237 +1277,62 @@ def sayfa_trend_analizi(ctx):
 
 def sayfa_metodoloji():
     html_content = """
-<style>
-/* === CSS STİLLERİ === */
-.methodology-container {
-    font-family: 'Inter', sans-serif;
-    color: #e4e4e7;
-    max-width: 900px;
-    margin: 0 auto;
-}
+    <style>
+    .methodology-container { font-family: 'Inter', sans-serif; color: #e4e4e7; max-width: 900px; margin: 0 auto; }
+    .method-card { background: rgba(26, 28, 35, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    h1.main-title { font-size: 32px; font-weight: 800; text-align: center; margin-bottom: 40px; background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    h2.section-title { font-size: 22px; font-weight: 700; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #60a5fa; }
+    ul.styled-list { list-style: none; padding: 0; margin: 15px 0; }
+    ul.styled-list li { position: relative; padding-left: 25px; margin-bottom: 10px; color: #d1d5db; }
+    ul.styled-list li::before { content: "➤"; position: absolute; left: 0; top: 2px; font-size: 12px; opacity: 0.7; color: #60a5fa; }
+    .formula-box { background: rgba(0, 0, 0, 0.3); border: 1px dashed rgba(251, 191, 36, 0.4); border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0; color: #fbbf24; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; }
+    .formula-desc { font-size: 14px; color: #9ca3af; text-align: center; font-style: italic; }
+    </style>
 
-/* ANA KART YAPISI */
-.method-card {
-    background: rgba(26, 28, 35, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 30px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
+    <section id="metodoloji" class="methodology-container theme-blue">
+      <h1 class="main-title">Metodoloji ve Akademik Çerçeve</h1>
+      <p>Piyasa Monitörü, Türkiye’de faaliyet gösteren zincir marketler ve e-ticaret platformları üzerinden yüksek frekanslı fiyat verisi toplayarak tüketici fiyatlarındaki değişimi gerçek zamanlıya yakın bir yaklaşımla izlemeyi amaçlayan alternatif bir fiyat endeksidir.</p>
+      
+      <div class="method-card">
+          <h2 class="section-title">1. Veri Toplama (Web Scraping)</h2>
+          <ul class="styled-list">
+            <li>User-Agent rotasyonu ve Rate Limiting ile güvenli veri çekimi.</li>
+            <li>IP bazlı anomali tespiti ve veri boşluklarının yönetimi.</li>
+          </ul>
+      </div>
 
-/* BAŞLIKLAR */
-h1.main-title {
-    font-size: 32px;
-    font-weight: 800;
-    text-align: center;
-    margin-bottom: 40px;
-    background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-h2.section-title {
-    font-size: 22px;
-    font-weight: 700;
-    margin-top: 0;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-h3.sub-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #e2e8f0;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    display: inline-block;
-    border-left: 3px solid #fbbf24;
-    padding-left: 10px;
-}
-
-/* RENK TEMALARI */
-.theme-blue h2 { color: #60a5fa; border-bottom-color: rgba(96, 165, 250, 0.3); }
-.theme-purple h2 { color: #a78bfa; border-bottom-color: rgba(167, 139, 250, 0.3); }
-.theme-yellow h2 { color: #fbbf24; border-bottom-color: rgba(251, 191, 36, 0.3); }
-.theme-green h2 { color: #34d399; border-bottom-color: rgba(52, 211, 153, 0.3); }
-.theme-gray h2 { color: #94a3b8; }
-
-/* LİSTELER VE METİN */
-p { font-size: 16px; line-height: 1.6; color: #cbd5e1; margin-bottom: 15px; }
-
-ul.styled-list { list-style: none; padding: 0; margin: 15px 0; }
-ul.styled-list li { position: relative; padding-left: 25px; margin-bottom: 10px; color: #d1d5db; }
-ul.styled-list li::before { content: "➤"; position: absolute; left: 0; top: 2px; font-size: 12px; opacity: 0.7; }
-
-.theme-blue ul li::before { color: #60a5fa; }
-.theme-purple ul li::before { color: #a78bfa; }
-.theme-yellow ul li::before { color: #fbbf24; }
-.theme-green ul li::before { color: #34d399; }
-.theme-gray ul li::before { color: #94a3b8; }
-
-/* FORMÜL KUTUSU */
-.formula-box {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px dashed rgba(251, 191, 36, 0.4);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    margin: 20px 0;
-    color: #fbbf24;
-    font-family: 'Courier New', monospace;
-    font-size: 18px;
-    font-weight: bold;
-}
-.formula-desc {
-    font-size: 14px;
-    color: #9ca3af;
-    text-align: center;
-    font-style: italic;
-}
-</style>
-
-<section id="metodoloji" class="methodology-container theme-blue">
-
-  <h1 class="main-title">Metodoloji ve Akademik Çerçeve</h1>
-
-  <p>
-    Piyasa Monitörü, Türkiye’de faaliyet gösteren zincir marketler ve e-ticaret platformları üzerinden
-    yüksek frekanslı fiyat verisi toplayarak tüketici fiyatlarındaki değişimi gerçek zamanlıya yakın
-    bir yaklaşımla izlemeyi amaçlayan alternatif bir fiyat endeksidir.
-    Bu metodoloji, uluslararası istatistik standartları ve TÜİK fiyat endeksi prensipleri ile uyumlu
-    olacak şekilde tasarlanmıştır.
-  </p>
-
-  <h2 class="section-title">1. Veri Toplama (Web Scraping)</h2>
-
-  <p>
-    Fiyat verileri, Python tabanlı web scraping altyapısı aracılığıyla günlük bazda otomatik olarak
-    toplanmaktadır. Süreçte hem veri sürekliliği hem de kaynak platformların operasyonel
-    sürdürülebilirliği gözetilmektedir.
-  </p>
-
-  <ul class="styled-list">
-    <li>User-Agent rotasyonu uygulanır.</li>
-    <li>Rate limiting mekanizması kullanılır.</li>
-    <li>Platformlara aşırı yük bindirilmez.</li>
-    <li>IP bazlı anomali tespiti yapılır.</li>
-    <li>Eksik günler için veri boşlukları işaretlenir.</li>
-  </ul>
-
-  <h2 class="section-title">2. Veri Temizleme ve Ön İşleme</h2>
-
-  <p>
-    Toplanan ham fiyat verileri, endeks hesaplamasına dahil edilmeden önce çok aşamalı bir
-    veri temizleme ve ön işleme sürecinden geçirilir. Amaç, ölçüm hatalarını ve geçici fiyat
-    bozulmalarını minimize etmektir.
-  </p>
-
-  <ul class="styled-list">
-    <li>Aykırı fiyat gözlemleri istatistiksel eşiklerle filtrelenir.</li>
-    <li>Ürün gramaj ve ambalaj değişimleri normalize edilir.</li>
-    <li>Stok dışı ürünler geçici olarak endeks dışı bırakılır.</li>
-    <li>Yanlış eşleşen ürün tanımları otomatik olarak elenir.</li>
-  </ul>
-
-  <h2 class="section-title">3. Endeks Hesaplama Metodolojisi</h2>
-
-  <p>
-    Fiyat endeksi hesaplamasında zincirleme Laspeyres yaklaşımı benimsenmiştir.
-    Bu yöntem, tüketim sepetinin zaman içerisinde güncellenmesine olanak tanırken,
-    fiyat değişimlerinin karşılaştırılabilirliğini korur.
-  </p>
-
-  <div class="formula-box">
-    I<sub>t</sub> = Σ ( P<sub>i,t</sub> / P<sub>i,0</sub> ) × W<sub>i</sub>
-  </div>
-
-  <div class="formula-desc">
-    Zincirleme Laspeyres Fiyat Endeksi formülü
-  </div>
-
-  <h2 class="section-title">4. Ağırlıklandırma Yapısı</h2>
-
-  <p>
-    Ürün ağırlıkları, TÜİK Hanehalkı Bütçe Anketi (HBA) harcama payları temel alınarak
-    belirlenmektedir. Bu sayede endeks, ortalama tüketici davranışını temsil etme
-    kabiliyetine sahip olur.
-  </p>
-
-  <ul class="styled-list">
-    <li>Alt ürün grupları için sabit ağırlıklar kullanılır.</li>
-    <li>Yıllık periyotlarla ağırlık güncellemesi yapılır.</li>
-    <li>Aşırı oynak kalemler için yumuşatma katsayıları uygulanır.</li>
-  </ul>
-
-  <h2 class="section-title">5. Kalite Kontrol ve Tutarlılık Analizi</h2>
-
-  <p>
-    Endeks çıktıları, hem zaman serisi tutarlılığı hem de resmi istatistiklerle
-    karşılaştırmalı analizler yoluyla sürekli olarak izlenir.
-  </p>
-
-  <ul class="styled-list">
-    <li>Günlük ve haftalık volatilite analizleri yapılır.</li>
-    <li>TÜFE alt grupları ile korelasyonlar takip edilir.</li>
-    <li>Metodoloji değişiklikleri geriye dönük olarak test edilir.</li>
-  </ul>
-
-  <h2 class="section-title">6. Akademik ve Politik Kullanım Alanları</h2>
-
-  <p>
-    Piyasa Monitörü Endeksi, akademik araştırmalar, para politikası analizleri ve
-    erken enflasyon sinyali üretimi gibi alanlarda tamamlayıcı bir gösterge
-    olarak kullanılabilecek şekilde tasarlanmıştır.
-  </p>
-
-</section>
-"""
+      <div class="method-card">
+          <h2 class="section-title">2. Endeks Hesaplama</h2>
+          <p>Fiyat endeksi hesaplamasında zincirleme Laspeyres yaklaşımı benimsenmiştir.</p>
+          <div class="formula-box">I<sub>t</sub> = Σ ( P<sub>i,t</sub> / P<sub>i,0</sub> ) × W<sub>i</sub></div>
+          <div class="formula-desc">Zincirleme Laspeyres Fiyat Endeksi formülü</div>
+      </div>
+      
+      <div class="method-card">
+          <h2 class="section-title">3. Ağırlıklandırma</h2>
+          <p>Ürün ağırlıkları, TÜİK Hanehalkı Bütçe Anketi (HBA) harcama payları temel alınarak belirlenmektedir.</p>
+      </div>
+    </section>
+    """
     st.markdown(html_content, unsafe_allow_html=True)
 
 
-# --- ANA YÖNLENDİRİCİ (Callback'li Navigasyon) ---
+# --- ANA YÖNLENDİRİCİ ---
 
 def main():
-    # --- HEADER VE SENKRONİZASYON ---
-    st.markdown("""
-        <style>
-            .monitor-header {
-                display: flex;
-                align_items: center;
-                justify-content: space-between;
-                padding: 15px 25px;
-                background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 100%);
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-                border-radius: 12px;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                margin-bottom: 20px;
-                margin-top: -30px;
-            }
-            .mh-left { display: flex; flex-direction: column; }
-            .mh-title { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 24px; color: #fff; display: flex; align-items: center; gap: 10px; }
-            .mh-badge { background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 10px; padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.2); font-weight: 700; }
-            .mh-subtitle { font-size: 12px; color: #94a3b8; margin-top: 2px; font-weight: 400; }
-            .mh-right { text-align: right; }
-            .mh-location { font-size: 10px; color: #64748b; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2px; }
-            .mh-date { font-size: 20px; font-weight: 700; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; }
-        </style>
-
-        <div class="monitor-header">
-            <div class="mh-left">
-                <div class="mh-title">
-                    Piyasa Monitörü
-                    <span class="mh-badge">SİMÜLASYON</span>
+    # --- HEADER ---
+    st.markdown(f"""
+        <div style="display:flex; justify-content:space-between; padding:15px 25px; background:linear-gradient(90deg, #0f172a 0%, #1e1b4b 100%); border-radius:12px; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); margin-top:-30px;">
+            <div>
+                <div style="font-weight:800; font-size:24px; color:#fff;">
+                    Piyasa Monitörü 
+                    <span style="background:rgba(16,185,129,0.15); color:#34d399; font-size:10px; padding:3px 8px; border-radius:4px; border:1px solid rgba(16,185,129,0.2);">SİMÜLASYON</span>
                 </div>
-                <div class="mh-subtitle">Yapay Zeka Destekli Enflasyon Analiz Platformu</div>
+                <div style="font-size:12px; color:#94a3b8;">Yapay Zeka Destekli Enflasyon Analiz Platformu</div>
             </div>
-            <div class="mh-right">
-                <div class="mh-location">İSTANBUL</div>
-                <div class="mh-date">""" + datetime.now().strftime("%d.%m.%Y") + """</div>
+            <div style="text-align:right;">
+                <div style="font-size:10px; color:#64748b; font-weight:700; letter-spacing:1.5px;">İSTANBUL</div>
+                <div style="font-size:20px; font-weight:700; color:#e2e8f0; font-family:'JetBrains Mono';">{datetime.now().strftime("%d.%m.%Y")}</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -1614,10 +1343,12 @@ def main():
             progress_bar = st.progress(0, text="Veri akışı sağlanıyor...")
             def progress_updater(percentage):
                 progress_bar.progress(min(1.0, max(0.0, percentage)), text="Senkronizasyon sürüyor...")
+            
             res = html_isleyici(progress_updater)
             progress_bar.progress(1.0, text="Tamamlandı!")
             time.sleep(0.5)
             progress_bar.empty()
+            
             if "OK" in res:
                 st.cache_data.clear()
                 st.toast('Sistem Senkronize Edildi!', icon='🚀') 
@@ -1629,96 +1360,43 @@ def main():
             else:
                 st.error(res)
 
-    # 1. Veriyi Yükle
+    # 1. Veriyi Yükle (CACHE KULLANILARAK)
     with st.spinner("Veri tabanına bağlanılıyor..."):
         df_base, r_dates, col_name = verileri_getir_cache()
     
-    # 2. Sonra Sidebar ve filtreleri çalıştır (Anlık çalışır)
+    # 2. Context Hazırla
     if df_base is not None:
         ctx = context_hazirla(df_base, r_dates, col_name)
     else:
         ctx = None
 
-    # --- 2. NAVİGASYON ---
+    # --- NAVİGASYON (RENKLİ & ŞIK - Option Menu Entegrasyonu) ---
+    secenekler = ["Ana Sayfa", "Piyasa Özeti", "Trendler", "Maddeler", "Kategori Detay", "Tam Liste", "Raporlama", "Metodoloji"]
+    ikonlar = ["house-fill", "activity", "graph-up-arrow", "box-seam-fill", "tags-fill", "table", "file-earmark-pdf-fill", "info-circle-fill"]
     
-    # --- 2. NAVİGASYON (GÜNCELLENMİŞ MODERN MENÜ) ---
-    
-    # Menü seçenekleri ve ikon tanımları (Bootstrap Icons kullanır)
-    secenekler = [
-        "Ana Sayfa", 
-        "Piyasa Özeti", 
-        "Trendler", 
-        "Maddeler", 
-        "Kategori Detay", 
-        "Tam Liste", 
-        "Raporlama", 
-        "Metodoloji"
-    ]
-    
-    ikonlar = [
-        "house-fill",      # Ana Sayfa
-        "activity",        # Piyasa Özeti
-        "graph-up-arrow",  # Trendler
-        "box-seam-fill",   # Maddeler
-        "tags-fill",       # Kategori Detay
-        "table",           # Tam Liste
-        "file-earmark-pdf-fill", # Raporlama
-        "info-circle-fill" # Metodoloji
-    ]
-
-    # Session State Kontrolü (Sayfa yenilendiğinde sekme kaybolmasın diye)
+    # Session State Başlatma
     if 'secilen_sekme' not in st.session_state:
         st.session_state.secilen_sekme = secenekler[0]
-
+    
     # Menüyü Oluştur
     secim = option_menu(
-        menu_title=None,  # Başlığı gizle
-        options=secenekler,
-        icons=ikonlar,
-        default_index=secenekler.index(st.session_state.secilen_sekme) if st.session_state.secilen_sekme in secenekler else 0,
+        menu_title=None, 
+        options=secenekler, 
+        icons=ikonlar, 
+        default_index=secenekler.index(st.session_state.secilen_sekme) if st.session_state.secilen_sekme in secenekler else 0, 
         orientation="horizontal",
         styles={
-            "container": {
-                "padding": "0!important", 
-                "background-color": "rgba(255,255,255,0.02)", # Hafif şeffaf arka plan
-                "border": "1px solid rgba(255,255,255,0.05)",
-                "border-radius": "12px",
-                "margin-bottom": "25px"
-            },
-            "icon": {
-                "color": "#a1a1aa", # Pasif ikon rengi
-                "font-size": "14px"
-            }, 
-            "nav-link": {
-                "font-size": "13px",
-                "text-align": "center",
-                "margin": "0px",
-                "padding": "10px",
-                "color": "#d4d4d8", # Pasif yazı rengi
-                "--hover-color": "rgba(59, 130, 246, 0.1)", # Üzerine gelince hafif mavi
-                "font-family": "'Inter', sans-serif",
-                "font-weight": "500"
-            },
-            "nav-link-selected": {
-                "background-color": "rgba(59, 130, 246, 0.2)", # Seçili arka plan (Neon Mavi)
-                "color": "#3b82f6", # Seçili yazı rengi (Parlak Mavi)
-                "border": "1px solid rgba(59, 130, 246, 0.4)",
-                "border-radius": "8px",
-                "font-weight": "700",
-                "box-shadow": "0 0 15px rgba(59, 130, 246, 0.2)" # Hafif neon parlaması
-            },
+            "container": {"padding": "0!important", "background-color": "#0f172a", "border": "1px solid rgba(255,255,255,0.05)", "border-radius": "12px", "margin-bottom": "25px"},
+            "icon": {"color": "#a1a1aa", "font-size": "14px"},
+            "nav-link": {"font-size": "13px", "text-align": "center", "margin": "0px", "padding": "10px", "color": "#e2e8f0", "--hover-color": "#1e293b", "font-family": "'Inter', sans-serif", "font-weight": "500"},
+            "nav-link-selected": {"background-color": "#3b82f6", "color": "white", "border-radius": "8px", "font-weight": "700", "box-shadow": "0 0 15px rgba(59, 130, 246, 0.3)"}
         }
     )
-
-    # Seçimi Session State'e kaydet (Senkronizasyon butonu basılırsa hatırlasın)
+    
+    # Seçimi kaydet
     st.session_state.secilen_sekme = secim
 
-    st.markdown("---")
-
-    # --- 3. İÇERİĞİ YÜKLE (GÜNCELLENMİŞ EŞLEŞTİRME) ---
-    # Not: Seçenek isimlerini yukarıda biraz kısalttık (Örn: "🏠 ANA SAYFA" -> "Ana Sayfa")
-    # Bu yüzden if bloklarını da yeni isimlere göre düzeltiyoruz:
-
+    # --- 3. İÇERİĞİ YÜKLE ---
     if ctx:
         if secim == "Ana Sayfa":
             sayfa_ana_sayfa(ctx)
@@ -1743,8 +1421,7 @@ def main():
             err_msg = "<br><div style='text-align:center; padding:20px; background:rgba(255,0,0,0.1); border-radius:10px; color:#fff;'>⚠️ Veri seti yüklenemedi. Lütfen internet bağlantınızı kontrol edin.</div>"
             st.markdown(err_msg, unsafe_allow_html=True)
 
+    st.markdown('<div style="text-align:center; color:#52525b; font-size:11px; margin-top:50px; opacity:0.6;">VALIDASYON MUDURLUGU © 2026 - GİZLİ ANALİZ BELGESİ</div>', unsafe_allow_html=True)
+
 if __name__ == "__main__":
     main()
-
-
-
