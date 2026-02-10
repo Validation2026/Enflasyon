@@ -762,7 +762,6 @@ def sayfa_ana_sayfa(ctx):
              padding: 15px; border-radius: 99px; display: inline-block; animation: pulseGlow 3s infinite;">
             <span style="color: #60a5fa; font-weight: bold;">🚀 SİSTEM DURUMU:</span> 
             <span style="color: #d1d5db;">Veri botları aktif. Fiyatlar <strong>{datetime.now().strftime('%H:%M')}</strong> itibarıyla güncel.</span>
-            style="margin-top: 40px; padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
             <p style="color: #94a3b8; font-size: 12px; font-style: italic;">
                 Bu platformda sunulan veriler deneysel ve akademik çalışma amaçlıdır. 
                 Resmi enflasyon verilerinin yerine geçmez ve yatırım tavsiyesi niteliği taşımaz.
@@ -994,6 +993,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
