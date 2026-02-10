@@ -758,12 +758,16 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
 
 # --- SAYFA FONKSİYONLARI (ESTETİK GÜNCELLEMELER) ---
 def sayfa_ana_sayfa(ctx):
+    # Verileri alıyoruz
     urun_sayisi = ctx["stats_urun"] if ctx else "..."
     kategori_sayisi = ctx["stats_kategori"] if ctx else "..."
     veri_noktasi = ctx["stats_veri_noktasi"] if ctx else "..."
     
-    st.markdown(f"""
+    # HTML KODU
+    # Python f-string kullandığımız için JavaScript süslü parantezlerini {{ }} şeklinde çift yaptık.
+    ana_sayfa_html = f"""
     <div style="text-align:center; padding: 40px 20px; animation: fadeInUp 0.8s ease;">
+        
         <h1 style="font-size: 56px; font-weight: 800; margin-bottom: 20px; 
             background: -webkit-linear-gradient(45deg, #3b82f6, #8b5cf6); 
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
@@ -774,6 +778,7 @@ def sayfa_ana_sayfa(ctx):
             <strong>{kategori_sayisi}</strong> farklı kategorideki <strong>{urun_sayisi}</strong> ürünü anlık izliyor, resmi verilerle kıyaslıyoruz.
         </p>
         <br><br>
+        
         <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
             <div class="kpi-card" style="width:250px; text-align:center; padding:30px;">
                 <div style="font-size:42px; margin-bottom:10px;">📦</div>
@@ -792,16 +797,38 @@ def sayfa_ana_sayfa(ctx):
             </div>
         </div>
         <br><br>
-        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); 
-             padding: 15px; border-radius: 99px; display: inline-block; animation: pulseGlow 3s infinite;">
-            <span style="color: #60a5fa; font-weight: bold;">🚀 SİSTEM DURUMU:</span> 
-            <span style="color: #d1d5db;">Veri botları aktif. Fiyatlar <strong>{datetime.now().strftime('%H:%M')}</strong> itibarıyla güncel.</span>
-            <p style="color: #94a3b8; font-size: 12px; font-style: italic;">
-                Bu platformda sunulan veriler deneysel ve akademik çalışma amaçlıdır. 
+        
+        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); 
+             padding: 20px; border-radius: 24px; display: inline-block; max-width: 850px; animation: pulseGlow 3s infinite;">
+            <div style="margin-bottom: 8px;">
+                <span style="color: #60a5fa; font-weight: bold; font-size: 14px;">🚀 SİSTEM DURUMU:</span> 
+                <span style="color: #d1d5db; font-size: 14px;">Veri botları aktif. Fiyatlar <strong id="live_clock" style="color:#fff;">--:--</strong> itibarıyla güncel.</span>
+            </div>
+            <div style="border-top: 1px solid rgba(59, 130, 246, 0.2); padding-top: 8px; margin-top: 8px; font-size: 11px; color: #94a3b8; line-height: 1.4;">
+                ⚠️ Bu platformda sunulan veriler deneysel ve akademik çalışma amaçlıdır. 
                 Resmi enflasyon verilerinin yerine geçmez ve yatırım tavsiyesi niteliği taşımaz.
-            </p>
+            </div>
         </div>
-    </div>""", unsafe_allow_html=True)
+        
+    </div>
+
+    <script>
+        function updateClock() {{
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('tr-TR', {{hour: '2-digit', minute: '2-digit'}});
+            const clockElement = document.getElementById('live_clock');
+            if (clockElement) {{
+                clockElement.innerText = timeString;
+            }}
+        }}
+        // İlk açılışta çalıştır
+        updateClock();
+        // Her 1 saniyede bir güncelle (1000ms)
+        setInterval(updateClock, 1000);
+    </script>
+    """
+
+    st.markdown(ana_sayfa_html, unsafe_allow_html=True)
 
 def sayfa_piyasa_ozeti(ctx):
     # --- 1. KPI KARTLARI ---
@@ -1079,6 +1106,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
