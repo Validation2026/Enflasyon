@@ -1,4 +1,6 @@
-# GEREKLİ KÜTÜPHANELER
+# GEREKLİ KÜTÜPHANELER:
+# pip install streamlit-lottie python-docx plotly pandas xlsxwriter matplotlib requests
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -18,9 +20,9 @@ from docx import Document
 from docx.shared import Pt, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from streamlit_lottie import st_lottie
-import textwrap
+import textwrap # HTML temizliği için kritik
 
-# --- 1. AYARLAR ---
+# --- 1. AYARLAR VE TEMA YÖNETİMİ ---
 st.set_page_config(
     page_title="Piyasa Monitörü | Pro Analytics",
     layout="wide",
@@ -28,36 +30,29 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS MOTORU (HATASIZ) ---
+# --- CSS MOTORU ---
 def apply_theme():
     if 'plotly_template' not in st.session_state:
         st.session_state.plotly_template = "plotly_dark"
 
-    # textwrap.dedent kullanarak Python girintilerinin HTML'i bozmasını engelliyoruz
+    # CSS kodunu textwrap.dedent ile temizliyoruz ki bozulmasın
     final_css = textwrap.dedent("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 
-        /* Header ve Toolbar Gizleme */
+        /* HEADER GİZLEME */
         header {visibility: hidden;}
         [data-testid="stHeader"] { visibility: hidden; height: 0px; }
         [data-testid="stToolbar"] { display: none; }
         .main .block-container { padding-top: 1rem; }
 
-        /* GLOBAL YAZI BEYAZ (Özel classlar hariç) */
-        .stApp, p, h1, h2, h3, h4, h5, h6, label, .stMarkdown, .stDataFrame div {
-            color: #ffffff;
+        /* GLOBAL YAZI AYARLARI */
+        .stApp, p, h1, h2, h3, h4, h5, h6, label, .stMarkdown, .stDataFrame div, .stDataFrame span {
+            color: #ffffff !important;
         }
 
-        /* YASAL UYARI İÇİN ÖZEL GRİ CLASS */
-        .legal-warning {
-            color: #94a3b8 !important;
-            font-size: 12px !important;
-            font-style: italic !important;
-        }
-
-        /* DROPDOWN DÜZELTMESİ (İçi Siyah Olsun ki okunsun) */
+        /* --- DROPDOWN DÜZELTMESİ --- */
         div[data-baseweb="select"] > div {
             color: #ffffff !important;
             background-color: rgba(255, 255, 255, 0.05);
@@ -67,16 +62,19 @@ def apply_theme():
         div[data-baseweb="popover"] span {
             color: #000000 !important; 
         }
-        div[data-baseweb="menu"] { background-color: #f0f2f6 !important; }
-        div[data-baseweb="menu"] li:hover { background-color: #e2e8f0 !important; }
+        div[data-baseweb="menu"] {
+            background-color: #f0f2f6 !important;
+        }
+        div[data-baseweb="menu"] li:hover {
+            background-color: #e2e8f0 !important;
+        }
 
         /* RENK SINIFLARI */
         .pg-red { color: #fca5a5 !important; }
         .pg-green { color: #6ee7b7 !important; }
         .pg-yellow { color: #fde047 !important; }
-        span[style*="color"] { color: inherit !important; }
-
-        /* KART STİLLERİ */
+        
+        /* HTML İÇİNDEKİ STİLLER */
         .kpi-card {
             background: rgba(30, 33, 40, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -85,17 +83,52 @@ def apply_theme():
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
         }
-        .kpi-card:hover { transform: translateY(-5px); border-color: rgba(59, 130, 246, 0.4); }
-        .kpi-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: #94a3b8 !important; font-weight: 600; margin-bottom: 8px; }
-        .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: #ffffff !important; }
-
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+        .kpi-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #94a3b8 !important;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .kpi-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff !important;
+        }
+        
         /* TICKER */
-        .ticker-wrap { width: 100%; overflow: hidden; background: rgba(255,255,255,0.02); border-y: 1px solid rgba(255, 255, 255, 0.08); padding: 10px 0; margin-bottom: 20px; white-space: nowrap; }
-        .ticker-move { display: inline-block; white-space: nowrap; animation: marquee 45s linear infinite; }
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            background: rgba(255,255,255,0.02);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 10px 0;
+            margin-bottom: 20px;
+            white-space: nowrap;
+        }
+        .ticker-move {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 45s linear infinite;
+        }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         
         /* ÜRÜN KARTLARI */
-        .pg-card { background: linear-gradient(145deg, rgba(30, 33, 40, 0.6), rgba(20, 23, 30, 0.8)); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 15px; height: 100%; }
+        .pg-card {
+            background: linear-gradient(145deg, rgba(30, 33, 40, 0.6), rgba(20, 23, 30, 0.8));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.3s;
+            height: 100%;
+        }
         .pg-card:hover { border-color: #3b82f6; }
         .pg-name { font-size: 13px; font-weight: 500; color: #ffffff !important; margin-bottom: 8px; height: 32px; overflow: hidden; }
         .pg-price { font-family: 'JetBrains Mono'; font-size: 18px; font-weight: 700; color: #ffffff !important; }
@@ -103,32 +136,95 @@ def apply_theme():
 
         /* YATAY MENÜ */
         [data-testid="stRadio"] > label { display: none !important; }
-        [data-testid="stRadio"] > div { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; background: rgba(30, 33, 40, 0.4); padding: 10px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); margin-top: -20px; }
-        [data-testid="stRadio"] label { background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.3s; color: #ffffff !important; min-width: 100px; display: flex; justify-content: center; align-items: center; }
+        [data-testid="stRadio"] > div {
+            display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px;
+            background: rgba(30, 33, 40, 0.4); padding: 10px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08); margin-top: -20px;
+        }
+        [data-testid="stRadio"] label {
+            background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px;
+            border-radius: 10px; cursor: pointer; transition: all 0.3s; color: #ffffff !important; min-width: 100px;
+            display: flex; justify-content: center; align-items: center;
+        }
         [data-testid="stRadio"] label:hover { background-color: rgba(59, 130, 246, 0.2); border-color: #3b82f6; }
-        [data-testid="stRadio"] label[data-checked="true"] { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-color: #60a5fa; font-weight: 700; }
+        [data-testid="stRadio"] label[data-checked="true"] {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-color: #60a5fa; font-weight: 700;
+        }
+        [data-testid="stRadio"] div[role="radiogroup"] > :first-child { display: none; }
         
         /* BUTON */
-        div.stButton > button { background: linear-gradient(90deg, #3b82f6, #2563eb); color: white !important; border: none; border-radius: 8px; padding: 0.5rem 1rem; }
-        
-        /* Animasyonlar */
-        @keyframes fadeInUp { from { opacity: 0; transform: translate3d(0, 20px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
-        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+        div.stButton > button {
+            background: linear-gradient(90deg, #3b82f6, #2563eb); color: white !important; border: none; border-radius: 8px; padding: 0.5rem 1rem;
+        }
     </style>
     """)
     st.markdown(final_css, unsafe_allow_html=True)
 
 apply_theme()
 
-# --- 3. VERİ FONKSİYONLARI ---
+# --- 2. GITHUB & VERİ MOTORU ---
 EXCEL_DOSYASI = "TUFE_Konfigurasyon.xlsx"
 FIYAT_DOSYASI = "Fiyat_Veritabani.xlsx"
 SAYFA_ADI = "Madde_Sepeti"
 
-@st.cache_resource
-def get_github_repo():
-    try: return Github(st.secrets["github"]["token"]).get_repo(st.secrets["github"]["repo_name"])
+def load_lottieurl(url: str):
+    try:
+        r = requests.get(url)
+        if r.status_code != 200: return None
+        return r.json()
     except: return None
+
+# --- 3. RAPOR MOTORU ---
+def create_word_report(text_content, tarih, df_analiz=None):
+    try:
+        doc = Document()
+        matplotlib.use('Agg')
+        style = doc.styles['Normal']
+        font = style.font
+        font.name = 'Arial'
+        font.size = Pt(11)
+        head = doc.add_heading(f'PİYASA GÖRÜNÜM RAPORU', 0)
+        head.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        subhead = doc.add_paragraph(f'Rapor Tarihi: {tarih}')
+        subhead.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        doc.add_paragraph("")
+        for p_text in text_content.split('\n'):
+            if not p_text.strip(): continue
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            for i, part in enumerate(p_text.split('**')):
+                run = p.add_run(part)
+                if i % 2 == 1: run.bold = True
+        if df_analiz is not None and not df_analiz.empty:
+            doc.add_page_break()
+            doc.add_heading('EKLER', 1)
+            try:
+                if 'Fark' in df_analiz.columns:
+                    data = pd.to_numeric(df_analiz['Fark'], errors='coerce').dropna() * 100
+                    if not data.empty:
+                        fig, ax = plt.subplots(figsize=(6, 4))
+                        ax.hist(data, bins=20, color='#3b82f6', edgecolor='white', alpha=0.7)
+                        ax.set_title(f"Dağılım - {tarih}")
+                        memfile = BytesIO()
+                        plt.savefig(memfile, format='png', dpi=100)
+                        plt.close(fig)
+                        doc.add_picture(memfile, width=Inches(5.5))
+                        memfile.close()
+            except: pass
+        buffer = BytesIO()
+        doc.save(buffer)
+        buffer.seek(0)
+        return buffer
+    except: return BytesIO()
+
+# --- 4. GITHUB İŞLEMLERİ ---
+@st.cache_resource
+def get_github_connection():
+    try: return Github(st.secrets["github"]["token"])
+    except: return None
+
+def get_github_repo():
+    g = get_github_connection()
+    return g.get_repo(st.secrets["github"]["repo_name"]) if g else None
 
 @st.cache_data(ttl=600, show_spinner=False)
 def github_excel_oku(dosya_adi, sayfa_adi=None):
@@ -140,20 +236,6 @@ def github_excel_oku(dosya_adi, sayfa_adi=None):
         if sayfa_adi: return pd.read_excel(BytesIO(data), sheet_name=sayfa_adi, dtype=str)
         return pd.read_excel(BytesIO(data), dtype=str)
     except: return pd.DataFrame()
-
-def kod_standartlastir(k): return str(k).replace('.0', '').strip().zfill(7)
-
-def temizle_fiyat(t):
-    if not t: return None
-    t = str(t).replace('TL', '').replace('₺', '').strip()
-    t = t.replace('.', '').replace(',', '.') if ',' in t and '.' in t else t.replace(',', '.')
-    try: return float(re.sub(r'[^\d.]', '', t))
-    except: return None
-
-def fiyat_bul_siteye_gore(soup, url):
-    if m := re.search(r'(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)\s*(?:TL|₺)', soup.get_text()[:5000]):
-        if v := temizle_fiyat(m.group(1)): return v, "Regex"
-    return 0, ""
 
 def github_excel_guncelle(df_yeni, dosya_adi):
     repo = get_github_repo()
@@ -172,6 +254,39 @@ def github_excel_guncelle(df_yeni, dosya_adi):
         else: repo.create_file(dosya_adi, "Create", out.getvalue(), branch=st.secrets["github"]["branch"])
         return "OK"
     except Exception as e: return str(e)
+
+# --- 5. RESMİ ENFLASYON ---
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_official_inflation():
+    api_key = st.secrets.get("evds", {}).get("api_key")
+    if not api_key: return None, "No API"
+    start = (datetime.now() - timedelta(days=365)).strftime("%d-%m-%Y")
+    end = datetime.now().strftime("%d-%m-%Y")
+    url = f"https://evds2.tcmb.gov.tr/service/evds/series=TP.FG.J0&startDate={start}&endDate={end}&type=json&key={api_key}"
+    try:
+        res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10, verify=False)
+        if res.status_code == 200 and "items" in res.json():
+            df = pd.DataFrame(res.json()["items"])[['Tarih', 'TP_FG_J0']]
+            df.columns = ['Tarih', 'Resmi_TUFE']
+            df['Resmi_TUFE'] = pd.to_numeric(df['Resmi_TUFE'], errors='coerce')
+            return df, "OK"
+        return None, "Err"
+    except: return None, "Err"
+
+# --- 6. SCRAPER YARDIMCILARI ---
+def temizle_fiyat(t):
+    if not t: return None
+    t = str(t).replace('TL', '').replace('₺', '').strip()
+    t = t.replace('.', '').replace(',', '.') if ',' in t and '.' in t else t.replace(',', '.')
+    try: return float(re.sub(r'[^\d.]', '', t))
+    except: return None
+
+def kod_standartlastir(k): return str(k).replace('.0', '').strip().zfill(7)
+
+def fiyat_bul_siteye_gore(soup, url):
+    if m := re.search(r'(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)\s*(?:TL|₺)', soup.get_text()[:5000]):
+        if v := temizle_fiyat(m.group(1)): return v, "Regex"
+    return 0, ""
 
 def html_isleyici(progress_callback):
     repo = get_github_repo()
@@ -214,71 +329,7 @@ def html_isleyici(progress_callback):
         return github_excel_guncelle(pd.DataFrame(veriler), FIYAT_DOSYASI) if veriler else "Veri Yok"
     except Exception as e: return str(e)
 
-@st.cache_data(ttl=600, show_spinner=False)
-def verileri_getir_cache():
-    df_f = github_excel_oku(FIYAT_DOSYASI)
-    df_s = github_excel_oku(EXCEL_DOSYASI, SAYFA_ADI)
-    if df_f.empty or df_s.empty: return None, None, None
-
-    df_f['Tarih_DT'] = pd.to_datetime(df_f['Tarih'], errors='coerce')
-    df_f = df_f.dropna(subset=['Tarih_DT']).sort_values('Tarih_DT')
-    pivot = df_f[df_f['Fiyat'] > 0].pivot_table(index='Kod', columns=df_f['Tarih_DT'].dt.strftime('%Y-%m-%d'), values='Fiyat', aggfunc='mean').ffill(axis=1).bfill(axis=1).reset_index()
-    if pivot.empty: return None, None, None
-
-    df_s.columns = df_s.columns.str.strip()
-    df_s['Kod'] = df_s[next(c for c in df_s.columns if c.lower()=='kod')].astype(str).apply(kod_standartlastir)
-    df_s = df_s.drop_duplicates(subset=['Kod'])
-    if 'Grup' not in df_s.columns: df_s['Grup'] = df_s['Kod'].str[:2].map({"01":"Gıda","02":"Alkol","03":"Giyim","04":"Konut"}).fillna("Diğer")
-    
-    return pd.merge(df_s, pivot, on='Kod', how='left'), pivot.columns[1:].tolist(), next(c for c in df_s.columns if 'ad' in c.lower())
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def get_official_inflation():
-    api_key = st.secrets.get("evds", {}).get("api_key")
-    if not api_key: return None, "No API"
-    start = (datetime.now() - timedelta(days=365)).strftime("%d-%m-%Y")
-    end = datetime.now().strftime("%d-%m-%Y")
-    url = f"https://evds2.tcmb.gov.tr/service/evds/series=TP.FG.J0&startDate={start}&endDate={end}&type=json&key={api_key}"
-    try:
-        res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10, verify=False)
-        if res.status_code == 200 and "items" in res.json():
-            df = pd.DataFrame(res.json()["items"])[['Tarih', 'TP_FG_J0']]
-            df.columns = ['Tarih', 'Resmi_TUFE']
-            df['Resmi_TUFE'] = pd.to_numeric(df['Resmi_TUFE'], errors='coerce')
-            return df, "OK"
-        return None, "Err"
-    except: return None, "Err"
-
-@st.cache_data(show_spinner=False)
-def hesapla_metrikler(df_base, secilen, gunler, tum_gunler, ad_col, agirlik, baz, aktif_agirlik, son):
-    df = df_base.copy()
-    for c in gunler: df[c] = pd.to_numeric(df[c], errors='coerce')
-    df[aktif_agirlik] = pd.to_numeric(df.get(aktif_agirlik, 0), errors='coerce').fillna(0)
-    gecerli = df[df[aktif_agirlik] > 0].copy()
-    bu_ay = [c for c in gunler if c.startswith(secilen[:7])] or [son]
-    gecerli['Ort'] = gecerli[bu_ay].apply(lambda x: np.exp(np.mean(np.log([v for v in x if v>0]))) if any(x>0) else np.nan, axis=1)
-    gecerli = gecerli.dropna(subset=['Ort', baz])
-    
-    enf_genel = ((gecerli[aktif_agirlik] * (gecerli['Ort']/gecerli[baz])).sum() / gecerli[aktif_agirlik].sum() * 100) - 100 if not gecerli.empty else 0
-    gida = gecerli[gecerli['Kod'].astype(str).str.startswith("01")]
-    enf_gida = ((gida[aktif_agirlik] * (gida['Ort']/gida[baz])).sum() / gida[aktif_agirlik].sum() * 100) - 100 if not gida.empty else 0
-    
-    df['Fark'] = 0.0
-    if not gecerli.empty: df.loc[gecerli.index, 'Fark'] = (gecerli['Ort'] / gecerli[baz]) - 1
-    df['Fark_Yuzde'] = df['Fark'] * 100
-    
-    onceki = gunler[-2] if len(gunler)>=2 else son
-    df['Gunluk_Degisim'] = (df[son] / df[onceki].replace(0, np.nan)) - 1
-    
-    resmi_degisim = 0.0
-    try:
-        r_df, _ = get_official_inflation()
-        if r_df is not None and len(r_df) >= 2: resmi_degisim = ((r_df.iloc[-1]['Resmi_TUFE']/r_df.iloc[-2]['Resmi_TUFE'])-1)*100
-    except: pass
-
-    return {"df_analiz": df, "enf_genel": enf_genel, "enf_gida": enf_gida, "tahmin": enf_genel, "resmi_aylik_degisim": resmi_degisim, "son": son, "ad_col": ad_col, "agirlik_col": aktif_agirlik, "gunler": gunler, "baz_col": baz, "stats_urun": len(df), "stats_kategori": df['Grup'].nunique(), "stats_veri_noktasi": len(df)*len(tum_gunler)}
-
-# --- ANALİZ MOTORU ---
+# --- 7. ANALİZ MOTORU ---
 def generate_detailed_static_report(df_analiz, tarih, enf_genel, enf_gida, gun_farki, tahmin, ad_col, agirlik_col):
     df_clean = df_analiz.dropna(subset=['Fark'])
     inc = df_clean.sort_values('Fark', ascending=False).head(5)
@@ -314,9 +365,61 @@ def style_chart(fig, is_pdf=False, is_sunburst=False):
         fig.update_layout(**layout)
     return fig
 
+# --- 8. VERİ ÇEKME VE HESAPLAMA ---
+@st.cache_data(ttl=600, show_spinner=False)
+def verileri_getir_cache():
+    df_f = github_excel_oku(FIYAT_DOSYASI)
+    df_s = github_excel_oku(EXCEL_DOSYASI, SAYFA_ADI)
+    if df_f.empty or df_s.empty: return None, None, None
+
+    df_f['Tarih_DT'] = pd.to_datetime(df_f['Tarih'], errors='coerce')
+    df_f = df_f.dropna(subset=['Tarih_DT']).sort_values('Tarih_DT')
+    pivot = df_f[df_f['Fiyat'] > 0].pivot_table(index='Kod', columns=df_f['Tarih_DT'].dt.strftime('%Y-%m-%d'), values='Fiyat', aggfunc='mean').ffill(axis=1).bfill(axis=1).reset_index()
+    if pivot.empty: return None, None, None
+
+    df_s.columns = df_s.columns.str.strip()
+    df_s['Kod'] = df_s[next(c for c in df_s.columns if c.lower()=='kod')].astype(str).apply(kod_standartlastir)
+    df_s = df_s.drop_duplicates(subset=['Kod'])
+    if 'Grup' not in df_s.columns: df_s['Grup'] = df_s['Kod'].str[:2].map({"01":"Gıda","02":"Alkol","03":"Giyim","04":"Konut"}).fillna("Diğer")
+    
+    return pd.merge(df_s, pivot, on='Kod', how='left'), pivot.columns[1:].tolist(), next(c for c in df_s.columns if 'ad' in c.lower())
+
+@st.cache_data(show_spinner=False)
+def hesapla_metrikler(df_base, secilen, gunler, tum_gunler, ad_col, agirlik, baz, aktif_agirlik, son):
+    df = df_base.copy()
+    for c in gunler: df[c] = pd.to_numeric(df[c], errors='coerce')
+    df[aktif_agirlik] = pd.to_numeric(df.get(aktif_agirlik, 0), errors='coerce').fillna(0)
+    
+    gecerli = df[df[aktif_agirlik] > 0].copy()
+    bu_ay = [c for c in gunler if c.startswith(secilen[:7])] or [son]
+    
+    # Geometrik ortalama
+    gecerli['Ort'] = gecerli[bu_ay].apply(lambda x: np.exp(np.mean(np.log([v for v in x if v>0]))) if any(x>0) else np.nan, axis=1)
+    gecerli = gecerli.dropna(subset=['Ort', baz])
+    
+    enf_genel = ((gecerli[aktif_agirlik] * (gecerli['Ort']/gecerli[baz])).sum() / gecerli[aktif_agirlik].sum() * 100) - 100 if not gecerli.empty else 0
+    
+    gida = gecerli[gecerli['Kod'].astype(str).str.startswith("01")]
+    enf_gida = ((gida[aktif_agirlik] * (gida['Ort']/gida[baz])).sum() / gida[aktif_agirlik].sum() * 100) - 100 if not gida.empty else 0
+    
+    df['Fark'] = 0.0
+    if not gecerli.empty: df.loc[gecerli.index, 'Fark'] = (gecerli['Ort'] / gecerli[baz]) - 1
+    df['Fark_Yuzde'] = df['Fark'] * 100
+    
+    onceki = gunler[-2] if len(gunler)>=2 else son
+    df['Gunluk_Degisim'] = (df[son] / df[onceki].replace(0, np.nan)) - 1
+    
+    resmi_degisim = 0.0
+    try:
+        r_df, _ = get_official_inflation()
+        if r_df is not None and len(r_df) >= 2: resmi_degisim = ((r_df.iloc[-1]['Resmi_TUFE']/r_df.iloc[-2]['Resmi_TUFE'])-1)*100
+    except: pass
+
+    return {"df_analiz": df, "enf_genel": enf_genel, "enf_gida": enf_gida, "tahmin": enf_genel, "resmi_aylik_degisim": resmi_degisim, "son": son, "ad_col": ad_col, "agirlik_col": aktif_agirlik, "gunler": gunler, "baz_col": baz, "stats_urun": len(df), "stats_kategori": df['Grup'].nunique(), "stats_veri_noktasi": len(df)*len(tum_gunler)}
+
 # --- SAYFALAR ---
 def sayfa_ana_sayfa(ctx):
-    # textwrap.dedent ile HTML'i temizliyoruz (Kod bloğu hatasını önler)
+    # HTML stringindeki boşlukları temizleyerek gönderiyoruz (RAW HTML HATASINI ÖNLEMEK İÇİN)
     html_hero = textwrap.dedent(f"""
     <div style="text-align:center; padding: 40px 20px; animation: fadeInUp 0.8s ease;">
         <h1 style="font-size: 56px; font-weight: 800; margin-bottom: 20px; 
@@ -324,7 +427,7 @@ def sayfa_ana_sayfa(ctx):
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
             Piyasa Monitörü
         </h1>
-        <p style="font-size: 20px; color: #a1a1aa !important; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+        <p style="font-size: 20px; color: #a1a1aa; max-width: 800px; margin: 0 auto; line-height: 1.6;">
             Türkiye'nin en kapsamlı yapay zeka destekli fiyat takip sistemi. <br>
             <strong>{ctx["stats_kategori"]}</strong> farklı kategorideki <strong>{ctx["stats_urun"]}</strong> ürünü anlık izliyor, resmi verilerle kıyaslıyoruz.
         </p>
@@ -333,28 +436,28 @@ def sayfa_ana_sayfa(ctx):
             <div class="kpi-card" style="width:250px; text-align:center; padding:30px;">
                 <div style="font-size:42px; margin-bottom:10px;">📦</div>
                 <div class="kpi-value">{ctx["stats_urun"]}</div>
-                <div style="color:#a1a1aa !important; font-size:14px; font-weight:600;">TAKİP EDİLEN ÜRÜN</div>
+                <div style="color:#a1a1aa; font-size:14px; font-weight:600;">TAKİP EDİLEN ÜRÜN</div>
             </div>
             <div class="kpi-card" style="width:250px; text-align:center; padding:30px;">
                 <div style="font-size:42px; margin-bottom:10px;">📊</div>
                 <div class="kpi-value">{ctx["stats_kategori"]}</div>
-                <div style="color:#a1a1aa !important; font-size:14px; font-weight:600;">ANA KATEGORİ</div>
+                <div style="color:#a1a1aa; font-size:14px; font-weight:600;">ANA KATEGORİ</div>
             </div>
             <div class="kpi-card" style="width:250px; text-align:center; padding:30px;">
                 <div style="font-size:42px; margin-bottom:10px;">⚡</div>
                 <div class="kpi-value">{ctx["stats_veri_noktasi"]}+</div>
-                <div style="color:#a1a1aa !important; font-size:14px; font-weight:600;">İŞLENEN VERİ NOKTASI</div>
+                <div style="color:#a1a1aa; font-size:14px; font-weight:600;">İŞLENEN VERİ NOKTASI</div>
             </div>
         </div>
         <br><br>
         <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); 
              padding: 15px; border-radius: 99px; display: inline-block; animation: pulseGlow 3s infinite;">
-            <span style="color: #60a5fa !important; font-weight: bold;">🚀 SİSTEM DURUMU:</span> 
-            <span style="color: #d1d5db !important;">Veri botları aktif. Fiyatlar <strong>{datetime.now().strftime('%H:%M')}</strong> itibarıyla güncel.</span>
+            <span style="color: #60a5fa; font-weight: bold;">🚀 SİSTEM DURUMU:</span> 
+            <span style="color: #d1d5db;">Veri botları aktif. Fiyatlar <strong>{datetime.now().strftime('%H:%M')}</strong> itibarıyla güncel.</span>
         </div>
         
         <div style="margin-top: 60px; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-            <p class="legal-warning">
+            <p style="color: #94a3b8 !important; font-size: 13px; font-style: italic; max-width: 700px; margin: 0 auto;">
                 Bu platformda sunulan veriler deneysel ve akademik çalışma amaçlıdır. 
                 Resmi enflasyon verilerinin yerine geçmez ve yatırım tavsiyesi niteliği taşımaz.
             </p>
