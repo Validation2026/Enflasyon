@@ -23,6 +23,7 @@ from docx import Document
 from docx.shared import Pt, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from streamlit_lottie import st_lottie
+import textwrap # Bu satırı dosyanın en tepesine de ekleyebilirsin ama burada da çalışır
 
 # --- 1. AYARLAR VE TEMA YÖNETİMİ ---
 st.set_page_config(
@@ -933,177 +934,195 @@ def sayfa_trend_analizi(ctx):
         st.plotly_chart(style_chart(px.line(df_melted, x='Tarih', y='Yuzde_Degisim', color=ctx['ad_col'], title="Ürün Bazlı Kümülatif Değişim (%)", markers=True)), use_container_width=True)
 
 # --- YENİLENEN METODOLOJİ SAYFASI ---
+import textwrap # Bu satırı dosyanın en tepesine de ekleyebilirsin ama burada da çalışır
+
 def sayfa_metodoloji(ctx=None):
-    # DİKKAT: Aşağıdaki tırnakların içindeki HTML kodu bilerek sola yaslanmıştır.
-    # Girinti (indentation) eklerseniz Markdown bunu kod bloğu sanar ve ekrana kod basar.
+    # textwrap.dedent kullanarak girinti sorununu %100 çözüyoruz.
+    # Bu sayede editörde kodun düzgün dursa bile, ekrana HTML olarak basılacak.
     
-    html_content = """
-<style>
-    /* Ana Kapsayıcı */
-    .metod-container {
-        max-width: 900px;
-        margin: 0 auto;
-        font-family: 'Inter', sans-serif;
-    }
+    html_source = """
+    <style>
+        /* Ana Kapsayıcı */
+        .metod-container {
+            max-width: 900px;
+            margin: 0 auto;
+            font-family: 'Inter', sans-serif;
+        }
 
-    /* Izgara Yapısı */
-    .metod-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 25px;
-        margin-top: 30px;
-    }
-    @media (max-width: 768px) {
-        .metod-grid { grid-template-columns: 1fr; }
-    }
+        /* Izgara Yapısı */
+        .metod-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+        @media (max-width: 768px) {
+            .metod-grid { grid-template-columns: 1fr; }
+        }
 
-    /* Kart Tasarımı (Raporlama Sayfası Stili) */
-    .report-style-card {
-        background-color: #131B24; /* Tema uyumlu koyu zemin */
-        border: 1px solid rgba(255, 255, 255, 0.08); /* Hafif çerçeve */
-        border-radius: 12px;
-        padding: 30px;
-        height: 100%;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-    
-    .report-style-card:hover {
-        transform: translateY(-3px);
-        border-color: #3b82f6; /* Hover'da mavi çerçeve */
-    }
+        /* Kart Tasarımı */
+        .report-style-card {
+            background-color: #131B24; /* Tema uyumlu koyu zemin */
+            border: 1px solid rgba(255, 255, 255, 0.08); /* Hafif çerçeve */
+            border-radius: 12px;
+            padding: 30px;
+            height: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        
+        .report-style-card:hover {
+            transform: translateY(-3px);
+            border-color: #3b82f6; /* Hover'da mavi çerçeve */
+        }
 
-    /* Başlıklar */
-    .report-style-title {
-        font-family: 'Inter', sans-serif;
-        font-size: 15px;
-        font-weight: 700;
-        color: #ffffff !important;
-        margin-bottom: 15px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
+        /* Başlıklar */
+        .report-style-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff !important;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    /* Metinler */
-    .report-style-text {
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        color: #cbd5e1 !important; /* Okunaklı gri-beyaz */
-        line-height: 1.7;
-    }
+        /* Metinler */
+        .report-style-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #cbd5e1 !important; /* Okunaklı gri-beyaz */
+            line-height: 1.7;
+        }
+        
+        /* Liste düzeni */
+        .report-style-text ul {
+            padding-left: 20px;
+            margin-top: 10px;
+            list-style-type: disc;
+        }
+        
+        .report-style-text li {
+            margin-bottom: 8px;
+            color: #94a3b8 !important;
+        }
 
-    /* Vurgular */
-    .report-style-text strong {
-        color: #ffffff !important;
-        font-weight: 600;
-    }
-    
-    /* Numara Rozeti */
-    .step-badge {
-        background: rgba(59, 130, 246, 0.15);
-        color: #60a5fa;
-        font-family: 'JetBrains Mono', monospace;
-        padding: 3px 8px;
-        border-radius: 6px;
-        font-size: 12px;
-        border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-    
-    /* Formül Alanı */
-    .code-block {
-        background: rgba(0,0,0,0.3);
-        border: 1px solid rgba(255,255,255,0.1);
-        padding: 12px;
-        border-radius: 8px;
-        font-family: 'JetBrains Mono', monospace;
-        color: #60a5fa !important;
-        text-align: center;
-        margin: 15px 0;
-        font-size: 13px;
-    }
-</style>
+        /* Vurgular */
+        .report-style-text strong {
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+        
+        /* Numara Rozeti */
+        .step-badge {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Formül Alanı */
+        .code-block {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            color: #60a5fa !important;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+    </style>
 
-<div class="metod-container">
-    
-    <div style="text-align: center; margin-bottom: 40px;">
-        <h2 style="color: #ffffff; margin-bottom: 10px; font-weight: 700;">Metodoloji ve Teknik Altyapı</h2>
-        <p style="color: #94a3b8; font-size: 15px;">
-            Veri toplama, işleme ve endeksleme süreçlerinin teknik detayları aşağıda özetlenmiştir.
-        </p>
-    </div>
-
-    <div class="metod-grid">
-        <div class="report-style-card">
-            <div class="report-style-title">
-                <span class="step-badge">01</span> VERİ TOPLAMA
-            </div>
-            <div class="report-style-text">
-                <p>Piyasa Monitörü, Türkiye'nin önde gelen zincir marketleri ve e-ticaret platformlarından <strong>Python tabanlı özel botlar</strong> ile günlük veri akışı sağlar.</p>
-                <ul style="margin-top:10px; padding-left:20px; list-style-type:disc;">
-                    <li><strong>Kapsam:</strong> Ulusal süpermarketler ve e-ticaret devleri.</li>
-                    <li><strong>Güvenlik:</strong> Rate Limiting ve User-Agent rotasyonu ile etik veri madenciliği.</li>
-                    <li><strong>Zamanlama:</strong> Her gün 09:00 - 12:00 saatleri arasında eş zamanlı tarama.</li>
-                </ul>
-            </div>
+    <div class="metod-container">
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h2 style="color: #ffffff; margin-bottom: 10px; font-weight: 700;">Metodoloji ve Teknik Altyapı</h2>
+            <p style="color: #94a3b8; font-size: 15px;">
+                Veri toplama, işleme ve endeksleme süreçlerinin teknik detayları aşağıda özetlenmiştir.
+            </p>
         </div>
 
-        <div class="report-style-card">
-            <div class="report-style-title">
-                <span class="step-badge">02</span> KALİTE KONTROL (QA)
-            </div>
-            <div class="report-style-text">
-                <p>Toplanan milyonlarca veri noktası, analize girmeden önce yapay zeka destekli bir temizlik filtresinden geçer.</p>
-                <ul style="margin-top:10px; padding-left:20px; list-style-type:disc;">
-                    <li><strong>Anomali Tespiti:</strong> Gün içi %50 üzeri ani fiyat değişimleri otomatik olarak elenir.</li>
-                    <li><strong>Eksik Veri:</strong> Veri akışının kesildiği durumlarda "Forward-Fill" yöntemi uygulanır.</li>
-                    <li><strong>Outlier:</strong> İstatistiksel sapmalar (Z-Score) temizlenir.</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="report-style-card">
-            <div class="report-style-title">
-                <span class="step-badge">03</span> ENDEKS HESAPLAMA
-            </div>
-            <div class="report-style-text">
-                <p>Enflasyon oranı, uluslararası ILO ve IMF standartlarına uygun <strong>Zincirleme Laspeyres</strong> formülü ile hesaplanır.</p>
-                <div class="code-block">
-                    I(t) = Σ ( P(i,t) / P(i,0) ) × W(i)
+        <div class="metod-grid">
+            <div class="report-style-card">
+                <div class="report-style-title">
+                    <span class="step-badge">01</span> VERİ TOPLAMA
                 </div>
-                <p style="font-size:12px; opacity:0.7; text-align:center;">P: Fiyat, W: Ağırlık, t: Zaman</p>
+                <div class="report-style-text">
+                    <p>Piyasa Monitörü, Türkiye'nin önde gelen zincir marketleri ve e-ticaret platformlarından <strong>Python tabanlı özel botlar</strong> ile günlük veri akışı sağlar.</p>
+                    <ul>
+                        <li><strong>Kapsam:</strong> Ulusal süpermarketler ve e-ticaret devleri.</li>
+                        <li><strong>Güvenlik:</strong> Rate Limiting ve User-Agent rotasyonu ile etik veri madenciliği.</li>
+                        <li><strong>Zamanlama:</strong> Her gün 09:00 - 12:00 saatleri arasında eş zamanlı tarama.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="report-style-card">
+                <div class="report-style-title">
+                    <span class="step-badge">02</span> KALİTE KONTROL (QA)
+                </div>
+                <div class="report-style-text">
+                    <p>Toplanan milyonlarca veri noktası, analize girmeden önce yapay zeka destekli bir temizlik filtresinden geçer.</p>
+                    <ul>
+                        <li><strong>Anomali Tespiti:</strong> Gün içi %50 üzeri ani fiyat değişimleri otomatik olarak elenir.</li>
+                        <li><strong>Eksik Veri:</strong> Veri akışının kesildiği durumlarda "Forward-Fill" yöntemi uygulanır.</li>
+                        <li><strong>Outlier:</strong> İstatistiksel sapmalar (Z-Score) temizlenir.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="report-style-card">
+                <div class="report-style-title">
+                    <span class="step-badge">03</span> ENDEKS HESAPLAMA
+                </div>
+                <div class="report-style-text">
+                    <p>Enflasyon oranı, uluslararası ILO ve IMF standartlarına uygun <strong>Zincirleme Laspeyres</strong> formülü ile hesaplanır.</p>
+                    <div class="code-block">
+                        I(t) = Σ ( P(i,t) / P(i,0) ) × W(i)
+                    </div>
+                    <p style="font-size:12px; opacity:0.7; text-align:center;">P: Fiyat, W: Ağırlık, t: Zaman</p>
+                </div>
+            </div>
+
+            <div class="report-style-card">
+                <div class="report-style-title">
+                    <span class="step-badge">04</span> AĞIRLIKLANDIRMA
+                </div>
+                <div class="report-style-text">
+                    <p>Sistem, resmi verilerle karşılaştırılabilir olması için <strong>TÜİK Hanehalkı Bütçe Anketi (HBA)</strong> ağırlıklarını simüle eder.</p>
+                    <ul>
+                        <li><strong>Sepet Uyumu:</strong> Gıda, Konut, Giyim ve Ulaştırma gibi ana gruplar dengelenir.</li>
+                        <li><strong>Revizyon:</strong> Her yıl başında ağırlıklar dinamik olarak güncellenir.</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
-        <div class="report-style-card">
-            <div class="report-style-title">
-                <span class="step-badge">04</span> AĞIRLIKLANDIRMA
-            </div>
-            <div class="report-style-text">
-                <p>Sistem, resmi verilerle karşılaştırılabilir olması için <strong>TÜİK Hanehalkı Bütçe Anketi (HBA)</strong> ağırlıklarını simüle eder.</p>
-                <ul style="margin-top:10px; padding-left:20px; list-style-type:disc;">
-                    <li><strong>Sepet Uyumu:</strong> Gıda, Konut, Giyim ve Ulaştırma gibi ana gruplar dengelenir.</li>
-                    <li><strong>Revizyon:</strong> Her yıl başında ağırlıklar dinamik olarak güncellenir.</li>
-                </ul>
-            </div>
+        <div style="margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; text-align: center;">
+            <p style="color: #64748b !important; font-size: 13px; margin: 0;">
+                <strong>YASAL UYARI:</strong> Bu platformda sunulan veriler deneysel ve akademik çalışma amaçlıdır. 
+                Resmi enflasyon verilerinin yerine geçmez ve yatırım tavsiyesi niteliği taşımaz.
+            </p>
         </div>
-    </div>
 
-    <div style="margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; text-align: center;">
-        <p style="color: #64748b !important; font-size: 13px; margin: 0;">
-            <strong>YASAL UYARI:</strong> Bu platformda sunulan veriler deneysel ve akademik çalışma amaçlıdır. 
-            Resmi enflasyon verilerinin yerine geçmez ve yatırım tavsiyesi niteliği taşımaz.
-        </p>
     </div>
-
-</div>
-"""
-    # En önemli kısım burası: unsafe_allow_html=True
-    st.markdown(html_content, unsafe_allow_html=True)
+    """
+    
+    # .strip() ile baştaki/sondaki gereksiz boşlukları atar
+    # textwrap.dedent() ile soldaki girintileri temizler
+    clean_html = textwrap.dedent(html_source).strip()
+    
+    st.markdown(clean_html, unsafe_allow_html=True)
 
 # --- ANA MAIN ---
 def main():
@@ -1187,6 +1206,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
