@@ -770,6 +770,7 @@ def sayfa_ana_sayfa(ctx):
     </div>""", unsafe_allow_html=True)
 
 def sayfa_piyasa_ozeti(ctx):
+    # --- 1. KPI KARTLARI ---
     c1, c2, c3, c4 = st.columns(4)
     with c1: st.markdown(f'<div class="kpi-card"><div class="kpi-title">GENEL ENFLASYON</div><div class="kpi-value">%{ctx["enf_genel"]:.2f}</div><div class="kpi-sub" style="color:#ef4444; font-size:12px;">Aylık Değişim</div></div>', unsafe_allow_html=True)
     with c2: st.markdown(f'<div class="kpi-card"><div class="kpi-title">GIDA ENFLASYONU</div><div class="kpi-value">%{ctx["enf_gida"]:.2f}</div><div class="kpi-sub" style="color:#fca5a5; font-size:12px;">Mutfak Sepeti</div></div>', unsafe_allow_html=True)
@@ -778,16 +779,26 @@ def sayfa_piyasa_ozeti(ctx):
     
     st.markdown("<br>", unsafe_allow_html=True)
     
+    # --- 2. TICKER (KAYAN YAZI) AYARLARI ---
     df = ctx["df_analiz"]
+    
+    # En çok artanlar ve düşenleri al
     inc = df.sort_values('Gunluk_Degisim', ascending=False).head(10)
     dec = df.sort_values('Gunluk_Degisim', ascending=True).head(10)
     items = []
+    
+    # ARTANLAR -> KIRMIZI (#ef4444)
     for _, r in inc.iterrows():
-        if r['Gunluk_Degisim'] > 0: items.append(f"<span style='color:#f87171'>▲ {r[ctx['ad_col']]} %{r['Gunluk_Degisim']*100:.1f}</span>")
+        if r['Gunluk_Degisim'] > 0: 
+            items.append(f"<span style='color:#ef4444; font-weight:bold;'>▲ {r[ctx['ad_col']]} %{r['Gunluk_Degisim']*100:.1f}</span>")
+            
+    # DÜŞENLER -> YEŞİL (#22c55e)
     for _, r in dec.iterrows():
-        if r['Gunluk_Degisim'] < 0: items.append(f"<span style='color:#34d399'>▼ {r[ctx['ad_col']]} %{r['Gunluk_Degisim']*100:.1f}</span>")
+        if r['Gunluk_Degisim'] < 0: 
+            items.append(f"<span style='color:#22c55e; font-weight:bold;'>▼ {r[ctx['ad_col']]} %{abs(r['Gunluk_Degisim'])*100:.1f}</span>")
     
     ticker_content = " &nbsp;&nbsp; • &nbsp;&nbsp; ".join(items)
+    
     st.markdown(f"""
     <div class="ticker-wrap">
         <div class="ticker-move">
@@ -795,12 +806,15 @@ def sayfa_piyasa_ozeti(ctx):
         </div>
     </div>""", unsafe_allow_html=True)
     
+    # --- 3. GRAFİK VE LİSTE ---
     col_g1, col_g2 = st.columns([2, 1])
     with col_g1:
+        # Histogram rengini de temaya uygun mavi yapıyoruz
         fig_hist = px.histogram(df, x="Fark_Yuzde", nbins=20, title="Fiyat Değişim Dağılımı", color_discrete_sequence=["#3b82f6"])
         fig_hist.update_layout(bargap=0.1)
         fig_hist.update_xaxes(title_text=None, showticklabels=False, ticks="", showgrid=False, visible=False)
         st.plotly_chart(style_chart(fig_hist), use_container_width=True)
+        
     with col_g2:
         st.markdown(f"""
         <div class="kpi-card" style="height:100%">
@@ -808,10 +822,12 @@ def sayfa_piyasa_ozeti(ctx):
             <div style="font-size:24px; color:#ef4444; font-weight:700;">{len(df[df['Fark'] > 0])} Ürün</div>
             <div style="margin: 20px 0; border-top:1px solid rgba(255,255,255,0.1)"></div>
             <div style="font-size:12px; color:#94a3b8; font-weight:700;">DÜŞENLER</div>
-            <div style="font-size:24px; color:#10b981; font-weight:700;">{len(df[df['Fark'] < 0])} Ürün</div>
+            <div style="font-size:24px; color:#22c55e; font-weight:700;">{len(df[df['Fark'] < 0])} Ürün</div>
         </div>""", unsafe_allow_html=True)
     
+    # --- 4. TREE MAP ---
     st.subheader("Sektörel Isı Haritası")
+    # Renk skalasını (Yeşil -> Sarı -> Kırmızı) olarak ayarlıyoruz (RdYlGn_r: Red-Yellow-Green reversed)
     fig_tree = px.treemap(df, path=[px.Constant("Piyasa"), 'Grup', ctx['ad_col']], values=ctx['agirlik_col'], color='Fark', color_continuous_scale='RdYlGn_r')
     st.plotly_chart(style_chart(fig_tree, is_sunburst=True), use_container_width=True)
 
@@ -993,6 +1009,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
