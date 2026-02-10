@@ -42,32 +42,25 @@ def apply_theme():
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 
-        /* HEADER GİZLEME */
+        /* --- HEADER VE TOOLBAR GİZLEME --- */
         header {visibility: hidden;}
         [data-testid="stHeader"] { visibility: hidden; height: 0px; }
         [data-testid="stToolbar"] { display: none; }
         .main .block-container { padding-top: 1rem; }
 
-        /* --- GLOBAL BEYAZ YAZI KURALI --- */
+        /* --- GLOBAL YAZI RENGİ (BEYAZ) --- */
         .stApp, p, h1, h2, h3, h4, h5, h6, label, .stMarkdown, .stDataFrame div, .stDataFrame span {
             color: #ffffff;
         }
 
-        /* --- ÖNEMLİ: RENK KORUMA (TICKER VE RENKLİ SPANLAR İÇİN) --- */
-        /* Eğer bir elementin içinde 'color' stili varsa, global beyazı yoksay */
-        span[style*="color"] {
-            color: inherit !important;
-        }
-        .ticker-move span {
-            color: inherit !important;
-        }
-
-        /* DROPDOWN DÜZELTMESİ */
+        /* --- DROPDOWN (SELECT-BOX) DÜZELTMESİ --- */
         div[data-baseweb="select"] > div {
             color: #ffffff !important;
             background-color: rgba(255, 255, 255, 0.05);
         }
-        div[data-baseweb="popover"] div, div[data-baseweb="popover"] li, div[data-baseweb="popover"] span {
+        div[data-baseweb="popover"] div, 
+        div[data-baseweb="popover"] li,
+        div[data-baseweb="popover"] span {
             color: #000000 !important; 
         }
         div[data-baseweb="menu"] {
@@ -77,47 +70,217 @@ def apply_theme():
             background-color: #e2e8f0 !important;
         }
 
-        /* DİĞER STİLLER */
+        /* --- RENKLENDİRME İÇİN ÖZEL SINIFLAR --- */
         .pg-red { color: #fca5a5 !important; }
         .pg-green { color: #6ee7b7 !important; }
         .pg-yellow { color: #fde047 !important; }
+        span[style*="color"] { color: inherit !important; }
 
-        @keyframes fadeInUp { from { opacity: 0; transform: translate3d(0, 20px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
-        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-
-        :root { --bg-dark: #0f1116; --card-bg: rgba(30, 33, 40, 0.7); --border: rgba(255, 255, 255, 0.08); --accent: #3b82f6; }
-        .stApp { background-color: var(--bg-dark); font-family: 'Inter', sans-serif; }
-        section[data-testid="stSidebar"] { background-color: #090a0c; border-right: 1px solid var(--border); }
-
-        /* MENU BUTTONS */
-        [data-testid="stRadio"] > div { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 10px; background: rgba(30, 33, 40, 0.4); padding: 10px; border-radius: 16px; border: 1px solid var(--border); margin-top: -20px; }
-        [data-testid="stRadio"] label { background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; font-weight: 500; font-size: 14px; color: #ffffff !important; min-width: 100px; text-align: center; display: flex; justify-content: center; align-items: center; }
-        [data-testid="stRadio"] label[data-checked="true"] { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-color: #60a5fa; font-weight: 700; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); }
-
-        /* KARTLAR */
-        .kpi-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; backdrop-filter: blur(10px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); animation: fadeInUp 0.6s ease-out both; transition: all 0.3s ease; position: relative; overflow: hidden; }
-        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.3); border-color: rgba(59, 130, 246, 0.4); }
-        .kpi-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: #94a3b8 !important; font-weight: 600; margin-bottom: 8px; }
-        .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; color: #ffffff !important; text-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-
-        /* TICKER */
-        .ticker-wrap { width: 100%; overflow: hidden; background: rgba(255,255,255,0.02); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 0; margin-bottom: 20px; white-space: nowrap; position: relative; }
-        .ticker-move { display: inline-block; white-space: nowrap; animation: marquee 40s linear infinite; } /* Hızı biraz düşürdüm */
+        /* --- ANİMASYON TANIMLARI --- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translate3d(0, 20px, 0); }
+            to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
         
-        /* ÜRÜN KARTLARI */
-        .pg-card { background: linear-gradient(145deg, rgba(30, 33, 40, 0.6), rgba(20, 23, 30, 0.8)); border: 1px solid var(--border); border-radius: 12px; padding: 15px; animation: fadeInUp 0.5s ease-out both; transition: all 0.3s; height: 100%; }
-        .pg-card:hover { transform: scale(1.03); border-color: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        :root {
+            --bg-dark: #0f1116;
+            --card-bg: rgba(30, 33, 40, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #3b82f6;
+        }
+
+        .stApp {
+            background-color: var(--bg-dark);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Sidebar Styling */
+        section[data-testid="stSidebar"] {
+            background-color: #090a0c;
+            border-right: 1px solid var(--border);
+        }
+
+        /* --- YATAY MENÜ --- */
+        [data-testid="stRadio"] > label {
+            display: none !important;
+        }
+        
+        [data-testid="stRadio"] > div {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(30, 33, 40, 0.4);
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin-top: -20px;
+        }
+
+        [data-testid="stRadio"] label {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            color: #ffffff !important;
+            min-width: 100px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        [data-testid="stRadio"] label p { color: #ffffff !important; }
+
+        [data-testid="stRadio"] label:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+
+        [data-testid="stRadio"] label[data-checked="true"] {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-color: #60a5fa;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        /* --- KART TASARIMLARI --- */
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.6s ease-out both;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.3);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+        
+        .kpi-card:hover::before { opacity: 1; }
+
+        .kpi-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #94a3b8 !important;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff !important;
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* --- TICKER --- */
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            background: rgba(255,255,255,0.02);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+            margin-bottom: 20px;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .ticker-move {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 30s linear infinite;
+        }
+        
+        .ticker-item {
+            display: inline-block;
+            padding: 0 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        /* --- ÜRÜN KARTLARI --- */
+        .pg-card {
+            background: linear-gradient(145deg, rgba(30, 33, 40, 0.6), rgba(20, 23, 30, 0.8));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            animation: fadeInUp 0.5s ease-out both;
+            transition: all 0.3s;
+            height: 100%;
+        }
+        
+        .pg-card:hover {
+            transform: scale(1.03);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+        
         .pg-name { font-size: 13px; font-weight: 500; color: #ffffff !important; margin-bottom: 8px; height: 32px; overflow: hidden; }
         .pg-price { font-family: 'JetBrains Mono'; font-size: 18px; font-weight: 700; color: #ffffff !important; }
-        .pg-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-top: 8px; display: inline-block; }
         
-        div.stButton > button { background: linear-gradient(90deg, #3b82f6, #2563eb); color: white !important; border: none; border-radius: 8px; padding: 0.5rem 1rem; transition: all 0.3s; }
-        div.stButton > button:hover { box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); transform: translateY(-2px); }
+        .pg-badge { 
+            font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; 
+            margin-top: 8px; display: inline-block;
+        }
+        .pg-red { background: rgba(239, 68, 68, 0.2); color: #fca5a5 !important; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .pg-green { background: rgba(16, 185, 129, 0.2); color: #6ee7b7 !important; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .pg-yellow { background: rgba(234, 179, 8, 0.2); color: #fde047 !important; border: 1px solid rgba(234, 179, 8, 0.3); }
+
+        div.stButton > button {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: white !important;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+        }
+        div.stButton > button:hover {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
-
+    
 apply_theme()
 
 # --- 2. GITHUB & VERİ MOTORU ---
@@ -905,6 +1068,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
