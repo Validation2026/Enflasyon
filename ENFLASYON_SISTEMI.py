@@ -732,10 +732,11 @@ def sayfa_ana_sayfa(ctx):
     # ŞİMDİKİ SAAT
     guncel_saat = datetime.now().strftime('%H:%M')
 
-    # --- HTML KODUNU BURAYA HAZIRLIYORUZ ---
-    # F-String (f""") kullanarak değişkenleri içeri gömüyoruz.
+    # --- HTML KODUNU TEK PARÇA OLARAK HAZIRLIYORUZ ---
+    # Not: Başlık kısmını da HTML içine aldım ki stil bütünlüğü bozulmasın.
     ana_sayfa_html = f"""
     <div style="text-align:center; padding: 40px 20px; animation: fadeInUp 0.8s ease;">
+        
         <h1 style="font-size: 56px; font-weight: 800; margin-bottom: 20px; 
             background: -webkit-linear-gradient(45deg, #3b82f6, #8b5cf6); 
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
@@ -781,8 +782,8 @@ def sayfa_ana_sayfa(ctx):
     </div>
     """
 
-    # --- EN ÖNEMLİ KISIM BURASI ---
-    # Bu satırdaki ', unsafe_allow_html=True' kısmı olmazsa ekranda kod yazar!
+    # --- KİLİT NOKTA BURASI ---
+    # Bu parametre (unsafe_allow_html=True) olmadan kod çalışmaz, yazı olarak görünür.
     st.markdown(ana_sayfa_html, unsafe_allow_html=True)
 
 def sayfa_piyasa_ozeti(ctx):
@@ -1009,6 +1010,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
