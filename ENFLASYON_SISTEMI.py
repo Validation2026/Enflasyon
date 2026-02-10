@@ -26,245 +26,253 @@ from streamlit_lottie import st_lottie
 
 # --- 1. AYARLAR VE TEMA YÖNETİMİ ---
 st.set_page_config(
-    page_title="Piyasa Monitörü | Pro Analytics",
+    page_title="Piyasa Monitörü | Pro Terminal",
     layout="wide",
-    page_icon="💎",
+    page_icon="💠",
     initial_sidebar_state="expanded"
 )
 
-# --- CSS MOTORU (DÜZELTİLDİ: f-string kaldırıldı) ---
+# --- CSS MOTORU (PREMIUM FINTECH TEMA) ---
 def apply_theme():
     if 'plotly_template' not in st.session_state:
         st.session_state.plotly_template = "plotly_dark"
 
-    # BURADAKİ 'f' HARFİ KALDIRILDI, ARTIK DÜZ STRING
     final_css = """
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+        /* Fontları Yükle */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap');
 
         :root {
-            --bg-dark: #09090b;
-            --bg-card: rgba(24, 24, 27, 0.6);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --accent-primary: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.5);
-            --text-primary: #f4f4f5;
-            --text-secondary: #a1a1aa;
-            --success: #10b981;
-            --danger: #ef4444;
+            /* Renk Paleti - Premium Dark */
+            --bg-app: #0e1117; /* Ana arka plan */
+            --bg-surface-1: #161b22; /* Yan menü ve kart zeminleri */
+            --bg-surface-2: #21262d; /* Kart içi vurgular, inputlar */
+            --border-subtle: rgba(240, 246, 252, 0.1);
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-blue: #2563eb; /* Daha kurumsal bir mavi */
+            --accent-green: #2ea043;
+            --accent-red: #da3633;
         }
 
-        /* Genel Sayfa Yapısı */
+        /* --- Temel Yapı --- */
         .stApp {
-            background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08), transparent 40%),
-                radial-gradient(circle at 0% 50%, rgba(16, 185, 129, 0.05), transparent 40%);
+            background-color: var(--bg-app);
             font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
         }
 
-        /* Header Gizleme */
+        /* Header'ı gizle (daha temiz görünüm için) */
         header {visibility: hidden;}
         [data-testid="stHeader"] { visibility: hidden; height: 0px; }
-        
-        /* Sidebar Özelleştirme */
+
+        /* Sidebar Styling */
         section[data-testid="stSidebar"] {
-            background-color: #0c0c0e !important;
-            border-right: 1px solid var(--border-color);
+            background-color: var(--bg-surface-1);
+            border-right: 1px solid var(--border-subtle);
         }
         
-        /* --- MODERN TAB MENU (Radio Butonu Dönüştürme) --- */
-        [data-testid="stRadio"] > div {
+        /* --- GELİŞMİŞ NAVİGASYON (Segmented Control) --- */
+        [data-testid="stRadio"] {
+            background-color: var(--bg-surface-1);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            display: inline-block; /* İçeriği kadar yer kaplasın */
+        }
+
+        [data-testid="stRadio"] > div[role="radiogroup"] {
             display: flex;
-            flex-wrap: wrap;
-            background: #18181b;
-            padding: 6px;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
             gap: 4px;
-            justify-content: center;
+            background: transparent;
         }
 
         [data-testid="stRadio"] label {
             flex: 1;
-            min-width: 100px;
-            background: transparent;
-            color: var(--text-secondary) !important;
-            border: 1px solid transparent;
-            border-radius: 12px;
-            padding: 8px 16px;
             text-align: center;
-            font-weight: 500;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            color: var(--text-secondary) !important;
+            background: transparent !important;
+            border: none !important;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
+        /* Seçili Olmayan Hover Durumu */
         [data-testid="stRadio"] label:hover {
-            color: #fff !important;
-            background: rgba(255,255,255,0.05);
+            color: var(--text-primary) !important;
+            background-color: rgba(255,255,255,0.03) !important;
         }
 
+        /* Seçili Durum */
         [data-testid="stRadio"] label[data-checked="true"] {
-            background: #27272a;
-            color: #fff !important;
-            border: 1px solid #3f3f46;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            font-weight: 600;
+            background-color: var(--accent-blue) !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
         }
-
+        
+        /* Radyo düğmesinin yuvarlak kısmını gizle */
         [data-testid="stRadio"] div[role="radiogroup"] > :first-child {
-            display: none;
+             display: none;
         }
 
-        /* --- KART TASARIMLARI (Glassmorphism) --- */
+        /* --- KART TASARIMLARI (Clean Surface) --- */
         .kpi-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
+            background-color: var(--bg-surface-1);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
             padding: 24px;
             display: flex;
             flex-direction: column;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            height: 100%;
         }
         
         .kpi-card:hover {
-            border-color: rgba(255,255,255,0.15);
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-            transform: translateY(-2px);
+            border-color: var(--accent-blue);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         }
 
         .kpi-title {
             font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
+            letter-spacing: 1px;
             color: var(--text-secondary);
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         .kpi-value {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 700;
-            color: #fff;
-            letter-spacing: -1px;
-            margin-bottom: 4px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
         
         .kpi-sub {
             font-size: 12px;
-            font-weight: 500;
-            padding: 4px 8px;
-            border-radius: 6px;
-            width: fit-content;
-            background: rgba(255,255,255,0.03);
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 6px;
         }
+        .trend-up { color: var(--accent-green); }
+        .trend-down { color: var(--accent-red); }
+        .trend-flat { color: var(--text-secondary); }
 
-        /* --- TICKER BANDI --- */
-        .ticker-wrap {
-            width: 100%;
+        /* --- TICKER BANDI (Daha sade) --- */
+        .ticker-container {
+            background: var(--bg-surface-1);
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 12px 0;
             overflow: hidden;
-            background: #0f1014;
-            border-y: 1px solid var(--border-color);
-            padding: 10px 0;
             white-space: nowrap;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
-        .ticker-move {
+        .ticker-track {
             display: inline-block;
-            white-space: nowrap;
-            padding-right: 100%;
-            animation: marquee 40s linear infinite;
+            animation: marquee 60s linear infinite;
         }
         .ticker-item {
-            display: inline-block;
-            padding: 0 2rem;
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
+            margin: 0 15px;
         }
-        @keyframes marquee {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-100%, 0, 0); }
-        }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
 
-        /* --- FİYAT KARTLARI (Grid) --- */
-        .pg-card {
-            background: rgba(30, 30, 35, 0.4);
-            border: 1px solid var(--border-color);
+        /* --- FİYAT GRID KARTLARI (Grid View) --- */
+        .grid-card {
+            background: var(--bg-surface-1);
+            border: 1px solid var(--border-subtle);
             border-radius: 12px;
             padding: 16px;
-            height: 100%;
+            transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: all 0.2s;
+            height: 130px;
         }
-        .pg-card:hover {
-            background: rgba(40, 40, 45, 0.6);
-            border-color: var(--accent-primary);
+        .grid-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255,255,255,0.2);
+            background: var(--bg-surface-2);
         }
-        .pg-name {
+        .grid-title {
             font-size: 13px;
-            color: #e4e4e7;
             font-weight: 500;
-            line-height: 1.4;
-            margin-bottom: 8px;
-            overflow: hidden; 
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            color: var(--text-primary);
+            line-height: 1.3;
+            overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         }
-        .pg-price {
+        .grid-price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: auto;
+        }
+        .grid-price {
             font-family: 'JetBrains Mono', monospace;
             font-size: 18px;
             font-weight: 700;
-            color: #fff;
         }
-        .pg-badge {
-            font-size: 11px;
+        .grid-badge {
+            font-size: 12px;
             font-weight: 700;
             padding: 4px 10px;
-            border-radius: 99px;
-            width: fit-content;
-            margin-top: 8px;
+            border-radius: 6px;
         }
-        .pg-red { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .pg-green { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.2); }
-        .pg-yellow { background: rgba(234, 179, 8, 0.15); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.2); }
+        .badge-up { background: rgba(46, 160, 67, 0.15); color: var(--accent-green); }
+        .badge-down { background: rgba(218, 54, 51, 0.15); color: var(--accent-red); }
+        .badge-flat { background: rgba(139, 148, 158, 0.15); color: var(--text-secondary); }
 
+        /* --- BİLEŞEN ÖZELLEŞTİRMELERİ --- */
         /* Butonlar */
         div.stButton > button {
-            background: linear-gradient(180deg, #27272a 0%, #18181b 100%);
-            border: 1px solid #3f3f46;
-            color: #fff;
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            font-weight: 600;
             border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.2s;
-            padding: 0.5rem 1rem;
+            transition: background-color 0.2s;
         }
         div.stButton > button:hover {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+            background-color: #1d4ed8; /* Biraz daha koyu mavi */
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        div.stButton > button:active {
+            transform: scale(0.98);
+        }
+
+        /* Inputlar ve Selectboxlar */
+        div[data-baseweb="select"] > div,
+        div[data-baseweb="input"] > div,
+        div[data-baseweb="base-input"] {
+            background-color: var(--bg-surface-2) !important;
+            border-color: var(--border-subtle) !important;
+            border-radius: 8px !important;
+            color: var(--text-primary) !important;
+        }
+
+        /* Expander (Genişletici) */
+        .streamlit-expanderHeader {
+            background-color: var(--bg-surface-1);
+            border-radius: 8px;
         }
         
-        /* Selectbox & Input */
-        div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
-            background-color: #18181b;
-            border-color: #3f3f46;
-            color: white;
-            border-radius: 8px;
+        /* Progress Bar */
+        .stProgress > div > div > div {
+            background-color: var(--accent-blue);
         }
     </style>
     """
@@ -272,7 +280,7 @@ def apply_theme():
 
 apply_theme()
 
-# --- 2. GITHUB & VERİ MOTORU ---
+# --- 2. GITHUB & VERİ MOTORU (DEĞİŞMEDİ) ---
 EXCEL_DOSYASI = "TUFE_Konfigurasyon.xlsx"
 FIYAT_DOSYASI = "Fiyat_Veritabani.xlsx"
 SAYFA_ADI = "Madde_Sepeti"
@@ -286,7 +294,7 @@ def load_lottieurl(url: str):
     except:
         return None
 
-# --- 3. RAPOR MOTORU ---
+# --- 3. RAPOR MOTORU (DEĞİŞMEDİ) ---
 def create_word_report(text_content, tarih, df_analiz=None):
     try:
         doc = Document()
@@ -320,10 +328,15 @@ def create_word_report(text_content, tarih, df_analiz=None):
                     data = pd.to_numeric(df_analiz['Fark'], errors='coerce').dropna() * 100
                     if not data.empty:
                         fig, ax = plt.subplots(figsize=(6, 4))
-                        ax.hist(data, bins=20, color='#3b82f6', edgecolor='white', alpha=0.7)
+                        ax.hist(data, bins=20, color='#2563eb', edgecolor='#161b22', alpha=0.8)
                         ax.set_title(f"Fiyat Değişim Dağılımı (%) - {tarih}", fontsize=12, fontweight='bold')
+                        ax.set_facecolor('#161b22')
+                        fig.patch.set_facecolor('#161b22')
+                        ax.tick_params(axis='x', colors='white')
+                        ax.tick_params(axis='y', colors='white')
+                        ax.title.set_color('white')
                         memfile = BytesIO()
-                        plt.savefig(memfile, format='png', dpi=100)
+                        plt.savefig(memfile, format='png', dpi=100, bbox_inches='tight')
                         plt.close(fig)
                         doc.add_picture(memfile, width=Inches(5.5))
                         memfile.close()
@@ -337,7 +350,7 @@ def create_word_report(text_content, tarih, df_analiz=None):
     except Exception as e:
         return BytesIO()
 
-# --- 4. GITHUB İŞLEMLERİ ---
+# --- 4. GITHUB İŞLEMLERİ (DEĞİŞMEDİ) ---
 @st.cache_resource
 def get_github_connection():
     try:
@@ -389,7 +402,7 @@ def github_excel_guncelle(df_yeni, dosya_adi):
     except Exception as e:
         return str(e)
 
-# --- 5. RESMİ ENFLASYON (CACHED) ---
+# --- 5. RESMİ ENFLASYON (CACHED) (DEĞİŞMEDİ) ---
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_official_inflation():
     api_key = st.secrets.get("evds", {}).get("api_key")
@@ -414,7 +427,7 @@ def get_official_inflation():
     except Exception as e:
         return None, str(e)
 
-# --- 6. SCRAPER YARDIMCILARI ---
+# --- 6. SCRAPER YARDIMCILARI (DEĞİŞMEDİ) ---
 def temizle_fiyat(t):
     if not t: return None
     t = str(t).replace('TL', '').replace('₺', '').strip()
@@ -489,7 +502,7 @@ def html_isleyici(progress_callback):
     except Exception as e:
         return f"Hata: {str(e)}"
 
-# --- 7. STATİK ANALİZ MOTORU ---
+# --- 7. STATİK ANALİZ MOTORU (DEĞİŞMEDİ) ---
 def generate_detailed_static_report(df_analiz, tarih, enf_genel, enf_gida, gun_farki, tahmin, ad_col, agirlik_col):
     df_clean = df_analiz.dropna(subset=['Fark'])
     toplam_urun = len(df_clean)
@@ -540,61 +553,54 @@ Tahmin modelimiz, ay sonu kapanışının **%{tahmin:.2f}** bandında olacağın
     return text.strip()
 
 # --- YENİ YARDIMCI FONKSİYONLAR ---
-def make_neon_chart(fig):
-    # Ana çizgiye glow efekti ve kalınlık ver
-    fig.update_traces(line=dict(width=3, color='#3b82f6')) # Neon mavi ana renk
+def style_chart(fig, is_sunburst=False):
+    # Yeni, profesyonel koyu tema
+    layout_args = dict(
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Inter, sans-serif", color="#8b949e", size=12),
+        margin=dict(l=10, r=10, t=40, b=10),
+        hoverlabel=dict(
+            bgcolor="#161b22", 
+            bordercolor="rgba(240, 246, 252, 0.1)", 
+            font=dict(family="JetBrains Mono", color="#f0f6fc", size=13)
+        ),
+        title_font=dict(size=16, color="#f0f6fc", family="Inter, sans-serif", weight=600),
+    )
     
-    # Glow efekti için aynı çizgiyi opak ve kalın olarak arkaya ekle
-    new_traces = []
-    for trace in fig.data:
-        if trace.type == 'scatter' or trace.type == 'line':
-            glow_trace = go.Scatter(
-                x=trace.x, y=trace.y, mode='lines',
-                line=dict(width=10, color=trace.line.color), opacity=0.2, 
-                hoverinfo='skip', showlegend=False
-            )
-            new_traces.append(glow_trace)
-    
-    # Sıralamayı ayarla: glow arkada, ana çizgi önde
-    fig.data = tuple(new_traces) + fig.data
-    
-    return fig
-
-def style_chart(fig, is_pdf=False, is_sunburst=False):
-    if is_pdf:
-        fig.update_layout(template="plotly_white", font=dict(family="Arial", size=14, color="black"))
-    else:
-        # Minimalist "Clean Dark" Tema
-        layout_args = dict(
-            template="plotly_dark",
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Inter, sans-serif", color="#a1a1aa", size=12),
-            margin=dict(l=0, r=0, t=40, b=0),
-            hoverlabel=dict(bgcolor="#18181b", bordercolor="#3b82f6", font=dict(family="JetBrains Mono", color="#fff"))
+    if not is_sunburst:
+        # Eksenleri daha belirgin ama inceltilmiş yap
+        axis_style = dict(
+            showgrid=True,
+            gridcolor="rgba(240, 246, 252, 0.06)", # Çok hafif grid
+            gridwidth=1,
+            zeroline=True,
+            zerolinecolor="rgba(240, 246, 252, 0.15)",
+            showline=True,
+            linecolor="rgba(240, 246, 252, 0.15)",
+            tickfont=dict(color="#8b949e", size=11),
         )
-        if not is_sunburst:
-            layout_args.update(dict(
-                xaxis=dict(
-                    showgrid=False, 
-                    zeroline=False, 
-                    showline=True, 
-                    linecolor="#3f3f46", 
-                    tickfont=dict(color="#71717a"),
-                    dtick="M1"
-                ),
-                yaxis=dict(
-                    showgrid=True, 
-                    gridcolor="rgba(255,255,255,0.05)", 
-                    zeroline=False, 
-                    gridwidth=1,
-                    tickfont=dict(color="#71717a")
-                )
-            ))
-        fig.update_layout(**layout_args)
+        layout_args.update(dict(
+            xaxis=axis_style,
+            yaxis=axis_style
+        ))
+        
+    fig.update_layout(**layout_args)
+    
+    # Çizgi grafiklerinde modernlik için yumuşatma (spline)
+    if not is_sunburst:
+        for data in fig.data:
+            if data.type == 'scatter' and data.mode == 'lines+markers':
+                data.line.shape = 'spline' 
+                data.line.width = 3
+                data.marker.size = 8
+                data.marker.line.width = 2
+                data.marker.line.color = '#0e1117' # Marker etrafına outline
+
     return fig
 
-# --- 9. VERİ VE HESAPLAMA MOTORLARI (CACHE) ---
+# --- 9. VERİ VE HESAPLAMA MOTORLARI (CACHE) (DEĞİŞMEDİ) ---
 
 # 1. VERİ GETİR
 @st.cache_data(ttl=600, show_spinner=False)
@@ -701,17 +707,17 @@ def hesapla_metrikler(df_analiz_base, secilen_tarih, gunler, tum_gunler_sirali, 
         "stats_veri_noktasi": len(df_analiz) * len(tum_gunler_sirali)
     }
 
-# 3. SIDEBAR UI (CONTEXT_HAZIRLA YERİNE)
+# 3. SIDEBAR UI
 def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
     if df_analiz_base is None: return None
-    st.sidebar.markdown("### ⚙️ Veri Ayarları")
+    st.sidebar.markdown("### ⚙️ Kontrol Paneli")
     
-    # Lottie
+    # Lottie Animasyon (Varsa)
     lottie_url = "https://lottie.host/98606416-297c-4a37-9b2a-714013063529/5D6o8k8fW0.json"
     try:
         lottie_json = load_lottieurl(lottie_url)
         with st.sidebar:
-             if lottie_json: st_lottie(lottie_json, height=120, key="nav_anim")
+             if lottie_json: st_lottie(lottie_json, height=100, key="nav_anim")
     except: pass
 
     BASLANGIC_LIMITI = "2026-02-04"
@@ -719,14 +725,24 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
     if not tum_tarihler:
         st.sidebar.warning("Veri henüz oluşmadı.")
         return None
-    secilen_tarih = st.sidebar.selectbox("Rapor Tarihi:", options=tum_tarihler, index=0)
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🌍 Piyasalar")
-    symbols = [ {"s": "FX_IDC:USDTRY", "d": "Dolar / TL"}, {"s": "FX_IDC:EURTRY", "d": "Euro / TL"}, {"s": "FX_IDC:XAUTRYG", "d": "Gram Altın"}, {"s": "TVC:UKOIL", "d": "Brent Petrol"}, {"s": "BINANCE:BTCUSDT", "d": "Bitcoin ($)"} ]
-    for sym in symbols:
-        widget_code = f"""<div class="tradingview-widget-container" style="border-radius:12px; overflow:hidden; margin-bottom:10px;"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>{{ "symbol": "{sym['s']}", "width": "100%", "height": 80, "locale": "tr", "dateRange": "1D", "colorTheme": "dark", "isTransparent": true, "autosize": true, "largeChartUrl": "" }}</script></div>"""
-        with st.sidebar: components.html(widget_code, height=90)
+    secilen_tarih = st.sidebar.selectbox("📅 Rapor Tarihi Seçin", options=tum_tarihler, index=0)
     
+    st.sidebar.divider()
+    
+    st.sidebar.markdown("### 🌍 Piyasa Göstergeleri")
+    symbols = [ 
+        {"s": "FX_IDC:USDTRY", "d": "USD/TRY"}, 
+        {"s": "FX_IDC:EURTRY", "d": "EUR/TRY"}, 
+        {"s": "FX_IDC:XAUTRYG", "d": "Gram Altın (TL)"}, 
+        {"s": "TVC:UKOIL", "d": "Brent Petrol"}, 
+        {"s": "BINANCE:BTCUSDT", "d": "Bitcoin (USD)"} 
+    ]
+    # Widget'ları sadeleştir
+    for sym in symbols:
+        widget_code = f"""<div class="tradingview-widget-container" style="border-radius:8px; overflow:hidden; margin-bottom:8px; border:1px solid rgba(240, 246, 252, 0.1);"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>{{ "symbol": "{sym['s']}", "width": "100%", "height": 70, "locale": "tr", "dateRange": "1D", "colorTheme": "dark", "isTransparent": true, "autosize": true, "largeChartUrl": "" }}</script></div>"""
+        with st.sidebar: components.html(widget_code, height=72)
+    
+    # Tarih hesaplamaları
     tum_gunler_sirali = sorted([c for c in df_analiz_base.columns if re.match(r'\d{4}-\d{2}-\d{2}', str(c)) and c >= BASLANGIC_LIMITI])
     if secilen_tarih in tum_gunler_sirali:
         idx = tum_gunler_sirali.index(secilen_tarih)
@@ -746,309 +762,451 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
     ctx = hesapla_metrikler(df_analiz_base, secilen_tarih, gunler, tum_gunler_sirali, ad_col, agirlik_col=None, baz_col=baz_col, aktif_agirlik_col=aktif_agirlik_col, son=son)
     return ctx
 
-# --- SAYFA FONKSİYONLARI ---
+# --- SAYFA FONKSİYONLARI (YENİ TASARIM) ---
 def sayfa_ana_sayfa(ctx):
-    urun_sayisi = ctx["stats_urun"] if ctx else "..."
-    kategori_sayisi = ctx["stats_kategori"] if ctx else "..."
-    veri_noktasi = ctx["stats_veri_noktasi"] if ctx else "..."
-    
-    # Hero Section - Daha Modern Tipografi
+    # Modern, temiz hero section
     st.markdown(f"""
-    <div style="text-align:center; padding: 60px 20px;">
-        <h1 style="font-size: 64px; font-weight: 800; letter-spacing: -2px; margin-bottom: 20px; 
-            background: linear-gradient(135deg, #fff 30%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-            Enflasyonun Gerçek Yüzü
+    <div style="text-align:left; padding: 40px 0; max-width: 900px;">
+        <h1 style="font-size: 48px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 24px;
+                   background: linear-gradient(to right, #f0f6fc, #8b949e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Gerçek Zamanlı Enflasyon Analiz Terminali
         </h1>
-        <p style="font-size: 18px; color: #a1a1aa; max-width: 700px; margin: 0 auto 40px auto; line-height: 1.6;">
-            Türkiye'nin en gelişmiş yapay zeka destekli fiyat takip sistemi. 
-            <span style="color:#fff; font-weight:600;">{kategori_sayisi}</span> kategoride 
-            <span style="color:#fff; font-weight:600;">{urun_sayisi}</span> ürünü anlık simüle ediyor, resmi verilerle kıyaslıyoruz.
+        <p style="font-size: 18px; color: #8b949e; line-height: 1.6; margin-bottom: 40px;">
+            Türkiye genelinde zincir marketler ve e-ticaret platformlarından toplanan yüksek frekanslı fiyat verileriyle oluşturulan alternatif, şeffaf ve yapay zeka destekli enflasyon göstergesi.
         </p>
         
-        <div style="display:flex; justify-content:center; gap:24px; flex-wrap:wrap;">
-            <div class="kpi-card" style="width:240px; text-align:center; align-items:center;">
-                <div style="color:#3b82f6; font-size:32px; margin-bottom:10px;">📦</div>
-                <div style="font-size:36px; font-weight:800; color:#fff; font-family:'JetBrains Mono';">{urun_sayisi}</div>
-                <div style="color:#71717a; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Ürün Takipte</div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:24px;">
+            <div class="kpi-card">
+                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <span style="font-size:24px;">📦</span>
+                    <span style="font-size:14px; font-weight:600; color:#8b949e;">TAKİP EDİLEN ÜRÜN</span>
+                </div>
+                <div class="kpi-value">{ctx["stats_urun"]}</div>
+                <div style="font-size:13px; color:#2ea043;">Canlı veri akışı aktif</div>
             </div>
-            <div class="kpi-card" style="width:240px; text-align:center; align-items:center;">
-                <div style="color:#10b981; font-size:32px; margin-bottom:10px;">📊</div>
-                <div style="font-size:36px; font-weight:800; color:#fff; font-family:'JetBrains Mono';">{kategori_sayisi}</div>
-                <div style="color:#71717a; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Alt Sektör</div>
+            <div class="kpi-card">
+                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <span style="font-size:24px;">📊</span>
+                    <span style="font-size:14px; font-weight:600; color:#8b949e;">ALT SEKTÖR</span>
+                </div>
+                <div class="kpi-value">{ctx["stats_kategori"]}</div>
+                 <div style="font-size:13px; color:#8b949e;">TÜİK ağırlıklandırması</div>
             </div>
-            <div class="kpi-card" style="width:240px; text-align:center; align-items:center;">
-                <div style="color:#f59e0b; font-size:32px; margin-bottom:10px;">⚡</div>
-                <div style="font-size:36px; font-weight:800; color:#fff; font-family:'JetBrains Mono';">{veri_noktasi}+</div>
-                <div style="color:#71717a; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Veri Noktası</div>
+            <div class="kpi-card">
+                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <span style="font-size:24px;">⚡</span>
+                    <span style="font-size:14px; font-weight:600; color:#8b949e;">VERİ NOKTASI</span>
+                </div>
+                <div class="kpi-value">{ctx["stats_veri_noktasi"]}+</div>
+                <div style="font-size:13px; color:#2563eb;">Yüksek frekanslı işlem</div>
             </div>
         </div>
 
-        <div style="margin-top:50px;">
-            <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); 
-                 padding: 12px 24px; border-radius: 99px; display: inline-flex; align-items:center; gap:10px;">
-                <span style="display:block; width:8px; height:8px; background:#10b981; border-radius:50%; box-shadow:0 0 10px #10b981;"></span>
-                <span style="color: #93c5fd; font-size:14px; font-weight: 500;">
-                    Sistem Botları Aktif • Son Güncelleme: <span style="color:#fff; font-family:'JetBrains Mono';">{datetime.now().strftime('%H:%M')}</span>
-                </span>
-            </div>
+        <div style="margin-top:40px; padding: 16px; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 12px; display: inline-flex; align-items:center; gap:12px;">
+            <span style="display:block; width:10px; height:10px; background:#2ea043; border-radius:50%;"></span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size:13px; color: #f0f6fc;">
+                SİSTEM DURUMU: NORMAL • SON GÜNCELLEME: {datetime.now().strftime('%H:%M')} TSİ
+            </span>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
 def sayfa_piyasa_ozeti(ctx):
-    # Ana KPI'lar - Flex Grid ile
-    st.markdown("### ⚡ Piyasa Nabzı")
-    c1, c2, c3, c4 = st.columns(4)
-    with c1: st.markdown(f'<div class="kpi-card"><div class="kpi-title">GENEL ENFLASYON</div><div class="kpi-value">%{ctx["enf_genel"]:.2f}</div><div class="kpi-sub" style="color:#ef4444; background:rgba(239,68,68,0.1)">▲ Aylık Değişim</div></div>', unsafe_allow_html=True)
-    with c2: st.markdown(f'<div class="kpi-card"><div class="kpi-title">GIDA ENFLASYONU</div><div class="kpi-value">%{ctx["enf_gida"]:.2f}</div><div class="kpi-sub" style="color:#fca5a5; background:rgba(252,165,165,0.1)">🍲 Mutfak Sepeti</div></div>', unsafe_allow_html=True)
-    with c3: st.markdown(f'<div class="kpi-card"><div class="kpi-title">AY SONU BEKLENTİ</div><div class="kpi-value">%{ctx["tahmin"]:.2f}</div><div class="kpi-sub" style="color:#a78bfa; background:rgba(167,139,250,0.1)">🤖 AI Projeksiyonu</div></div>', unsafe_allow_html=True)
-    with c4: st.markdown(f'<div class="kpi-card"><div class="kpi-title">RESMİ (TÜİK) VERİSİ</div><div class="kpi-value">%{ctx["resmi_aylik_degisim"]:.2f}</div><div class="kpi-sub" style="color:#fbbf24; background:rgba(251,191,36,0.1)">🏛️ Son Açıklanan</div></div>', unsafe_allow_html=True)
+    st.markdown("### ⚡ Kritik Göstergeler")
     
+    # KPI Kartları - Grid Yapısı
+    c1, c2, c3, c4 = st.columns(4)
+    
+    def create_kpi(title, value, sub_icon, sub_text, trend_class):
+        return f"""
+        <div class="kpi-card">
+            <div class="kpi-title">{title}</div>
+            <div class="kpi-value">%{value:.2f}</div>
+            <div class="kpi-sub {trend_class}">
+                <span>{sub_icon}</span> <span>{sub_text}</span>
+            </div>
+        </div>
+        """
+        
+    # Trend renklerini belirle
+    enf_genel_trend = "trend-up" if ctx["enf_genel"] > 0 else "trend-down"
+    enf_gida_trend = "trend-up" if ctx["enf_gida"] > 0 else "trend-down"
+
+    with c1: st.markdown(create_kpi("GENEL ENFLASYON (AYLIK)", ctx["enf_genel"], "📈", "Sepet Değişimi", enf_genel_trend), unsafe_allow_html=True)
+    with c2: st.markdown(create_kpi("GIDA ENFLASYONU (AYLIK)", ctx["enf_gida"], "🍲", "Mutfak Harcaması", enf_gida_trend), unsafe_allow_html=True)
+    with c3: st.markdown(create_kpi("YIL SONU TAHMİNİ", ctx["tahmin"], "🤖", "AI Projeksiyonu", "trend-flat"), unsafe_allow_html=True)
+    with c4: st.markdown(create_kpi("RESMİ TÜİK VERİSİ", ctx["resmi_aylik_degisim"], "🏛️", "Son Açıklanan", "trend-flat"), unsafe_allow_html=True)
+
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Ticker
+    # Kayan Ticker Bandı (Daha sade)
     df = ctx["df_analiz"]
-    inc = df.sort_values('Gunluk_Degisim', ascending=False).head(5)
-    dec = df.sort_values('Gunluk_Degisim', ascending=True).head(5)
-    items = []
+    inc = df.sort_values('Gunluk_Degisim', ascending=False).head(7)
+    dec = df.sort_values('Gunluk_Degisim', ascending=True).head(7)
+    ticker_items = []
     for _, r in inc.iterrows():
-        if r['Gunluk_Degisim'] > 0: items.append(f"<span class='ticker-item' style='color:#f87171'>▲ {r[ctx['ad_col']]} %{r['Gunluk_Degisim']*100:.1f}</span>")
+        if r['Gunluk_Degisim'] > 0: ticker_items.append(f"<span class='ticker-item trend-up'>▲ {r[ctx['ad_col']]} %{r['Gunluk_Degisim']*100:.1f}</span>")
     for _, r in dec.iterrows():
-        if r['Gunluk_Degisim'] < 0: items.append(f"<span class='ticker-item' style='color:#34d399'>▼ {r[ctx['ad_col']]} %{r['Gunluk_Degisim']*100:.1f}</span>")
-    st.markdown(f"""<div class="ticker-wrap"><div class="ticker-move">{"".join(items)}</div></div>""", unsafe_allow_html=True)
+        if r['Gunluk_Degisim'] < 0: ticker_items.append(f"<span class='ticker-item trend-down'>▼ {r[ctx['ad_col']]} %{r['Gunluk_Degisim']*100:.1f}</span>")
+        
+    st.markdown(f"""
+    <div class="ticker-container">
+        <div class="ticker-track">
+            {' • '.join(ticker_items)} {' • '.join(ticker_items)} </div>
+    </div>
+    """, unsafe_allow_html=True)
     
+    # Grafikler ve Özet Tablo
     col_g1, col_g2 = st.columns([2, 1])
     with col_g1:
-        st.markdown("#### Fiyat Değişim Dağılımı")
-        fig_hist = px.histogram(df, x="Fark_Yuzde", nbins=25, color_discrete_sequence=["#3b82f6"])
-        fig_hist.update_traces(marker_line_width=0, opacity=0.8)
-        fig_hist.update_layout(bargap=0.1, margin=dict(t=10))
-        fig_hist.update_xaxes(title_text=None, showticklabels=True, gridcolor='rgba(255,255,255,0.05)')
-        fig_hist.update_yaxes(visible=False)
+        st.subheader("Fiyat Değişim Dağılımı")
+        # Histogram için daha profesyonel renkler
+        fig_hist = px.histogram(df, x="Fark_Yuzde", nbins=30, color_discrete_sequence=["#2563eb"])
+        fig_hist.update_traces(marker_line_color='#161b22', marker_line_width=1, opacity=0.9)
         st.plotly_chart(style_chart(fig_hist), use_container_width=True)
         
     with col_g2:
-        st.markdown("#### Hareket Özeti")
+        st.subheader("Piyasa Özeti")
+        artan = len(df[df['Fark'] > 0])
+        dusen = len(df[df['Fark'] < 0])
+        sabit = len(df[df['Fark'] == 0])
+        
         st.markdown(f"""
-        <div style="background:var(--bg-card); border-radius:16px; padding:20px; border:1px solid var(--border-color);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px;">
-                <span style="font-size:13px; color:#a1a1aa;">YÜKSELENLER</span>
-                <span style="font-size:18px; color:#ef4444; font-weight:700; font-family:'JetBrains Mono';">{len(df[df['Fark'] > 0])}</span>
+        <div style="background:var(--bg-surface-1); border-radius:16px; padding:24px; border:1px solid var(--border-subtle); height:100%; display:flex; flex-direction:column; justify-content:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid var(--border-subtle);">
+                <span style="font-size:14px; color:#8b949e; font-weight:600;">YÜKSELEN ÜRÜNLER</span>
+                <span style="font-size:20px; color:#2ea043; font-weight:700; font-family:'JetBrains Mono';">▲ {artan}</span>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:10px;">
-                <span style="font-size:13px; color:#a1a1aa;">DÜŞENLER</span>
-                <span style="font-size:18px; color:#10b981; font-weight:700; font-family:'JetBrains Mono';">{len(df[df['Fark'] < 0])}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid var(--border-subtle);">
+                <span style="font-size:14px; color:#8b949e; font-weight:600;">DÜŞEN ÜRÜNLER</span>
+                <span style="font-size:20px; color:#da3633; font-weight:700; font-family:'JetBrains Mono';">▼ {dusen}</span>
             </div>
              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:13px; color:#a1a1aa;">SABİT</span>
-                <span style="font-size:18px; color:#fbbf24; font-weight:700; font-family:'JetBrains Mono';">{len(df[df['Fark'] == 0])}</span>
+                <span style="font-size:14px; color:#8b949e; font-weight:600;">SABİT KALANLAR</span>
+                <span style="font-size:20px; color:#f0f6fc; font-weight:700; font-family:'JetBrains Mono';">• {sabit}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
     
-    st.markdown("#### Sektörel Isı Haritası")
-    fig_tree = px.treemap(df, path=[px.Constant("Piyasa"), 'Grup', ctx['ad_col']], values=ctx['agirlik_col'], color='Fark', color_continuous_scale='RdYlGn_r')
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.subheader("Sektörel Isı Haritası (Ağırlıklı)")
+    # Isı haritası için daha net bir renk skalası
+    fig_tree = px.treemap(df, path=[px.Constant("Genel Pazar"), 'Grup', ctx['ad_col']], values=ctx['agirlik_col'], color='Fark', 
+                          color_continuous_scale=['#da3633', '#161b22', '#2ea043'], # Kırmızı -> Koyu -> Yeşil
+                          color_continuous_midpoint=0)
+    fig_tree.update_traces(marker_line_width=1, marker_line_color='#161b22')
     st.plotly_chart(style_chart(fig_tree, is_sunburst=True), use_container_width=True)
 
 def sayfa_kategori_detay(ctx):
     df = ctx["df_analiz"]
-    st.markdown("### 🔍 Detaylı Fiyat Takibi")
-    col_sel, col_src = st.columns([1, 2])
-    kategoriler = ["Tümü"] + sorted(df['Grup'].unique().tolist())
-    secilen_kat = col_sel.selectbox("Kategori Filtresi", kategoriler)
-    arama = col_src.text_input("Ürün Arama", placeholder="Örn: Süt, Yumurta...")
+    st.markdown("### 🔍 Ürün Fiyat Takibi")
     
+    # Filtreleme Alanı - Daha temiz layout
+    with st.container():
+        c1, c2 = st.columns([1, 3])
+        kategoriler = ["Tümü"] + sorted(df['Grup'].unique().tolist())
+        secilen_kat = c1.selectbox("Kategori Filtresi", kategoriler)
+        arama = c2.text_input("Ürün Arama", placeholder="Örn: Süt, Ekmek, Yumurta...")
+    
+    st.divider()
+
     df_show = df.copy()
     if secilen_kat != "Tümü": df_show = df_show[df_show['Grup'] == secilen_kat]
     if arama: df_show = df_show[df_show[ctx['ad_col']].astype(str).str.contains(arama, case=False, na=False)]
     
     if not df_show.empty:
-        items_per_page = 16
-        # Pagination UI
+        # Pagination
+        items_per_page = 20
         total_pages = max(1, len(df_show)//items_per_page + 1)
-        col_p1, col_p2 = st.columns([1, 6])
-        page_num = col_p1.number_input("Sayfa", min_value=1, max_value=total_pages, step=1)
+        
+        col_pag, _ = st.columns([2, 8])
+        page_num = col_pag.number_input(f"Sayfa (Toplam {total_pages})", min_value=1, max_value=total_pages, step=1)
         
         batch = df_show.iloc[(page_num - 1) * items_per_page : (page_num - 1) * items_per_page + items_per_page]
-        cols = st.columns(4)
+        
+        # Grid Görünümü
+        cols = st.columns(5) # 5 kolonlu grid
         for idx, row in enumerate(batch.to_dict('records')):
             fiyat = row[ctx['son']]; fark = row.get('Gunluk_Degisim', 0) * 100
-            cls = "pg-red" if fark > 0 else ("pg-green" if fark < 0 else "pg-yellow")
-            icon = "▲" if fark > 0 else ("▼" if fark < 0 else "•")
-            with cols[idx % 4]:
+            
+            if fark > 0.01:
+                badge_cls = "badge-up"; icon = "▲"; fark_txt = f"+%{abs(fark):.2f}"
+            elif fark < -0.01:
+                badge_cls = "badge-down"; icon = "▼"; fark_txt = f"-%{abs(fark):.2f}"
+            else:
+                badge_cls = "badge-flat"; icon = "•"; fark_txt = "%0.00"
+
+            with cols[idx % 5]:
                 st.markdown(f"""
-                <div class="pg-card">
-                    <div>
-                        <div class="pg-name" title="{row[ctx['ad_col']]}">{row[ctx['ad_col']]}</div>
-                        <div class="pg-price">{fiyat:.2f} ₺</div>
+                <div class="grid-card">
+                    <div class="grid-title" title="{row[ctx['ad_col']]}">{row[ctx['ad_col']]}</div>
+                    <div class="grid-price-row">
+                        <div class="grid-price">{fiyat:.2f} ₺</div>
+                        <div class="grid-badge {badge_cls}">{icon} {fark_txt}</div>
                     </div>
-                    <div class="pg-badge {cls}">{icon} %{abs(fark):.2f}</div>
                 </div>
-                <div style="margin-bottom:20px;"></div>
+                <div style="margin-bottom:16px;"></div>
                 """, unsafe_allow_html=True)
-    else: st.info("Kriterlere uygun ürün bulunamadı.")
+    else: 
+        st.info("Kriterlere uygun ürün bulunamadı.")
 
 def sayfa_tam_liste(ctx):
-    st.markdown("### 📋 Ham Veri Seti")
+    st.markdown("### 📋 Tam Veri Seti ve Analiz")
     df = ctx["df_analiz"]
+
+    # Sparkline için veriyi hazırla
     def fix_sparkline(row):
-        vals = row.tolist(); 
-        if vals and min(vals) == max(vals): vals[-1] += 0.00001
+        vals = [v if pd.notnull(v) else 0 for v in row.tolist()]
+        if not vals: return [0,0]
+        # Düz çizgi olmaması için minik bir varyasyon ekle (görsel hile)
+        if min(vals) == max(vals) and len(vals) > 1: vals[-1] += 0.0001
         return vals
+
     df['Fiyat_Trendi'] = df[ctx['gunler']].apply(fix_sparkline, axis=1)
-    cols_show = ['Grup', ctx['ad_col'], 'Fiyat_Trendi', ctx['baz_col'], 'Gunluk_Degisim']
-    if ctx['baz_col'] != ctx['son']: cols_show.insert(3, ctx['son'])
+    
+    cols_show = ['Grup', ctx['ad_col'], 'Fiyat_Trendi', ctx['baz_col'], ctx['son'], 'Gunluk_Degisim']
+    
     cfg = {
-        "Fiyat_Trendi": st.column_config.LineChartColumn("Trend", width="small", y_min=0), 
-        ctx['ad_col']: "Ürün Adı", 
-        "Gunluk_Degisim": st.column_config.ProgressColumn("Değişim", format="%.2f%%", min_value=-0.5, max_value=0.5), 
-        ctx['baz_col']: st.column_config.NumberColumn(f"Baz Fiyat", format="%.2f ₺"), 
-        ctx['son']: st.column_config.NumberColumn(f"Son Fiyat", format="%.2f ₺")
+        "Grup": st.column_config.TextColumn("Kategori", width="medium"),
+        ctx['ad_col']: st.column_config.TextColumn("Ürün Adı", width="large"),
+        "Fiyat_Trendi": st.column_config.LineChartColumn("Fiyat Trendi (Son Dönem)", width="medium", y_min=0), 
+        ctx['baz_col']: st.column_config.NumberColumn(f"Baz Fiyat ({ctx['baz_col']})", format="%.2f ₺"), 
+        ctx['son']: st.column_config.NumberColumn(f"Son Fiyat ({ctx['son']})", format="%.2f ₺"),
+        "Gunluk_Degisim": st.column_config.ProgressColumn("Günlük Değişim", format="%.2f%%", min_value=-0.2, max_value=0.2), 
     }
-    st.data_editor(df[cols_show], column_config=cfg, hide_index=True, use_container_width=True, height=600)
+    
+    # Dataframe'i daha temiz göster
+    st.dataframe(df[cols_show], column_config=cfg, hide_index=True, use_container_width=True, height=700)
+    
+    # İndirme butonu
     output = BytesIO(); 
     with pd.ExcelWriter(output) as writer: df.to_excel(writer, index=False)
-    st.download_button("📥 Excel Olarak İndir", data=output.getvalue(), file_name="Veri_Seti.xlsx")
+    st.download_button("📥 Excel Raporunu İndir", data=output.getvalue(), file_name=f"Enflasyon_Verisi_{ctx['son']}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 def sayfa_raporlama(ctx):
-    st.markdown("### 📝 Stratejik Pazar Raporu")
-    col_l, col_r = st.columns([2, 1])
+    st.markdown("### 📝 Stratejik Pazar Raporu (AI)")
+    
+    col_l, col_r = st.columns([7, 3])
     with col_l:
+        # Rapor metnini bir "kağıt" gibi göster
         rap_text = generate_detailed_static_report(ctx["df_analiz"], ctx["son"], ctx["enf_genel"], ctx["enf_gida"], ctx["gun_farki"], ctx["tahmin"], ctx["ad_col"], ctx["agirlik_col"])
-        st.markdown(f"""<div style="background:#18181b; padding:40px; border-radius:12px; border:1px solid #27272a; font-family:'Inter'; line-height:1.8; font-size:15px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">{rap_text.replace(chr(10), '<br>').replace('**', '<b>').replace('**', '</b>')}</div>""", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="background:var(--bg-surface-1); padding:40px; border-radius:12px; border:1px solid var(--border-subtle); font-family:'Inter'; line-height:1.7; font-size:15px; color: var(--text-primary);">
+            {rap_text.replace(chr(10), '<br>').replace('**', '<b style="color:var(--accent-blue);">').replace('**', '</b>')}
+        </div>
+        """, unsafe_allow_html=True)
+        
     with col_r:
-        st.markdown("#### İşlemler")
+        st.markdown("#### Rapor İşlemleri")
+        st.write("Bu rapor, sistemdeki anlık veriler ve yapay zeka algoritmaları kullanılarak otomatik oluşturulmuştur. Word formatında indirerek düzenleyebilirsiniz.")
+        
         word_buffer = create_word_report(rap_text, ctx["son"], ctx["df_analiz"])
-        st.download_button(label="📥 Word Raporu İndir", data=word_buffer, file_name="Strateji_Raporu.docx", type="primary", use_container_width=True)
-        st.info("Bu rapor, yapay zeka algoritmaları tarafından oluşturulmuş olup resmi yatırım tavsiyesi niteliği taşımaz.")
+        st.download_button(
+            label="📄 Word Raporu Olarak İndir", 
+            data=word_buffer, 
+            file_name=f"Piyasa_Raporu_{ctx['son']}.docx", 
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+            use_container_width=True
+        )
+        
+        st.divider()
+        st.info("NOT: Bu belge, dahili analiz amaçlıdır ve resmi yatırım tavsiyesi niteliği taşımaz.")
 
 def sayfa_maddeler(ctx):
     df = ctx["df_analiz"]
-    st.markdown("### 📦 Madde Bazlı Değişim Analizi")
-    st.markdown("<p style='color:#a1a1aa; font-size:14px; margin-bottom:20px;'>Seçilen kategorideki ürünlerin, baz alınan tarihe göre kümülatif değişim oranları.</p>", unsafe_allow_html=True)
+    st.markdown("### 📦 Kategori Bazlı Kümülatif Değişim")
+    st.markdown("<p style='color:#8b949e; font-size:14px; margin-bottom:20px;'>Seçilen kategorideki ürünlerin, baz alınan tarihe göre toplam yüzdesel değişimlerini gösterir.</p>", unsafe_allow_html=True)
+    
     kategoriler = sorted(df['Grup'].unique().tolist())
     col1, col2 = st.columns([1, 3])
-    with col1: secilen_kat = st.selectbox("Kategori:", options=kategoriler, index=0)
+    with col1: secilen_kat = st.selectbox("Kategori Seçiniz:", options=kategoriler, index=0)
+    
     df_sub = df[df['Grup'] == secilen_kat].copy().sort_values('Fark_Yuzde', ascending=True)
+    
     if not df_sub.empty:
-        colors = ['#10b981' if x < 0 else '#ef4444' for x in df_sub['Fark_Yuzde']]
-        fig = go.Figure(go.Bar(x=df_sub['Fark_Yuzde'], y=df_sub[ctx['ad_col']], orientation='h', marker_color=colors, text=df_sub['Fark_Yuzde'].apply(lambda x: f"%{x:.2f}"), textposition='outside', hovertemplate='<b>%{y}</b><br>Değişim: %%{x:.2f}<extra></extra>'))
-        fig.update_layout(height=max(500, len(df_sub) * 35), title="", xaxis_title="Değişim Oranı (%)", margin=dict(l=0, r=0, t=10, b=0))
+        # Renkleri profesyonel palete göre ayarla
+        colors = ['#da3633' if x < 0 else '#2ea043' for x in df_sub['Fark_Yuzde']]
+        
+        fig = go.Figure(go.Bar(
+            x=df_sub['Fark_Yuzde'], 
+            y=df_sub[ctx['ad_col']], 
+            orientation='h', 
+            marker_color=colors,
+            text=df_sub['Fark_Yuzde'].apply(lambda x: f"%{x:.2f}"), 
+            textposition='outside',
+            hovertemplate='<b>%{y}</b><br>Kümülatif Değişim: %%{x:.2f}<extra></extra>'
+        ))
+        
+        # Dinamik yükseklik
+        fig.update_layout(
+            height=max(600, len(df_sub) * 40), 
+            title=f"{secilen_kat} Grubu Ürünleri",
+            xaxis_title="Değişim Oranı (%)", 
+            yaxis_title=None,
+            margin=dict(l=0, r=0, t=40, b=0)
+        )
         st.plotly_chart(style_chart(fig), use_container_width=True)
-    else: st.warning("Bu kategoride veri bulunamadı.")
+    else: 
+        st.warning("Bu kategoride görüntülenecek veri bulunamadı.")
 
 def sayfa_trend_analizi(ctx):
-    st.markdown("### 📈 Zaman Serisi ve Enflasyon Trendleri")
+    st.markdown("### 📈 Zaman Serisi ve Trend Analizi")
+    
     df = ctx["df_analiz"]; gunler = ctx["gunler"]; agirlik_col = ctx["agirlik_col"]
+    
+    # --- Genel Enflasyon Trendi ---
     endeks_verisi = []
     for gun in gunler:
         temp_df = df.dropna(subset=[gun, agirlik_col])
         if not temp_df.empty and temp_df[agirlik_col].sum() > 0:
             index_val = (temp_df[gun] * temp_df[agirlik_col]).sum() / temp_df[agirlik_col].sum()
             endeks_verisi.append({"Tarih": gun, "Deger": index_val})
+            
     df_endeks = pd.DataFrame(endeks_verisi)
     if not df_endeks.empty:
+        # Başlangıcı 0'a endeksle
         df_endeks['Kümülatif_Degisim'] = ((df_endeks['Deger'] / df_endeks.iloc[0]['Deger']) - 1) * 100
-        fig_genel = make_neon_chart(px.line(df_endeks, x='Tarih', y='Kümülatif_Degisim', title="GENEL ENFLASYON TRENDİ", markers=True))
+        
+        fig_genel = px.line(df_endeks, x='Tarih', y='Kümülatif_Degisim', title="Genel Sepet Kümülatif Değişimi (%)", markers=True)
+        # Çizgiyi kalınlaştır ve kurumsal mavi yap
+        fig_genel.update_traces(line_color='#2563eb', line_width=4, marker_size=10)
+        
         st.plotly_chart(style_chart(fig_genel), use_container_width=True)
-        st.info(f"ℹ️ Grafik, {gunler[0]} tarihini baz alarak hesaplanan kümülatif sepet değişimini gösterir.")
+        st.caption(f"ℹ️ Grafik, {gunler[0]} tarihini baz (0) alarak hesaplanan ağırlıklı sepet değişimini gösterir.")
     
-    st.markdown("---")
-    st.subheader("Ürün Kıyaslama")
-    seçilen_urunler = st.multiselect("Grafiğe eklenecek ürünler:", options=df[ctx['ad_col']].unique(), default=df.sort_values('Fark_Yuzde', ascending=False).head(3)[ctx['ad_col']].tolist())
+    st.divider()
+    
+    # --- Ürün Bazlı Kıyaslama ---
+    st.subheader("Ürün Bazlı Fiyat Kıyaslama")
+    
+    # Varsayılan olarak en çok artan 3 ürünü seç
+    default_selection = df.sort_values('Fark_Yuzde', ascending=False).head(3)[ctx['ad_col']].tolist()
+    seçilen_urunler = st.multiselect("Karşılaştırılacak ürünleri seçin:", options=df[ctx['ad_col']].unique(), default=default_selection)
+    
     if seçilen_urunler:
         df_melted = df[df[ctx['ad_col']].isin(seçilen_urunler)][[ctx['ad_col']] + gunler].melt(id_vars=[ctx['ad_col']], var_name='Tarih', value_name='Fiyat')
+        
+        # Her ürünün kendi ilk günkü fiyatına göre değişimini hesapla
         base_prices = df_melted[df_melted['Tarih'] == gunler[0]].set_index(ctx['ad_col'])['Fiyat'].to_dict()
         df_melted['Yuzde_Degisim'] = df_melted.apply(lambda row: ((row['Fiyat']/base_prices.get(row[ctx['ad_col']], 1)) - 1)*100 if base_prices.get(row[ctx['ad_col']], 0) > 0 else 0, axis=1)
-        st.plotly_chart(style_chart(px.line(df_melted, x='Tarih', y='Yuzde_Degisim', color=ctx['ad_col'], title="", markers=True)), use_container_width=True)
+        
+        fig_urun = px.line(df_melted, x='Tarih', y='Yuzde_Degisim', color=ctx['ad_col'], title="Seçili Ürünlerin Kümülatif Değişimi (%)", markers=True, color_discrete_sequence=px.colors.qualitative.Bold)
+        fig_urun.update_traces(line_width=3)
+        st.plotly_chart(style_chart(fig_urun), use_container_width=True)
 
 def sayfa_metodoloji(ctx=None):
-    html_content = """
-    <style>.method-card { background: #18181b; border: 1px solid #27272a; border-radius: 16px; padding: 25px; margin-bottom: 20px; }</style>
-    <h3 style="margin-bottom:30px;">Metodoloji ve Akademik Çerçeve</h3>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-        <div class="method-card">
-            <h4 style="color:#3b82f6; margin-top:0;">1. Veri Toplama (Web Scraping)</h4>
-            <p style="color:#a1a1aa; font-size:14px; line-height:1.6;">User-Agent rotasyonu ve Rate Limiting ile güvenli veri çekimi. IP bazlı anomali tespiti ve veri boşluklarının yönetimi.</p>
-        </div>
-        <div class="method-card">
-            <h4 style="color:#10b981; margin-top:0;">2. Endeks Hesaplama</h4>
-            <p style="color:#a1a1aa; font-size:14px; line-height:1.6;">Fiyat endeksi hesaplamasında zincirleme Laspeyres yaklaşımı benimsenmiştir.</p>
-            <code style="background:#000; padding:5px; border-radius:4px; color:#fff;">I(t) = Σ ( P(i,t) / P(i,0) ) × W(i)</code>
-        </div>
-        <div class="method-card" style="grid-column: span 2;">
-            <h4 style="color:#f59e0b; margin-top:0;">3. Ağırlıklandırma</h4>
-            <p style="color:#a1a1aa; font-size:14px;">Ürün ağırlıkları, TÜİK Hanehalkı Bütçe Anketi (HBA) harcama payları temel alınarak 2024 yılı bazlı simüle edilmiştir.</p>
-        </div>
-    </div>
-    """
-    st.markdown(html_content, unsafe_allow_html=True)
+    st.markdown("### ℹ️ Metodoloji ve Yasal Uyarı")
+    
+    with st.expander("📌 Veri Toplama ve İşleme Yöntemi", expanded=True):
+        st.markdown("""
+        Bu sistem, Türkiye'de faaliyet gösteren önde gelen zincir marketler ve e-ticaret platformlarından **web kazıma (web scraping)** yöntemiyle günlük olarak fiyat verisi toplamaktadır.
+        * **Kapsam:** TÜİK enflasyon sepetindeki ana harcama gruplarını temsil eden simüle edilmiş bir ürün sepeti takip edilmektedir.
+        * **Veri Güvenliği:** Toplama işlemi sırasında User-Agent rotasyonu ve hız sınırlaması (rate limiting) uygulanarak hedef sitelere zarar verilmemesi amaçlanmaktadır.
+        * **Veri Temizliği:** Aykırı değerler (anomali) ve eksik veriler, istatistiksel yöntemlerle (örneğin, önceki günün verisini taşıma veya enterpolasyon) işlenmektedir.
+        """)
 
-# --- ANA MAIN ---
+    with st.expander("🧮 Endeks Hesaplama Modeli", expanded=True):
+        st.markdown("""
+        Enflasyon hesaplamasında, uluslararası standartlara uygun olarak **Zincirleme Laspeyres Fiyat Endeksi** yaklaşımı benimsenmiştir.
+        * **Formül:** `I(t) = Σ ( P(i,t) / P(i,0) ) × W(i)`
+        * **Ağırlıklandırma (W):** Ürünlerin endeks üzerindeki etkisi, TÜİK Hanehalkı Bütçe Anketi'nden (HBA) elde edilen harcama paylarına göre simüle edilmiş ağırlıklarla belirlenir. Bu ağırlıklar her yılın başında (Zincirleme tarihi) güncellenir.
+        """)
+
+    with st.expander("⚠️ Yasal Uyarı ve Sorumluluk Reddi", expanded=True):
+        st.markdown("""
+        * Bu platformda sunulan veriler, analizler ve raporlar tamamen **bilgilendirme ve akademik/deneysel amaçlıdır.**
+        * Buradaki bilgiler, **resmi enflasyon verisi (TÜİK) yerine geçmez** ve kesinlikle **yatırım tavsiyesi değildir.**
+        * Verilerin doğruluğu, tamlığı veya güncelliği konusunda garanti verilmez. Bu verilere dayanarak alınan finansal veya ticari kararlardan doğabilecek zararlardan sistem geliştiricileri sorumlu tutulamaz.
+        """)
+
+# --- ANA UYGULAMA MANTIĞI ---
 def main():
-    # --- 1. MODERN HEADER ---
-    col_h1, col_h2 = st.columns([3, 1])
-    with col_h1:
-        st.markdown(f"""
-        <div style="padding:10px 0;">
-            <div style="font-weight:900; font-size:28px; color:#fff; letter-spacing:-1px;">
-                Piyasa Monitörü <span style="color:#3b82f6;">PRO</span>
-            </div>
-            <div style="font-size:14px; color:#71717a; display:flex; gap:10px; align-items:center;">
-                <span>Yapay Zeka Destekli Enflasyon Analiz Platformu</span>
-                <span style="background:rgba(16,185,129,0.1); color:#10b981; font-size:10px; padding:2px 8px; border-radius:4px;">CANLI</span>
+    # --- HEADER BÖLÜMÜ (Üstte sabit) ---
+    c_head_1, c_head_2 = st.columns([3, 1])
+    with c_head_1:
+        st.markdown("""
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div style="font-size:32px;">💠</div>
+            <div>
+                <div style="font-weight:800; font-size:26px; color:var(--text-primary); letter-spacing:-0.5px;">Piyasa Monitörü <span style="color:var(--accent-blue);">PRO</span></div>
+                <div style="font-size:13px; color:var(--text-secondary);">Kurumsal Enflasyon Analiz Terminali v2.1</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
-    with col_h2:
+    with c_head_2:
         st.markdown(f"""
-        <div style="text-align:right; padding:10px 0;">
-            <div style="font-size:11px; color:#52525b; font-weight:700; letter-spacing:1px;">İSTANBUL</div>
-            <div style="font-size:24px; font-weight:700; color:#e4e4e7; font-family:'JetBrains Mono';">{datetime.now().strftime("%d.%m.%Y")}</div>
+        <div style="text-align:right;">
+            <div style="font-size:12px; font-weight:600; color:var(--text-secondary); letter-spacing:1px;">İSTANBUL (TSİ)</div>
+            <div style="font-family:'JetBrains Mono'; font-size:22px; font-weight:700; color:var(--text-primary);">{datetime.now().strftime("%d.%m.%Y")}</div>
         </div>
         """, unsafe_allow_html=True)
+    
+    st.markdown("<div style='margin-bottom:25px;'></div>", unsafe_allow_html=True)
 
-    st.markdown("<div style='height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); margin-bottom:20px;'></div>", unsafe_allow_html=True)
-
-    # --- 2. ÜST MENÜ VE AKSİYON ---
-    c_nav, c_act = st.columns([5, 1])
+    # --- NAVİGASYON ve AKSİYON BAR ---
+    c_nav, c_act = st.columns([6, 1], gap="medium")
     
     with c_nav:
+        # Modern Segmented Control Menü
         menu_items = {
             "🏠 Ana Sayfa": "Ana Sayfa",
             "⚡ Özet": "Piyasa Özeti",
-            "📈 Trend": "Trendler",
+            "📈 Trendler": "Trendler",
             "📦 Ürünler": "Maddeler",
             "🔍 Detay": "Kategori Detay",
-            "💾 Veri": "Tam Liste",
+            "💾 Veri Seti": "Tam Liste",
             "📝 Rapor": "Raporlama",
-            "ℹ️ Bilgi": "Metodoloji"
+            "ℹ️ Metodoloji": "Metodoloji"
         }
-        secilen_etiket = st.radio("Navigasyon", options=list(menu_items.keys()), label_visibility="collapsed", key="nav_radio", horizontal=True)
+        # CSS ile özelleştirilmiş radio butonu
+        secilen_etiket = st.radio(
+            "Navigasyon", 
+            options=list(menu_items.keys()), 
+            label_visibility="collapsed", 
+            key="main_nav",
+            horizontal=True
+        )
         secim = menu_items[secilen_etiket]
 
     with c_act:
-        if st.button("🔄 Senkronize Et", use_container_width=True):
-            progress_bar = st.progress(0, text="Veri akışı sağlanıyor...")
-            res = html_isleyici(lambda p: progress_bar.progress(min(1.0, max(0.0, p)), text="Senkronizasyon sürüyor..."))
-            progress_bar.progress(1.0, text="Tamamlandı!"); time.sleep(0.5); progress_bar.empty()
-            if "OK" in res:
-                st.cache_data.clear(); st.toast('Sistem Senkronize Edildi!', icon='🚀'); time.sleep(1); st.rerun()
-            elif "Veri bulunamadı" in res: st.warning("⚠️ Yeni veri akışı yok.")
-            else: st.error(res)
+        # Senkronizasyon Butonu
+        if st.button("🔄 Veriyi Güncelle", use_container_width=True, help="Github üzerinden son verileri çeker ve işler."):
+            with st.status("Veri senkronizasyonu başlatılıyor...", expanded=True) as status:
+                st.write("Bot sunucusuna bağlanılıyor...")
+                progress_bar = st.progress(0)
+                res = html_isleyici(lambda p: progress_bar.progress(min(1.0, max(0.0, p))))
+                
+                if "OK" in res:
+                    progress_bar.progress(1.0)
+                    status.update(label="Senkronizasyon tamamlandı!", state="complete", expanded=False)
+                    st.cache_data.clear()
+                    st.toast('Sistem başarıyla güncellendi.', icon='✅')
+                    time.sleep(1)
+                    st.rerun()
+                elif "Veri bulunamadı" in res:
+                    status.update(label="Yeni veri yok.", state="complete")
+                    st.toast("İşlenecek yeni veri paketi bulunamadı.", icon="ℹ️")
+                else:
+                    status.update(label="Hata oluştu!", state="error")
+                    st.error(f"Senkronizasyon hatası: {res}")
 
-    # --- 3. VERİ YÜKLEME ---
-    with st.spinner("Veri tabanına bağlanılıyor..."):
+    st.divider()
+
+    # --- VERİ YÜKLEME ---
+    with st.spinner("Veritabanı ve analiz motoru başlatılıyor..."):
         df_base, r_dates, col_name = verileri_getir_cache()
     
     if df_base is not None:
+        # Sidebar'ı sadece veri varsa göster
         ctx = ui_sidebar_ve_veri_hazirlama(df_base, r_dates, col_name)
     else:
         ctx = None
 
-    # --- 4. İÇERİK YÖNETİMİ ---
+    # --- SAYFA İÇERİĞİ ---
     if ctx:
+        # İçerik alanı için biraz boşluk
         st.markdown("<div style='margin-top:20px;'></div>", unsafe_allow_html=True)
+        
         if secim == "Ana Sayfa": sayfa_ana_sayfa(ctx)
         elif secim == "Piyasa Özeti": sayfa_piyasa_ozeti(ctx)
         elif secim == "Trendler": sayfa_trend_analizi(ctx)
@@ -1057,13 +1215,20 @@ def main():
         elif secim == "Tam Liste": sayfa_tam_liste(ctx)
         elif secim == "Raporlama": sayfa_raporlama(ctx)
         elif secim == "Metodoloji": sayfa_metodoloji(ctx)
+        
     else:
-        if secim == "Metodoloji": sayfa_metodoloji()
+        # Veri yüklenemezse
+        if secim == "Metodoloji":
+            sayfa_metodoloji()
         else:
-            st.error("Veri seti yüklenemedi. Lütfen internet bağlantınızı kontrol edin veya GitHub yapılandırmasını doğrulayın.")
+            st.error("⚠️ Veritabanı bağlantısı kurulamadı. Lütfen internet bağlantınızı kontrol edin veya GitHub yapılandırmasını gözden geçirin.")
 
     # --- FOOTER ---
-    st.markdown('<div style="text-align:center; color:#52525b; font-size:11px; margin-top:60px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05);">VALIDASYON MUDURLUGU © 2026 - CONFIDENTIAL ANALYTICS SUITE</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div style="text-align:center; color:var(--text-secondary); font-size:12px; margin-top:60px; padding-top:20px; border-top:1px solid var(--border-subtle);">
+        VALIDASYON MÜDÜRLÜĞÜ © 2026 • CONFIDENTIAL ANALYTICS SUITE • v2.1.4 (Stable)
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
