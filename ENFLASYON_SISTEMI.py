@@ -55,9 +55,11 @@ st.set_page_config(
 )
 
 # --- CSS MOTORU ---
+# --- CSS MOTORU (DÜZELTİLMİŞ) ---
 def apply_theme():
     st.session_state.plotly_template = "plotly_dark"
 
+    # NOT: f-string içinde CSS kullanırken TÜM süslü parantezler {{ }} şeklinde çift olmalıdır!
     final_css = f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -159,13 +161,13 @@ def apply_theme():
         }}
         div.stButton > button:hover {{ border-color: var(--accent-blue); box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); transform: translateY(-1px); }}
 
-        /* --- TİTREME ENGELLEME VE GÖRSEL İYİLEŞTİRMELER --- */
-        .stApp, [data-testid="stAppViewContainer"], .main, .block-container {
+        /* --- TİTREME ENGELLEME VE GÖRSEL İYİLEŞTİRMELER (DÜZELTİLDİ: Çift Parantez) --- */
+        .stApp, [data-testid="stAppViewContainer"], .main, .block-container {{
             transition: none !important;
             opacity: 1 !important;
             filter: none !important; 
             transform: none !important;
-        }
+        }}
         [data-testid="stStatusWidget"] {{ visibility: hidden !important; display: none !important; }}
         div[data-stale="true"] {{ opacity: 1 !important; transition: none !important; }}
         .stProgress > div > div > div > div {{ background-color: transparent !important; }}
@@ -1425,3 +1427,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
