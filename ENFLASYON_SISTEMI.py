@@ -944,7 +944,7 @@ def main():
     
     # --- AYAR: SENKRONİZASYON BUTONU ---
     # Bu ayarı False yaparak butonu tamamen gizleyebilirsiniz.
-    SENKRONIZASYON_AKTIF = True 
+    SENKRONIZASYON_AKTIF = False 
 
     # --- Üst Bilgi Barı (Sticky Header) ---
     st.markdown(f"""
@@ -1028,3 +1028,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
