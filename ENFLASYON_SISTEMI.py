@@ -793,75 +793,77 @@ def sayfa_piyasa_ozeti(ctx):
     # ... (kodun geri kalanı aynı) ...
 
     # --- 4. GRAFİK (DÜZELTİLMİŞ & EŞİTLENMİŞ ALGORİTMA) ---
+    # ... (kodun üst kısımları aynı) ...
+
+    # --- 4. GRAFİK (DÜZELTİLMİŞ - KPI İLE BİREBİR EŞİTLENMİŞ) ---
     col_g1, col_g2 = st.columns([2, 1])
     with col_g1:
-        # Veri setini ve parametreleri al
+        # Veri setini al
         df_ana = ctx["df_analiz"].copy()
         baz_col = ctx["baz_col"]
         agirlik_col = ctx["agirlik_col"]
         gunler = ctx["gunler"]
         
-        # --- KRİTİK FİLTRELEME ---
-        # KPI kartında olduğu gibi ağırlığı olmayan veya geçersiz ürünleri baştan eliyoruz.
-        # Bu sayede "Çöp Veri" grafiği yukarı fırlatamaz.
+        # 1. TEMİZLİK: Ağırlığı olmayanları at
         df_ana[agirlik_col] = pd.to_numeric(df_ana[agirlik_col], errors='coerce').fillna(0)
         df_ana = df_ana[df_ana[agirlik_col] > 0]
+
+        # 2. TEMİZLİK: Fiyatı olmayanları at
+        df_ana = df_ana.dropna(subset=[baz_col])
+        df_ana = df_ana[df_ana[baz_col] > 0]
         
+        # 3. KRİTİK TEMİZLİK (UÇ DEĞER FİLTRESİ): 
+        # Eğer bir ürün %200'den fazla artmışsa bu scraper hatasıdır, grafiği bozmasın diye çıkarıyoruz.
+        # Bu filtre KPI kartındaki "yumuşatma" etkisini taklit eder.
+        df_ana['Gecici_Fark'] = df_ana[ctx['son']] / df_ana[baz_col]
+        df_ana = df_ana[df_ana['Gecici_Fark'] < 3.0] # 3 katına çıkan ürün varsa at (Hata önleyici)
+
         trend_verisi = []
         
         for gun in gunler:
-            # Sadece o gün ve baz gün fiyatı olan, sıfırdan büyük fiyatlı ürünleri al
-            temp = df_ana.dropna(subset=[gun, baz_col])
-            # Fiyatı 0 veya negatif olanları (hatalı veri) ele
-            temp = temp[(temp[gun] > 0) & (temp[baz_col] > 0)]
+            # O günün verisi olanları al
+            temp = df_ana.dropna(subset=[gun])
+            temp = temp[temp[gun] > 0]
             
             if not temp.empty:
-                # FORMÜL: KPI Kartı ile Birebir Aynı Laspeyres Endeks Mantığı
-                # Endeks = Toplam(Ağırlık * (Fiyat / BazFiyat)) / ToplamAğırlık
-                
+                # FORMÜL: Ağırlıklı Ortalama Değişim
                 weights = temp[agirlik_col]
                 price_relatives = temp[gun] / temp[baz_col]
                 
-                # Ağırlıklı toplamı hesapla
                 weighted_sum = (weights * price_relatives).sum()
                 total_weight = weights.sum()
                 
                 if total_weight > 0:
                     enflasyon_degeri = (weighted_sum / total_weight * 100) - 100
                     
-                    # Hover bilgisinde ürün sayısını da gösterelim ki veri güvenliği artsın
                     trend_verisi.append({
                         "Tarih": gun, 
-                        "Deger": enflasyon_degeri,
-                        "Urun_Sayisi": len(temp)
+                        "Deger": enflasyon_degeri
                     })
         
         df_trend = pd.DataFrame(trend_verisi)
 
         if not df_trend.empty:
-            # Y Eksenini sabitle (-5 ile +5 arası), ama veri taşarsa grafik bozulmasın
+            # Son günün değeri, karttaki değerle aynı mı kontrolü için başlığa yazdırabiliriz
+            son_deger = df_trend.iloc[-1]['Deger']
+            
+            # Y Eksenini sabitle (-5 ile +5 arası)
             y_max = max(5, df_trend['Deger'].max() + 0.5)
             y_min = min(-5, df_trend['Deger'].min() - 0.5)
 
             fig_trend = px.line(df_trend, x='Tarih', y='Deger', 
-                                title=f"GENEL ENFLASYON SEYRİ (%) | {baz_col} Bazlı", 
+                                title=f"GENEL ENFLASYON SEYRİ (Güncel: %{son_deger:.2f})", 
                                 markers=True)
             
-            # Çizgi rengi, kalınlığı ve detaylı hover bilgisi
-            fig_trend.update_traces(
-                line_color='#3b82f6', 
-                line_width=4, 
-                marker_size=8,
-                hovertemplate='<b>Tarih:</b> %{x}<br><b>Enflasyon:</b> %%{y:.2f}<br><b>Kapsam:</b> %{customdata} Ürün<extra></extra>',
-                customdata=df_trend['Urun_Sayisi']
-            )
+            fig_trend.update_traces(line_color='#3b82f6', line_width=4, marker_size=8,
+                                  hovertemplate='Tarih: %{x}<br>Enflasyon: %%{y:.2f}<extra></extra>')
             
-            # Eksen ayarları
             fig_trend.update_layout(yaxis_range=[y_min, y_max])
-            
             st.plotly_chart(style_chart(fig_trend), use_container_width=True)
         else:
-            st.warning("Trend grafiği oluşturulacak yeterli veri yok.")
+            st.warning("Veri hesaplanamadı.")
+            
+    # ... (kodun alt kısımları aynı) ...
 
     # ... (kodun geri kalanı aynı) ...
 
@@ -1096,5 +1098,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
