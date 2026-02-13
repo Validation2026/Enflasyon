@@ -711,74 +711,51 @@ def hesapla_metrikler(df_analiz_base, secilen_tarih, gunler, tum_gunler_sirali, 
     }
 
 # 3. SIDEBAR UI (CONTEXT_HAZIRLA YERİNE)
+# 3. SIDEBAR UI (GÜNCELLENMİŞ HALİ)
 def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
-    # ... (önceki kodlar)
-    
-    # SIDEBAR YORUM BLOĞU
-    with st.sidebar:
-        st.markdown("---")
-        st.markdown("### 🧠 AI Görüşü")
-        
-        yorum = ""
-        genel = ctx["enf_genel"]
-        gida = ctx["enf_gida"]
-        
-        if genel > 5:
-            durum = "Kritik Seviye"
-            renk = "#ef4444" # Kırmızı
-            yorum = "Enflasyon ivmesi yüksek seyrediyor. Özellikle gıda dışı harcamalarda kısıtlamaya gidilmesi önerilir."
-        elif genel > 2:
-            durum = "Yüksek İzleme"
-            renk = "#f59e0b" # Turuncu
-            yorum = "Fiyatlar artış trendinde. Lüks tüketim harcamaları ertelenebilir."
-        else:
-            durum = "Stabil"
-            renk = "#10b981" # Yeşil
-            yorum = "Piyasa şu an için dengeli görünüyor. Ani fiyat hareketleri gözlemlenmiyor."
-            
-        if gida > genel:
-            yorum += " 🍎 **Not:** Gıda enflasyonu ortalamanın üzerinde, mutfak masraflarına dikkat."
-            
-        st.markdown(f"""
-        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; border-left: 4px solid {renk};">
-            <div style="color:{renk}; font-weight:bold; font-size:12px; margin-bottom:5px;">DURUM: {durum}</div>
-            <div style="font-size:11px; line-height:1.4;">{yorum}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
     if df_analiz_base is None: return None
+
+    # --- 1. YERLEŞİM PLANI (LAYOUT) ---
+    # En üstte AI Görüşü için yer ayırıyoruz (Henüz boş)
+    ai_container = st.sidebar.container()
+    
+    st.sidebar.markdown("---") # Ayıraç
+    
+    # --- 2. VERİ AYARLARI (ORTA) ---
     st.sidebar.markdown("### ⚙️ Veri Ayarları")
     
-    # Lottie
+    # Lottie (İsteğe bağlı görsel)
     lottie_url = "https://lottie.host/98606416-297c-4a37-9b2a-714013063529/5D6o8k8fW0.json"
     try:
         lottie_json = load_lottieurl(lottie_url)
         with st.sidebar:
-             if lottie_json: st_lottie(lottie_json, height=120, key="nav_anim")
+             if lottie_json: st_lottie(lottie_json, height=100, key="nav_anim")
     except: pass
 
+    # Tarih Seçimi Mantığı
     BASLANGIC_LIMITI = "2026-02-04"
     tum_tarihler = sorted([d for d in raw_dates if d >= BASLANGIC_LIMITI], reverse=True)
+    
     if not tum_tarihler:
         st.sidebar.warning("Veri henüz oluşmadı.")
         return None
+        
     secilen_tarih = st.sidebar.selectbox("Rapor Tarihi:", options=tum_tarihler, index=0)
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🌍 Piyasalar")
-    symbols = [ {"s": "FX_IDC:USDTRY", "d": "Dolar / TL"}, {"s": "FX_IDC:EURTRY", "d": "Euro / TL"}, {"s": "FX_IDC:XAUTRYG", "d": "Gram Altın"}, {"s": "TVC:UKOIL", "d": "Brent Petrol"}, {"s": "BINANCE:BTCUSDT", "d": "Bitcoin ($)"} ]
-    for sym in symbols:
-        widget_code = f"""<div class="tradingview-widget-container" style="border-radius:12px; overflow:hidden; margin-bottom:10px;"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>{{ "symbol": "{sym['s']}", "width": "100%", "height": 80, "locale": "tr", "dateRange": "1D", "colorTheme": "dark", "isTransparent": true, "autosize": true, "largeChartUrl": "" }}</script></div>"""
-        with st.sidebar: components.html(widget_code, height=90)
     
+    # Tarih bazlı hesaplamalar (Logic)
     tum_gunler_sirali = sorted([c for c in df_analiz_base.columns if re.match(r'\d{4}-\d{2}-\d{2}', str(c)) and c >= BASLANGIC_LIMITI])
+    
     if secilen_tarih in tum_gunler_sirali:
         idx = tum_gunler_sirali.index(secilen_tarih)
         gunler = tum_gunler_sirali[:idx+1]
     else: gunler = tum_gunler_sirali
+    
     if not gunler: return None
+    
     son = gunler[-1]; dt_son = datetime.strptime(son, '%Y-%m-%d')
     col_w25, col_w26 = 'Agirlik_2025', 'Agirlik_2026'
     ZINCIR_TARIHI = datetime(2026, 2, 4)
+    
     if dt_son >= ZINCIR_TARIHI:
         aktif_agirlik_col = col_w26
         gunler_2026 = [c for c in tum_gunler_sirali if c >= "2026-01-01"]
@@ -786,7 +763,60 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
     else:
         aktif_agirlik_col = col_w25; baz_col = gunler[0]
 
+    # HESAPLAMAYI YAP (Context Oluştur)
     ctx = hesapla_metrikler(df_analiz_base, secilen_tarih, gunler, tum_gunler_sirali, ad_col, agirlik_col=None, baz_col=baz_col, aktif_agirlik_col=aktif_agirlik_col, son=son)
+
+    # --- 3. AI GÖRÜŞÜNÜ EN TEPEYE DOLDURMA (Refill Logic) ---
+    # Hesaplama bittiği için ctx verisini kullanarak en üstteki kutuyu dolduruyoruz.
+    with ai_container:
+        st.markdown("### 🧠 AI Görüşü")
+        
+        genel = ctx["enf_genel"]
+        gida = ctx["enf_gida"]
+        
+        # Basit Kural Tabanlı Yorum Mantığı
+        if genel > 5:
+            durum = "KRİTİK"
+            renk = "#ef4444" # Kırmızı
+            yorum = "Enflasyon ivmesi çok yüksek. Harcama disiplini şart."
+        elif genel > 2:
+            durum = "YÜKSEK"
+            renk = "#f59e0b" # Turuncu
+            yorum = "Fiyatlar artış trendinde. Lüks harcamalar ertelenmeli."
+        else:
+            durum = "STABİL"
+            renk = "#10b981" # Yeşil
+            yorum = "Piyasa dengeli görünüyor. Ani şok beklenmiyor."
+            
+        ek_not = ""
+        if gida > (genel * 1.2):
+            ek_not = "<br><span style='font-size:10px; color:#fca5a5;'>⚠️ Mutfak enflasyonu ortalamadan yüksek!</span>"
+            
+        st.markdown(f"""
+        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border-left: 3px solid {renk}; margin-bottom:10px;">
+            <div style="color:{renk}; font-weight:800; font-size:13px; letter-spacing:1px;">{durum}</div>
+            <div style="font-size:11px; margin-top:4px; opacity:0.9;">{yorum}</div>
+            {ek_not}
+        </div>
+        """, unsafe_allow_html=True)
+
+    # --- 4. PİYASALAR (EN ALT) ---
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 🌍 Piyasalar")
+    
+    symbols = [ 
+        {"s": "FX_IDC:USDTRY", "d": "Dolar"}, 
+        {"s": "FX_IDC:EURTRY", "d": "Euro"}, 
+        {"s": "FX_IDC:XAUTRYG", "d": "Gram Altın"}, 
+        {"s": "TVC:UKOIL", "d": "Brent Petrol"}, 
+        {"s": "BINANCE:BTCUSDT", "d": "Bitcoin"} 
+    ]
+    
+    # Widget'ları biraz daha kompakt hale getirdim
+    for sym in symbols:
+        widget_code = f"""<div class="tradingview-widget-container" style="border-radius:8px; overflow:hidden; margin-bottom:8px;"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>{{ "symbol": "{sym['s']}", "width": "100%", "height": 70, "locale": "tr", "dateRange": "1D", "colorTheme": "dark", "isTransparent": true, "autosize": true, "largeChartUrl": "" }}</script></div>"""
+        with st.sidebar: components.html(widget_code, height=75)
+    
     return ctx
 
 # --- SAYFA FONKSİYONLARI ---
@@ -1168,6 +1198,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
