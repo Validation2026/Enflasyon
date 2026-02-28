@@ -774,13 +774,17 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
     son = gunler[-1]; dt_son = datetime.strptime(son, '%Y-%m-%d')
     col_w25, col_w26 = 'Agirlik_2025', 'Agirlik_2026'
     ZINCIR_TARIHI = datetime(2026, 2, 4)
-    
+
+    # BAZ TARİH - Her zaman önceki ayın son günü baz alınır
+    onceki_ay = f"{dt_son.year}-{dt_son.month-1:02d}"
+    onceki_ay_gunleri = [d for d in tum_gunler_sirali if d.startswith(onceki_ay)]
+    baz_col = max(onceki_ay_gunleri) if onceki_ay_gunleri else tum_gunler_sirali[0]
+
+    # Ağırlık sütunu belirle
     if dt_son >= ZINCIR_TARIHI:
         aktif_agirlik_col = col_w26
-        gunler_2026 = [c for c in tum_gunler_sirali if c >= "2026-01-01"]
-        baz_col = gunler_2026[0] if gunler_2026 else gunler[0]
     else:
-        aktif_agirlik_col = col_w25; baz_col = gunler[0]
+        aktif_agirlik_col = col_w25
 
     ctx = hesapla_metrikler(df_analiz_base, secilen_tarih, gunler, tum_gunler_sirali, ad_col, agirlik_col=None, baz_col=baz_col, aktif_agirlik_col=aktif_agirlik_col, son=son)
 
