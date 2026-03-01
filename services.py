@@ -183,9 +183,13 @@ def _internal_calculate_metrics():
     gunler = sorted([c for c in pivot.columns if c != 'Kod'])
     son = gunler[-1]
 
-    # BAZ TARİH
-    baz_tarih = "2025-12-30" if "2025-12-30" in gunler else (
-        [d for d in gunler if d.startswith("2025")][-1] if [d for d in gunler if d.startswith("2025")] else gunler[0])
+    # BAZ TARİH - Her zaman önceki ayın son günü baz alınır
+    dt_son = datetime.strptime(son, '%Y-%m-%d')
+
+    # Önceki ayın son verili gününü bul
+    onceki_ay = f"{dt_son.year}-{dt_son.month-1:02d}"
+    onceki_ay_gunleri = [d for d in gunler if d.startswith(onceki_ay)]
+    baz_tarih = max(onceki_ay_gunleri) if onceki_ay_gunleri else gunler[0]
 
     def calculate_geo_mean_series(df, cols):
         data = df[cols].values.astype(float)
@@ -226,9 +230,9 @@ def _internal_calculate_metrics():
     # Örn: 4.03 -> 4.00, 4.99 -> 4.00
     month_end_forecast = math.floor(enf_genel)
 
-    prev_day = gunler[-2] if len(gunler) > 1 else son
+    # Günlük değişim: Son gün / Önceki gün (baz_tarih = önceki ayın son günü)
     with np.errstate(divide='ignore', invalid='ignore'):
-        df_analiz['Gunluk_Degisim'] = (df_analiz[son] / df_analiz[prev_day]) - 1
+        df_analiz['Gunluk_Degisim'] = (df_analiz[son] / df_analiz[baz_tarih]) - 1
     df_analiz['Gunluk_Degisim'] = df_analiz['Gunluk_Degisim'].replace([np.inf, -np.inf], np.nan).fillna(0)
 
     rap_text = generate_detailed_static_report(df_analiz, son, enf_genel, enf_gida, 0, month_end_forecast, ad_col,
