@@ -338,6 +338,15 @@ def get_github_repo():
     g = get_github_connection()
     if g: return g.get_repo(st.secrets["github"]["repo_name"])
     return None
+    
+def github_file_to_bytes(content_file, repo=None):
+    try:
+        return content_file.decoded_content
+    except Exception:
+        if repo and getattr(content_file, "sha", None):
+            blob = repo.get_git_blob(content_file.sha)
+            return base64.b64decode(blob.content)
+        raise
 
 def github_excel_guncelle(df_yeni, dosya_adi):
     repo = get_github_repo()
@@ -346,7 +355,7 @@ def github_excel_guncelle(df_yeni, dosya_adi):
         c = None
         try:
             c = repo.get_contents(dosya_adi, ref=st.secrets["github"]["branch"])
-            old = pd.read_excel(BytesIO(c.decoded_content), dtype=str)
+            old = pd.read_excel(BytesIO(github_file_to_bytes(c, repo)), dtype=str)
             yeni_tarih = str(df_yeni['Tarih'].iloc[0])
             old = old[~((old['Tarih'].astype(str) == yeni_tarih) & (old['Kod'].isin(df_yeni['Kod'])))]
             final = pd.concat([old, df_yeni], ignore_index=True)
@@ -443,7 +452,7 @@ def html_isleyici(progress_callback):
     try:
         df_conf = pd.DataFrame() 
         c = repo.get_contents(EXCEL_DOSYASI, ref=st.secrets["github"]["branch"])
-        df_conf = pd.read_excel(BytesIO(c.decoded_content), sheet_name=SAYFA_ADI, dtype=str)
+        df_conf = pd.read_excel(BytesIO(github_file_to_bytes(c, repo)), sheet_name=SAYFA_ADI, dtype=str)
         df_conf.columns = df_conf.columns.str.strip()
         
         kod_col = next((c for c in df_conf.columns if c.lower() == 'kod'), 'Kod')
@@ -1357,6 +1366,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
