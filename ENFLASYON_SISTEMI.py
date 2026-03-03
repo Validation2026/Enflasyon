@@ -1135,22 +1135,26 @@ def sayfa_tam_liste(ctx):
     df = ctx["df_analiz"]
     df = df.dropna(subset=[ctx['son'], ctx['ad_col']])
 
-    def fix_sparkline(row):
-        vals = row.tolist();
-        if vals and min(vals) == max(vals): vals[-1] += 0.00001
-        return vals
-
-    df['Fiyat_Trendi'] = df[ctx['gunler']].apply(fix_sparkline, axis=1)
-    cols_show = ['Grup', ctx['ad_col'], 'Fiyat_Trendi', ctx['baz_col'], 'Gunluk_Degisim']
-    if ctx['baz_col'] != ctx['son']: cols_show.insert(3, ctx['son'])
-    cfg = {"Fiyat_Trendi": st.column_config.LineChartColumn("Trend", width="small", y_min=0), ctx['ad_col']: "Ürün Adı",
-           "Gunluk_Degisim": st.column_config.ProgressColumn("Değişim", format="%.2f%%", min_value=-0.5, max_value=0.5),
-           ctx['baz_col']: st.column_config.NumberColumn(f"Baz Fiyat", format="%.2f ₺"),
-           ctx['son']: st.column_config.NumberColumn(f"Son Fiyat", format="%.2f ₺")}
+    # Fiyat_Trendi kısmı ve cols_show içindeki yeri kaldırıldı
+    cols_show = ['Grup', ctx['ad_col'], ctx['baz_col'], 'Gunluk_Degisim']
+    
+    # Eskiden 3. sıraya (Trend'den sonraya) ekliyordu, artık 2. sıraya (Baz fiyattan önceye) ekliyor
+    if ctx['baz_col'] != ctx['son']: 
+        cols_show.insert(2, ctx['son'])
+        
+    cfg = {
+        ctx['ad_col']: "Ürün Adı",
+        "Gunluk_Degisim": st.column_config.ProgressColumn("Değişim", format="%.2f%%", min_value=-0.5, max_value=0.5),
+        ctx['baz_col']: st.column_config.NumberColumn("Baz Fiyat", format="%.2f ₺"),
+        ctx['son']: st.column_config.NumberColumn("Son Fiyat", format="%.2f ₺")
+    }
+    
     st.data_editor(df[cols_show], column_config=cfg, hide_index=True, use_container_width=True, height=600)
-    output = BytesIO();
+    
+    output = BytesIO()
     with pd.ExcelWriter(output) as writer:
         df.to_excel(writer, index=False)
+        
     st.download_button("📥 Excel Olarak İndir", data=output.getvalue(), file_name="Veri_Seti.xlsx")
 
 
@@ -1412,4 +1416,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
