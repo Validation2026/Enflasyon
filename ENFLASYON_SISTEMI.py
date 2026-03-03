@@ -771,18 +771,16 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
              if lottie_json: st_lottie(lottie_json, height=100, key="nav_anim")
     except: pass
 
-    BASLANGIC_LIMITI = "2026-02-04"
+    # Başlangıç limitini Şubat'ın başını kapsayacak şekilde ayarlayabiliriz
+    BASLANGIC_LIMITI = "2026-02-01" 
     tum_tarihler = sorted([d for d in raw_dates if d >= BASLANGIC_LIMITI], reverse=True)
 
     if not tum_tarihler:
         st.sidebar.warning("Veri henüz oluşmadı.")
         return None
 
-    en_guncel_tarih = datetime.strptime(tum_tarihler[0], '%Y-%m-%d')
-    aktif_ay = en_guncel_tarih.strftime('%Y-%m')
-    ay_tarihleri = [d for d in tum_tarihler if d.startswith(aktif_ay)]
-
-    secilen_tarih = st.sidebar.selectbox("Rapor Tarihi:", options=ay_tarihleri, index=0, key=f"tarih_secici_{ay_tarihleri[0]}")
+    # Ay filtrelemesini kaldırıp tüm tarihleri doğrudan selectbox'a veriyoruz
+    secilen_tarih = st.sidebar.selectbox("Rapor Tarihi:", options=tum_tarihler, index=0)
 
     tum_gunler_sirali = sorted([c for c in df_analiz_base.columns if re.match(r'\d{4}-\d{2}-\d{2}', str(c)) and c >= BASLANGIC_LIMITI])
 
@@ -1307,4 +1305,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
