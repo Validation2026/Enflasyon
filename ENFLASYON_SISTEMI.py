@@ -772,7 +772,7 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
     except: pass
 
     # Başlangıç limitini Şubat'ın başını kapsayacak şekilde ayarlayabiliriz
-    BASLANGIC_LIMITI = "2026-02-01" 
+    BASLANGIC_LIMITI = "2026-03-01" 
     tum_tarihler = sorted([d for d in raw_dates if d >= BASLANGIC_LIMITI], reverse=True)
 
     if not tum_tarihler:
@@ -1313,6 +1313,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
