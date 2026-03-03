@@ -1043,7 +1043,9 @@ def sayfa_piyasa_ozeti(ctx):
                                 title=f"GENEL ENFLASYON TRENDİ (Güncel: %{son_deger:.2f})",
                                 markers=True)
             fig_trend.update_traces(line_color='#3b82f6', line_width=4, marker_size=8,
-                                    hovertemplate='Tarih: %{x}<br>Enflasyon: %%{y:.2f}<extra></extra>')
+                                    hovertemplate='Tarih: %{x}<br>Enflasyon: %%{y:.2f}<extra></extra>',
+                                    connectgaps=True) # <-- BU PARAMETREYİ EKLE)
+                                    
             fig_trend.update_layout(yaxis_range=[y_min, y_max])
             st.plotly_chart(style_chart(fig_trend), use_container_width=True)
         else:
@@ -1301,9 +1303,12 @@ def sayfa_trend_analizi(ctx):
         df_melted['Yuzde_Degisim'] = df_melted.apply(
             lambda row: ((row['Fiyat'] / base_prices.get(row[ctx['ad_col']], 1)) - 1) * 100 if base_prices.get(
                 row[ctx['ad_col']], 0) > 0 else 0, axis=1)
-        st.plotly_chart(style_chart(px.line(df_melted, x='Tarih', y='Yuzde_Degisim', color=ctx['ad_col'],
-                                            title="Ürün Bazlı Kümülatif Değişim (%)", markers=True)),
-                        use_container_width=True)
+        # Grafiği bir değişkene alıp boşlukları bağla
+        fig_urun = px.line(df_melted, x='Tarih', y='Yuzde_Degisim', color=ctx['ad_col'], 
+                           title="Ürün Bazlı Kümülatif Değişim (%)", markers=True)
+        fig_urun.update_traces(connectgaps=True) # <-- BOŞLUKLARI BAĞLAYAN KOD
+        
+        st.plotly_chart(style_chart(fig_urun), use_container_width=True)
 
 
 def sabit_kademeli_top10_hazirla(ctx):
@@ -1445,6 +1450,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
