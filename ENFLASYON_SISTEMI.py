@@ -738,7 +738,7 @@ def hesapla_metrikler(df_analiz_base, secilen_tarih, gunler, tum_gunler_sirali, 
     rising_baz_son_count = int(((df_analiz['Fark'] > 0) & baz_son_mask).sum())
     falling_baz_son_count = int(((df_analiz['Fark'] < 0) & baz_son_mask).sum())
 
-    resmi_aylik_degisim = 4.84
+    resmi_aylik_degisim = 2.96
     tahmin = enf_genel
 
     return {
@@ -1307,3 +1307,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
