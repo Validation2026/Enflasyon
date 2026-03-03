@@ -489,12 +489,14 @@ def fiyat_bul_siteye_gore(soup, kaynak_tipi):
 
 
 # --- ANA İŞLEYİCİ (ZIP Okuyucu ve Hesaplayıcı) ---
+# --- ANA İŞLEYİCİ (ZIP Okuyucu ve Hesaplayıcı) ---
 def html_isleyici(progress_callback):
     repo = get_github_repo()
     if not repo: return "GitHub Bağlantı Hatası"
 
     progress_callback(0.05)
     try:
+        # 1. Konfigürasyon Dosyasını Oku
         df_conf = pd.DataFrame()
         c = repo.get_contents(EXCEL_DOSYASI, ref=st.secrets["github"]["branch"])
         df_conf = pd.read_excel(BytesIO(github_file_to_bytes(c, repo)), sheet_name=SAYFA_ADI, dtype=str)
@@ -507,6 +509,22 @@ def html_isleyici(progress_callback):
         urun_isimleri = pd.Series(df_conf[ad_col].values,
                                   index=df_conf[kod_col].astype(str).apply(kod_standartlastir)).to_dict()
         veri_havuzu = {}
+
+        # --- YENİ EKLENEN KISIM: ÖNCEKİ FİYATLARI ÇEK (Eksik verileri doldurmak için) ---
+        eski_fiyatlar = {}
+        try:
+            c_fiyat = repo.get_contents(FIYAT_DOSYASI, ref=st.secrets["github"]["branch"])
+            df_eski = pd.read_excel(BytesIO(github_file_to_bytes(c_fiyat, repo)), dtype=str)
+            df_eski['Tarih_DT'] = pd.to_datetime(df_eski['Tarih'], errors='coerce')
+            df_eski['Fiyat'] = df_eski['Fiyat'].apply(parse_fiyat_degeri)
+            df_eski = df_eski.sort_values('Tarih_DT')
+            son_fiyat_df = df_eski.drop_duplicates(subset=['Kod'], keep='last')
+            for _, row in son_fiyat_df.iterrows():
+                if pd.notna(row['Fiyat']) and row['Fiyat'] > 0:
+                    eski_fiyatlar[row['Kod']] = row['Fiyat']
+        except Exception as e:
+            print(f"Önceki fiyatlar alınamadı: {e}")
+        # ----------------------------------------------------------------------------------
 
         if manuel_col:
             for _, row in df_conf.iterrows():
@@ -566,22 +584,33 @@ def html_isleyici(progress_callback):
         simdi = tr_saati.strftime("%H:%M")
 
         final_list = []
-        for kod, fiyatlar in veri_havuzu.items():
-            if fiyatlar:
-                clean_vals = [p for p in fiyatlar if p > 0]
-                if clean_vals:
-                    if len(clean_vals) > 1:
-                        final_fiyat = float(max(clean_vals))
-                        kaynak_str = f"Max ({len(clean_vals)} Kaynak)"
-                    else:
-                        final_fiyat = clean_vals[0]
-                        kaynak_str = "Single Source"
+        
+        # --- DEĞİŞTİRİLEN KISIM: Sadece veri çekilenleri değil, tüm ürünleri tarıyoruz ---
+        for kod, urun_adi in urun_isimleri.items():
+            fiyatlar = veri_havuzu.get(kod, [])
+            clean_vals = [p for p in fiyatlar if p > 0]
 
-                    final_list.append({
-                        "Tarih": bugun, "Zaman": simdi, "Kod": kod,
-                        "Madde_Adi": urun_isimleri.get(kod, "Bilinmeyen Ürün"),
-                        "Fiyat": final_fiyat, "Kaynak": kaynak_str, "URL": "ZIP_ARCHIVE"
-                    })
+            if clean_vals:
+                if len(clean_vals) > 1:
+                    final_fiyat = float(max(clean_vals))
+                    kaynak_str = f"Max ({len(clean_vals)} Kaynak)"
+                else:
+                    final_fiyat = clean_vals[0]
+                    kaynak_str = "Single Source"
+            else:
+                # Yeni fiyat yoksa, eski fiyatı kontrol et
+                if kod in eski_fiyatlar and eski_fiyatlar[kod] > 0:
+                    final_fiyat = eski_fiyatlar[kod]
+                    kaynak_str = "Önceki Günden Devir"
+                else:
+                    continue # Ne yeni fiyat çekilebilmiş, ne de eskisinde var (atla)
+
+            final_list.append({
+                "Tarih": bugun, "Zaman": simdi, "Kod": kod,
+                "Madde_Adi": urun_adi,
+                "Fiyat": final_fiyat, "Kaynak": kaynak_str, "URL": "ZIP_ARCHIVE"
+            })
+        # ----------------------------------------------------------------------------------
 
         progress_callback(0.95)
         if final_list:
@@ -1416,5 +1445,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
