@@ -795,12 +795,20 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
     col_w25, col_w26 = 'Agirlik_2025', 'Agirlik_2026'
     ZINCIR_TARIHI = datetime(2026, 2, 4)
 
-    # BAZ TARİH - Seçili ay için sabit olarak önceki ayın son verili günü
-    onceki_ay_son = dt_son.replace(day=1) - timedelta(days=1)
-    onceki_ay_prefix = onceki_ay_son.strftime('%Y-%m')
-    onceki_ay_gunleri = [d for d in tum_gunler_sirali if d.startswith(onceki_ay_prefix)]
-    baz_col = max(onceki_ay_gunleri) if onceki_ay_gunleri else tum_gunler_sirali[0]
-
+    # BAZ TARİH MANTIĞI
+    if dt_son.year == 2026 and dt_son.month == 2:
+        # Eğer seçili ay Şubat ise baz tarih sabit olarak 4 Şubat alınır
+        baz_col = "2026-02-04"
+        # Garanti olması açısından 4 Şubat verisi yoksa listedeki ilk günü baz al
+        if baz_col not in tum_gunler_sirali:
+            baz_col = tum_gunler_sirali[0]
+    else:
+        # Mart ve sonraki aylar için mevcut mantık (önceki ayın son verili günü)
+        onceki_ay_son = dt_son.replace(day=1) - timedelta(days=1)
+        onceki_ay_prefix = onceki_ay_son.strftime('%Y-%m')
+        onceki_ay_gunleri = [d for d in tum_gunler_sirali if d.startswith(onceki_ay_prefix)]
+        baz_col = max(onceki_ay_gunleri) if onceki_ay_gunleri else tum_gunler_sirali[0]
+        
     # Ağırlık sütunu belirle
     if dt_son >= ZINCIR_TARIHI:
         aktif_agirlik_col = col_w26
@@ -1305,5 +1313,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
