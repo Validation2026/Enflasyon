@@ -1084,9 +1084,14 @@ def sayfa_piyasa_ozeti(ctx):
             fig_trend = px.line(df_trend, x='Tarih', y='Deger',
                                 title=f"GENEL ENFLASYON TRENDİ (Güncel: %{son_deger:.2f})",
                                 markers=True)
-            fig_trend.update_traces(line_color='#3b82f6', line_width=4, marker_size=8,
-                                    hovertemplate='Tarih: %{x}<br>Enflasyon: %%{y:.2f}<extra></extra>',
-                                    connectgaps=True) # <-- BU PARAMETREYİ EKLE)
+            fig_trend.update_traces(
+                line_color='#3b82f6', 
+                line_width=4, 
+                marker_size=8,
+                fill='tozeroy', # Çizginin altını doldurur
+                fillcolor='rgba(59, 130, 246, 0.1)', # Saydam neon mavi dolgu
+                connectgaps=True
+            )
                                     
             fig_trend.update_layout(yaxis_range=[y_min, y_max])
             st.plotly_chart(style_chart(fig_trend), use_container_width=True)
@@ -1155,6 +1160,7 @@ def sayfa_piyasa_ozeti(ctx):
     st.subheader("Sektörel Isı Haritası")
     fig_tree = px.treemap(df, path=[px.Constant("Enflasyon Sepeti"), 'Grup', ctx['ad_col']], values=ctx['agirlik_col'],
                           color='Fark', color_continuous_scale='RdYlGn_r')
+    fig_tree.update_traces(marker=dict(line=dict(color='#0a0f1c', width=2)))
     st.plotly_chart(style_chart(fig_tree, is_sunburst=True), use_container_width=True)
 
 
@@ -1465,9 +1471,9 @@ def main():
             artan_10, azalan_10 = sabit_kademeli_top10_hazirla(ctx)
             sonuc = google_sheets_guncelle(ctx, artan_10, azalan_10)
             if sonuc is True:
-                st.success("Google Sheets başarıyla güncellendi!")
+                st.toast("Google Sheets başarıyla güncellendi!", icon="✅") # Değişen kısım
             else:
-                st.error(f"Hata oluştu: {sonuc}")
+                st.toast(f"Hata oluştu: {sonuc}", icon="❌") # Değişen kısım
 
     # --- SAYFALARI RENDER ETME ---
     if ctx:
@@ -1492,6 +1498,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
