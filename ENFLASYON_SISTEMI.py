@@ -158,6 +158,7 @@ def apply_theme():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
         /* TEMEL GİZLEMELER */
         header {visibility: hidden;}
         [data-testid="stHeader"] { visibility: hidden; height: 0px; }
@@ -276,7 +277,16 @@ def apply_theme():
             border-color: rgba(59, 130, 246, 0.4);
         }
         .kpi-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8 !important; font-weight: 700; margin-bottom: 8px; }
-        .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 800; color: #ffffff !important; text-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+        @keyframes numberPop {
+            0% { transform: scale(0.3); opacity: 0; }
+            60% { transform: scale(1.15); opacity: 1; text-shadow: 0 0 30px rgba(59,130,246,0.8); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .kpi-value {
+            animation: numberPop 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation-delay: 0.2s; /* Kart yüklendikten saliseler sonra sayı patlar */
+            opacity: 0; /* Animasyon başlayana kadar sayıyı gizle */
+        }
         /* KAYAN YAZI (TİCKER) */
         .ticker-wrap {
             width: 100%; overflow: hidden; background: linear-gradient(90deg, rgba(15,23,42,0) 0%, rgba(30,41,59,0.5) 50%, rgba(15,23,42,0) 100%);
@@ -541,6 +551,46 @@ def apply_theme():
             0% { left: -100%; }
             40% { left: 200%; }
             100% { left: 200%; }
+        }
+
+        /* FÜTÜRİSTİK FONT GÜNCELLEMESİ */
+        h1, h2, h3, h4, h5, h6, .gradient-text {
+            font-family: 'Space Grotesk', sans-serif !important;
+            letter-spacing: -0.5px;
+        }
+
+        /* GRAFİKLER İÇİN CAM KAPSÜL VE LEVİTASYON EFEKTİ */
+        [data-testid="stPlotlyChart"] {
+            background: rgba(15, 23, 42, 0.3) !important;
+            border-radius: 16px !important;
+            padding: 15px !important;
+            border: 1px solid rgba(255,255,255,0.02) !important;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        }
+        [data-testid="stPlotlyChart"]:hover {
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.15), inset 0 0 15px rgba(255,255,255,0.05) !important;
+            transform: translateY(-6px) !important;
+            border: 1px solid rgba(59, 130, 246, 0.4) !important;
+            background: rgba(20, 24, 33, 0.5) !important;
+        }
+
+        /* SİBER UYARI VE BİLGİ KUTULARI */
+        [data-testid="stAlert"] {
+            background: rgba(20, 24, 33, 0.7) !important;
+            backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+            color: #e2e8f0 !important;
+            transition: all 0.3s ease !important;
+        }
+        [data-testid="stAlert"]:hover {
+            border-color: rgba(59, 130, 246, 0.5) !important;
+            box-shadow: 0 4px 25px rgba(59, 130, 246, 0.2) !important;
+        }
+        /* Uyarı ikonlarının renklerini daha fosforlu yapalım */
+        [data-testid="stAlert"] svg {
+            filter: drop-shadow(0 0 5px currentColor);
         }
     </style>
     """
@@ -1718,6 +1768,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
