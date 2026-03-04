@@ -58,21 +58,29 @@ def google_sheets_guncelle(ctx, artan_10, azalan_10):
 
         # --- 3. EN ÇOK ARTAN 10 ÜRÜN (A37 ve B37'den itibaren) ---
         if not artan_10.empty:
-            artan_liste = []
-            for _, row in artan_10.iterrows():
-                urun = row[ctx['ad_col']]
-                degisim = f"{row['Fark'] * 100:.2f}%"
-                artan_liste.append([urun, degisim])
-            sheet.update(range_name=f'A37:B{36 + len(artan_liste)}', values=artan_liste)
+            disp_artan = artan_10[[ctx['ad_col'], 'Ilk_Fiyat', 'Son_Fiyat', 'Fark_Yuzde']].copy()
+            # Pandas Styler ile ısı haritası
+            styled_artan = disp_artan.style.background_gradient(
+                cmap='Reds', subset=['Fark_Yuzde'], vmin=0, vmax=disp_artan['Fark_Yuzde'].max() * 1.5
+            ).format({
+                'Ilk_Fiyat': '{:.2f} ₺',
+                'Son_Fiyat': '{:.2f} ₺',
+                'Fark_Yuzde': '+{:.2f} %'
+            })
+            st.dataframe(styled_artan, hide_index=True, use_container_width=True)
 
         # --- 4. EN ÇOK AZALAN 10 ÜRÜN (A49 ve B49'dan itibaren) ---
         if not azalan_10.empty:
-            azalan_liste = []
-            for _, row in azalan_10.iterrows():
-                urun = row[ctx['ad_col']]
-                degisim = f"{row['Fark'] * 100:.2f}%"
-                azalan_liste.append([urun, degisim])
-            sheet.update(range_name=f'A49:B{48 + len(azalan_liste)}', values=azalan_liste)
+            disp_azalan = azalan_10[[ctx['ad_col'], 'Ilk_Fiyat', 'Son_Fiyat', 'Fark_Yuzde']].copy()
+            # Azalanlar için yeşil tonlama (Greens_r kullanarak tersten renklendiriyoruz)
+            styled_azalan = disp_azalan.style.background_gradient(
+                cmap='Greens_r', subset=['Fark_Yuzde'], vmin=disp_azalan['Fark_Yuzde'].min() * 1.5, vmax=0
+            ).format({
+                'Ilk_Fiyat': '{:.2f} ₺',
+                'Son_Fiyat': '{:.2f} ₺',
+                'Fark_Yuzde': '{:.2f} %'
+            })
+            st.dataframe(styled_azalan, hide_index=True, use_container_width=True)
 
         # --- 5. SEKTÖREL ENFLASYON (Kategori Bazlı Aktarım) ---
         df = ctx["df_analiz"]
@@ -355,6 +363,18 @@ def apply_theme():
         [data-testid="stDataFrame"]:hover {
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15), inset 0 0 0 1px rgba(59, 130, 246, 0.3);
         }
+
+        /* SAYFA GEÇİŞİ VE YÜKLENME ANİMASYONU */
+        .block-container {
+            animation: fadeInScale 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+        }
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.97) translateY(15px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        /* TABLOLAR İÇİN MİNİK HOVER EFEKTİ */
+        tr:hover { background-color: rgba(59, 130, 246, 0.05) !important; }
         
     </style>
     """
@@ -1317,7 +1337,42 @@ def sayfa_maddeler(ctx):
         plot_bgcolor="rgba(0,0,0,0)"
     )
     st.plotly_chart(style_chart(fig_cat), use_container_width=True)
+    
+    col_bar, col_radar = st.columns([1.2, 1]) # Ekranı ikiye bölüyoruz
+    
+    with col_bar:
+        # Mevcut Bar Chart kodun burada kalacak
+        fig_cat = px.bar(
+            df_cat_summary, x='Ortalama_Degisim', y='Grup', orientation='h',
+            text_auto='.2f', color='Ortalama_Degisim', color_continuous_scale=['#10b981', '#f59e0b', '#ef4444']
+        )
+        fig_cat.update_layout(title="Kategori Bazlı Enflasyon (%)", xaxis_title="", yaxis_title="", height=400, plot_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(style_chart(fig_cat), use_container_width=True)
 
+    with col_radar:
+        # YENİ RADAR GRAFİĞİ
+        fig_radar = go.Figure(data=go.Scatterpolar(
+            r=df_cat_summary['Ortalama_Degisim'],
+            theta=df_cat_summary['Grup'],
+            fill='toself',
+            fillcolor='rgba(59, 130, 246, 0.2)',
+            line=dict(color='#3b82f6', width=2),
+            marker=dict(size=8, color='#60a5fa', symbol='diamond')
+        ))
+        fig_radar.update_layout(
+            title="Sektörel Yayılım Radarı",
+            polar=dict(
+                radialaxis=dict(visible=True, showline=False, gridcolor='rgba(255,255,255,0.1)'),
+                angularaxis=dict(gridcolor='rgba(255,255,255,0.1)', linecolor='rgba(255,255,255,0.1)')
+            ),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#a1a1aa", size=10),
+            height=400,
+            margin=dict(l=40, r=40, t=60, b=40)
+        )
+        st.plotly_chart(style_chart(fig_radar), use_container_width=True)
+        
     st.markdown("---")
     st.markdown("#### 🔎 Ürün Bazlı Detaylar")
 
@@ -1452,7 +1507,10 @@ def main():
             <div style="font-size:13px; color:#94a3b8; font-weight: 500; margin-top:4px;">Yapay Zeka Destekli Enflasyon Analiz Platformu</div>
         </div>
         <div style="text-align:right;">
-            <div style="font-size:11px; color:#64748b; font-weight:800; letter-spacing:2px;">TÜRKİYE SAATİ</div>
+            <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-bottom:4px;">
+                <div style="width:8px; height:8px; background-color:#10b981; border-radius:50%; box-shadow: 0 0 10px #10b981; animation: pulseGlow 2s infinite;"></div>
+                <div style="font-size:11px; color:#10b981; font-weight:800; letter-spacing:2px;">SİSTEM AKTİF</div>
+            </div>
             <div style="font-size:22px; font-weight:800; color:#e2e8f0; font-family:'JetBrains Mono'; text-shadow: 0 0 15px rgba(255,255,255,0.2);">{(datetime.utcnow() + timedelta(hours=3)).strftime("%d.%m.%Y")}</div>
         </div>
     </div>
@@ -1548,6 +1606,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
