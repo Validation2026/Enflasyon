@@ -827,10 +827,12 @@ def hesapla_metrikler(df_analiz_base, secilen_tarih, gunler, tum_gunler_sirali, 
     df_analiz['Gunluk_Degisim'] = df_analiz['Gunluk_Degisim'].replace([np.inf, -np.inf], np.nan).fillna(0)
     gun_farki = son_idx
 
-    # Maddeler sayfasındaki mantıkla birebir aynı olması için Fark_Yuzde baz alınır.
-    # Yalnızca 0'dan kesin büyük veya küçük olanlar sayılır, 0 olanlar yoksayılır.
-    rising_baz_son_count = int((df_analiz['Fark_Yuzde'] > 0).sum())
-    falling_baz_son_count = int((df_analiz['Fark_Yuzde'] < 0).sum())
+    # Maddeler sayfasındaki görünümle birebir eşleşmesi için 2 ondalığa yuvarlıyoruz.
+    # Böylece ekranda %0.00 görünen mikroskobik değişimler "Yükselen/Düşen" sayılmaz.
+    yuvarlanmis_fark = df_analiz['Fark_Yuzde'].round(2)
+    
+    rising_baz_son_count = int((yuvarlanmis_fark > 0).sum())
+    falling_baz_son_count = int((yuvarlanmis_fark < 0).sum())
 
     resmi_aylik_degisim = 2.96
     tahmin = enf_genel
@@ -1476,6 +1478,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
