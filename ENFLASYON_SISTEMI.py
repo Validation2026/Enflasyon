@@ -1743,6 +1743,67 @@ def sayfa_maddeler(ctx):
         else:
             st.warning("Bu kategoride görüntülenecek veri bulunamadı.")
 
+def sayfa_metodoloji():
+    st.markdown("### 📐 Metodoloji ve Matematiksel Modeller")
+    st.info("Bu platformda sunulan enflasyon, risk ve anomali metrikleri, literatürde kabul görmüş aşağıdaki istatistiksel ve ekonometrik modellere dayanmaktadır.")
+
+    st.markdown("---")
+
+    # 1. Enflasyon Hesaplaması (Laspeyres Yaklaşımı)
+    st.markdown("#### 1. Ağırlıklı Fiyat Endeksi (Laspeyres Yaklaşımı Modifiye)")
+    st.markdown("""
+    Genel enflasyon oranı, sepetteki her bir ürünün güncel fiyatının baz fiyata olan nispi değişiminin, ürünün sepet içindeki ağırlığı ile çarpılmasıyla hesaplanır. Bu hesaplama, formülize edilmiş bir ağırlıklı ortalama mantığına dayanır.
+    """)
+    st.latex(r"I = \frac{\sum_{i=1}^{n} (P_{i,t} \cdot W_i)}{\sum_{i=1}^{n} (P_{i,0} \cdot W_i)} - 1")
+    st.markdown("""
+    * $I$: Genel Enflasyon Oranı
+    * $P_{i,t}$: $i$ ürününün $t$ anındaki (güncel) fiyatı
+    * $P_{i,0}$: $i$ ürününün baz tarihindeki fiyatı
+    * $W_i$: $i$ ürününün sepetteki ağırlığı (TÜİK veya Özel Sepet)
+    """)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 2. Z-Score ve Anomali Tespiti
+    st.markdown("#### 2. Anomali Tespiti (Z-Score Analizi)")
+    st.markdown("""
+    Veri setindeki fiyat değişimlerinin standart normal dağılıma ne kadar uyduğunu test etmek ve istatistiksel aykırı değerleri (outliers) tespit etmek için Z-Skoru standardizasyonu kullanılır. Z-Skoru mutlak değer olarak 2'den büyük olan ( $\pm 2\sigma$ ) gözlemler anomali kabul edilir.
+    """)
+    st.latex(r"Z_i = \frac{x_i - \mu}{\sigma}")
+    st.markdown("""
+    * $Z_i$: $i$ ürününün standart skoru
+    * $x_i$: $i$ ürününün yüzdelik fiyat değişimi
+    * $\mu$: Tüm sepetteki ortalama fiyat değişimi
+    * $\sigma$: Fiyat değişimlerinin standart sapması (Volatilite)
+    """)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 3. Yıllıklandırılmış Projeksiyon
+    st.markdown("#### 3. Yıllıklandırılmış Enflasyon Projeksiyonu")
+    st.markdown("""
+    Bulunan aylık (veya dönemsel) enflasyon oranının, yılın geri kalan aylarında beklenen/hedeflenen sabit bir ortalama enflasyon oranı ile bileşik faiz (compound) mantığıyla yıllıklandırılmasıdır.
+    """)
+    st.latex(r"Y = \left[ (1 + I_m) \cdot (1 + I_{exp})^{11} - 1 \right] \times 100")
+    st.markdown("""
+    * $Y$: Yıllıklandırılmış Enflasyon Projeksiyonu (%)
+    * $I_m$: Gerçekleşen Aylık Enflasyon Oranı
+    * $I_{exp}$: Gelecek aylar için beklenen/sabit ortalama aylık artış
+    """)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 4. Sektörel Etki Puanı
+    st.markdown("#### 4. Manşet Enflasyona Etki (Contribution) Puanı")
+    st.markdown("""
+    Bir ürünün veya sektörün genel manşet enflasyona yaptığı net katkı puanı, fiyatındaki yüzdelik değişimin toplam sepet içindeki nispi ağırlığıyla çarpılmasıyla izole edilir.
+    """)
+    st.latex(r"C_i = \Delta P_i \times \left( \frac{W_i}{\sum W} \right)")
+    st.markdown("""
+    * $C_i$: Enflasyona Katkı Puanı (Puan bazında)
+    * $\Delta P_i$: İlgili ürünün fiyat değişim yüzdesi
+    * $W_i$: İlgili ürünün ağırlığı
+    """)
 
 def sayfa_trend_analizi(ctx):
     st.markdown("### 📈 Trend Analizleri")
@@ -1837,7 +1898,8 @@ def main():
         "📦 Maddeler": "Maddeler",
         "🏷️ Kategori Detay": "Kategori Detay",
         "📋 Tam Liste": "Tam Liste",
-        "📑 Rapor Merkezi": "Rapor Merkezi" # YENİ EKLENEN SATIR
+        "📑 Rapor Merkezi": "Rapor Merkezi",
+        "📐 Metodoloji": "Metodoloji" # YENİ EKLENEN SATIR
     }
 
     secilen_etiket = st.radio(
@@ -1914,6 +1976,8 @@ def main():
             sayfa_tam_liste(ctx)
         elif secim == "Rapor Merkezi": # YENİ EKLENEN KISIM
             sayfa_rapor_merkezi(ctx)
+        elif secim == "Metodoloji":
+            sayfa_metodoloji()
     else:
         err_msg = "<br><div style='text-align:center; padding:20px; background:rgba(255,0,0,0.1); border-radius:10px; color:#fff;'>⚠️ Veri seti yüklenemedi veya internet bağlantısı yok. Lütfen sayfayı yenileyin.</div>"
         st.markdown(err_msg, unsafe_allow_html=True)
@@ -1925,6 +1989,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
