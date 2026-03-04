@@ -921,19 +921,6 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
 
     ai_container = st.sidebar.container()
     # YAN MENÜ PROFİL KARTI
-    st.sidebar.markdown(f"""
-    <div style="background: linear-gradient(135deg, rgba(30,33,40,0.8), rgba(15,18,25,0.8)); 
-        border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 15px; 
-        margin-bottom: 20px; margin-top: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; transition: all 0.3s;">
-        <div style="background: rgba(59,130,246,0.2); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(59,130,246,0.5); font-size: 20px; box-shadow: inset 0 0 10px rgba(59,130,246,0.3);">
-            👩‍💻
-        </div>
-        <div>
-            <div style="color: #94a3b8; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Yetkili Veri Analisti</div>
-            <div style="color: #ffffff; font-size: 15px; font-weight: 800; margin-top: 2px;">Ezgi</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
     st.sidebar.markdown("### ⚙️ Veri Ayarları")
 
     lottie_url = "https://lottie.host/98606416-297c-4a37-9b2a-714013063529/5D6o8k8fW0.json"
@@ -1561,6 +1548,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
