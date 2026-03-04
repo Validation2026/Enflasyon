@@ -1487,6 +1487,106 @@ def sayfa_tam_liste(ctx):
         
     st.download_button("📥 Excel Olarak İndir", data=output.getvalue(), file_name="Veri_Seti.xlsx")
 
+def sayfa_rapor_merkezi(ctx):
+    st.markdown("### 📑 Detaylı Rapor Merkezi")
+    st.info("Bu modül, veri setinizin derinlemesine istatistiksel özetini, sektörel risk metriklerini ve uç değer analizlerini sunar.")
+
+    df = ctx["df_analiz"].copy()
+    df = df.dropna(subset=[ctx['son'], ctx['baz_col'], ctx['ad_col']])
+
+    # 1. TEMEL İSTATİSTİKLER
+    st.markdown("#### 1. Genel İstatistiksel Özet")
+    c1, c2, c3, c4 = st.columns(4)
+    
+    # Stil verilmiş metrik kartları
+    c1.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>İncelenen Ürün</div><div style='font-size:24px; font-weight:800;'>{len(df)}</div></div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Ort. Değişim (Basit)</div><div style='font-size:24px; font-weight:800;'>%{df['Fark_Yuzde'].mean():.2f}</div></div>", unsafe_allow_html=True)
+    c3.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Medyan Değişim</div><div style='font-size:24px; font-weight:800;'>%{df['Fark_Yuzde'].median():.2f}</div></div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Standart Sapma (Volatilite)</div><div style='font-size:24px; font-weight:800;'>{df['Fark_Yuzde'].std():.2f}</div></div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 2. EN UÇ DEĞERLER (OUTLIERS)
+    st.markdown("#### 2. Uç Değer Analizi (Outliers)")
+    col_max, col_min = st.columns(2)
+    idx_max = df['Fark_Yuzde'].idxmax()
+    idx_min = df['Fark_Yuzde'].idxmin()
+
+    with col_max:
+        st.markdown(f"""
+        <div style="padding:15px; border-left:4px solid #ef4444; background:rgba(239,68,68,0.1); border-radius:8px;">
+            <div style="font-size:12px; color:#fca5a5;">Maksimum Fiyat Artışı Görülen Ürün:</div>
+            <div style="font-size:18px; font-weight:800; color:#ffffff;">{df.loc[idx_max, ctx['ad_col']]}</div>
+            <div style="font-size:20px; font-weight:900; color:#ef4444;">+ %{df.loc[idx_max, 'Fark_Yuzde']:.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_min:
+        st.markdown(f"""
+        <div style="padding:15px; border-left:4px solid #22c55e; background:rgba(34,197,94,0.1); border-radius:8px;">
+            <div style="font-size:12px; color:#86efac;">Maksimum Fiyat Düşüşü Görülen Ürün:</div>
+            <div style="font-size:18px; font-weight:800; color:#ffffff;">{df.loc[idx_min, ctx['ad_col']]}</div>
+            <div style="font-size:20px; font-weight:900; color:#22c55e;">%{df.loc[idx_min, 'Fark_Yuzde']:.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 3. KATEGORİ BAZLI RİSK VE DAĞILIM
+    st.markdown("#### 3. Sektörel Dağılım ve Volatilite Tablosu")
+    cat_stats = df.groupby('Grup').agg(
+        Ürün_Sayısı=(ctx['ad_col'], 'count'),
+        Ortalama_Değişim=('Fark_Yuzde', 'mean'),
+        Maks_Artış=('Fark_Yuzde', 'max'),
+        En_Düşük=('Fark_Yuzde', 'min'),
+        Volatilite_Std=('Fark_Yuzde', 'std')
+    ).reset_index()
+
+    cat_stats = cat_stats.sort_values('Ortalama_Değişim', ascending=False).fillna(0)
+
+    st.dataframe(
+        cat_stats,
+        column_config={
+            "Grup": "Sektör / Kategori",
+            "Ürün_Sayısı": st.column_config.NumberColumn("Ürün Sayısı"),
+            "Ortalama_Değişim": st.column_config.NumberColumn("Ort. Değişim", format="%.2f %%"),
+            "Maks_Artış": st.column_config.NumberColumn("Tepe Noktası (Max)", format="%.2f %%"),
+            "En_Düşük": st.column_config.NumberColumn("Dip Noktası (Min)", format="%.2f %%"),
+            "Volatilite_Std": st.column_config.NumberColumn("Standart Sapma", format="%.2f")
+        },
+        hide_index=True, use_container_width=True
+    )
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 4. EXCEL İNDİRME BÖLÜMÜ
+    st.markdown("#### 4. Kapsamlı Rapor Çıktısı")
+    st.caption("Aşağıdaki buton ile bu istatistiksel özeti ve ham verileri ÇOK SEKMELİ bir Excel dosyası olarak indirebilirsiniz.")
+
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        # 1. Sekme: Özet
+        summary_df = pd.DataFrame({
+            "Metrik": ["Toplam İncelenen Ürün", "Aylık Ortalama Değişim (%)", "Medyan Değişim (%)", "Standart Sapma"],
+            "Değer": [len(df), df['Fark_Yuzde'].mean(), df['Fark_Yuzde'].median(), df['Fark_Yuzde'].std()]
+        })
+        summary_df.to_excel(writer, sheet_name="1_Genel_Ozet", index=False)
+        
+        # 2. Sekme: Sektörler
+        cat_stats.to_excel(writer, sheet_name="2_Sektorel_Analiz", index=False)
+        
+        # 3. Sekme: Ham Veri
+        export_df = df[[ctx['ad_col'], 'Grup', ctx['baz_col'], ctx['son'], 'Fark_Yuzde']].copy()
+        export_df.to_excel(writer, sheet_name="3_Ham_Veri", index=False)
+
+    st.download_button(
+        label="📥 Çok Sekmeli Detaylı Raporu İndir (.xlsx)",
+        data=output.getvalue(),
+        file_name=f"Enflasyon_Detayli_Rapor_{ctx['son']}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        type="primary",
+        use_container_width=True
+    )
 
 def sayfa_maddeler(ctx):
     df = ctx["df_analiz"]
@@ -1633,7 +1733,8 @@ def main():
         "📈 Trendler": "Trendler",
         "📦 Maddeler": "Maddeler",
         "🏷️ Kategori Detay": "Kategori Detay",
-        "📋 Tam Liste": "Tam Liste"
+        "📋 Tam Liste": "Tam Liste",
+        "📑 Rapor Merkezi": "Rapor Merkezi" # YENİ EKLENEN SATIR
     }
 
     secilen_etiket = st.radio(
@@ -1696,6 +1797,7 @@ def main():
                 st.toast(f"Hata oluştu: {sonuc}", icon="❌")
                 
     # --- SAYFALARI RENDER ETME ---
+    # --- SAYFALARI RENDER ETME ---
     if ctx:
         if secim == "Enflasyon Özeti":
             sayfa_piyasa_ozeti(ctx)
@@ -1707,6 +1809,8 @@ def main():
             sayfa_kategori_detay(ctx)
         elif secim == "Tam Liste":
             sayfa_tam_liste(ctx)
+        elif secim == "Rapor Merkezi": # YENİ EKLENEN KISIM
+            sayfa_rapor_merkezi(ctx)
     else:
         err_msg = "<br><div style='text-align:center; padding:20px; background:rgba(255,0,0,0.1); border-radius:10px; color:#fff;'>⚠️ Veri seti yüklenemedi veya internet bağlantısı yok. Lütfen sayfayı yenileyin.</div>"
         st.markdown(err_msg, unsafe_allow_html=True)
@@ -1718,6 +1822,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
