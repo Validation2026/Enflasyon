@@ -501,6 +501,47 @@ def apply_theme():
             font-weight: 800 !important;
             border-bottom-color: #3b82f6 !important;
         }
+        /* BORSA SATIRLARI MANYETİK ETKİLEŞİM */
+        .stock-row {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .stock-row:hover {
+            transform: translateX(8px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            filter: brightness(1.2);
+            border-left-width: 6px !important;
+            z-index: 10;
+        }
+        /* YAN MENÜ BUZLU CAM EFEKTİ */
+        [data-testid="stSidebar"] {
+            background-color: rgba(10, 15, 28, 0.45) !important;
+            backdrop-filter: blur(20px) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+            box-shadow: 5px 0 25px rgba(0,0,0,0.2);
+        }
+        /* Streamlit'in iç arka planlarını da temizleyelim */
+        [data-testid="stSidebar"] > div:first-child {
+            background: transparent !important;
+        }
+        /* AI KUTUSU SİBER TARAMA IŞIĞI */
+        .ai-focus-anim {
+            position: relative;
+            overflow: hidden; /* Dışarı taşan ışığı keser */
+        }
+        .ai-focus-anim::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            transform: skewX(-25deg);
+            animation: sciFiScan 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        @keyframes sciFiScan {
+            0% { left: -100%; }
+            40% { left: 200%; }
+            100% { left: 200%; }
+        }
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -1279,10 +1320,13 @@ def sayfa_piyasa_ozeti(ctx):
             fig_trend = px.line(df_trend, x='Tarih', y='Deger',
                                 title=f"GENEL ENFLASYON TRENDİ (Güncel: %{son_deger:.2f})",
                                 markers=True)
-            fig_trend.update_traces(line_color='#3b82f6', line_width=4, marker_size=8,
-                                    fill='tozeroy', fillcolor='rgba(59, 130, 246, 0.1)',
-                                    hovertemplate='Tarih: %{x}<br>Enflasyon: %%{y:.2f}<extra></extra>',
-                                    connectgaps=True)
+            fig_trend.update_traces(
+                line_color='#3b82f6', line_width=4, 
+                marker=dict(size=10, color='#3b82f6', line=dict(width=2, color='#ffffff')), # BEYAZ HALE BURADA EKLENİYOR
+                fill='tozeroy', fillcolor='rgba(59, 130, 246, 0.1)',
+                hovertemplate='Tarih: %{x}<br>Enflasyon: %%{y:.2f}<extra></extra>',
+                connectgaps=True
+            )
                                     
             fig_trend.update_layout(yaxis_range=[y_min, y_max])
             st.plotly_chart(style_chart(fig_trend), use_container_width=True)
@@ -1322,10 +1366,10 @@ def sayfa_piyasa_ozeti(ctx):
                 
                 # Borsa tarzı satır tasarımı
                 html_artan += f'''
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; 
+                <div class="stock-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; 
                     background:linear-gradient(90deg, rgba(239,68,68,0.1), rgba(20,24,33,0.6)); 
                     border-left: 3px solid #ef4444; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-                    border-right: 1px solid rgba(255,255,255,0.02);">
+                    border-right: 1px solid rgba(255,255,255,0.02); margin-bottom: 8px;">
                     <div style="flex:2; font-size:13px; font-weight:600; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;" title="{ad}">{ad}</div>
                     <div style="flex:1.5; text-align:right; font-family:'JetBrains Mono'; font-size:12px; color:#94a3b8;">{ilk:.2f}₺ <span style="font-size:10px; color:#64748b;">➔</span> <span style="color:#ffffff; font-weight:700;">{son:.2f}₺</span></div>
                     <div style="flex:1; text-align:right; font-weight:900; color:#ef4444; font-size:13px; text-shadow: 0 0 10px rgba(239,68,68,0.4);">▲ %{fark:.2f}</div>
@@ -1349,10 +1393,10 @@ def sayfa_piyasa_ozeti(ctx):
                 
                 # Borsa tarzı satır tasarımı (Yeşil Tonları)
                 html_azalan += f'''
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; 
+                <div class="stock-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; 
                     background:linear-gradient(90deg, rgba(34,197,94,0.1), rgba(20,24,33,0.6)); 
                     border-left: 3px solid #22c55e; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-                    border-right: 1px solid rgba(255,255,255,0.02);">
+                    border-right: 1px solid rgba(255,255,255,0.02); margin-bottom: 8px;">
                     <div style="flex:2; font-size:13px; font-weight:600; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;" title="{ad}">{ad}</div>
                     <div style="flex:1.5; text-align:right; font-family:'JetBrains Mono'; font-size:12px; color:#94a3b8;">{ilk:.2f}₺ <span style="font-size:10px; color:#64748b;">➔</span> <span style="color:#ffffff; font-weight:700;">{son:.2f}₺</span></div>
                     <div style="flex:1; text-align:right; font-weight:900; color:#22c55e; font-size:13px; text-shadow: 0 0 10px rgba(34,197,94,0.4);">▼ %{fark:.2f}</div>
@@ -1674,6 +1718,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
