@@ -1773,19 +1773,32 @@ def sayfa_trend_analizi(ctx):
 
 
 def sabit_kademeli_top10_hazirla(ctx):
-    # Ana hesaplama verisini alıyoruz (Maddeler sayfası da tam olarak bunu kullanıyor)
+    # Orijinal veriyi alıyoruz
     df_analiz = ctx["df_analiz"].copy()
     
-    # Sadece Fark_Yuzde sütunu hesaplanabilmiş olanları al (Gereksiz hiçbir filtre yok)
-    df_gecerli = df_analiz.dropna(subset=['Fark_Yuzde', ctx['ad_col']]).copy()
+    # Şubat sonu (veya önceki ayın son verisi) ile bugünün verisini belirliyoruz
+    baz_col = ctx['baz_col'] 
+    son_col = ctx['son']     
+    ad_col = ctx['ad_col']
     
-    # Ön yüzdeki kutucuklar hata vermesin diye Ilk_Fiyat ve Son_Fiyat atamalarını yapıyoruz
-    df_gecerli['Ilk_Fiyat'] = pd.to_numeric(df_gecerli.get(ctx['baz_col'], 0), errors='coerce').fillna(0)
-    df_gecerli['Son_Fiyat'] = pd.to_numeric(df_gecerli.get(ctx['son'], 0), errors='coerce').fillna(0)
+    # Sadece bize lazım olan 3 sütunu alalım (Ürün Adı, İlk Tarih, Son Tarih)
+    cols = [ad_col, baz_col, son_col]
+    df_fark = df_analiz.dropna(subset=cols).copy()
     
-    # Sadece 0'dan büyük/küçük olanları al ve Maddeler sayfasındaki gibi sırala
-    artan_10 = df_gecerli[df_gecerli['Fark_Yuzde'] > 0].sort_values('Fark_Yuzde', ascending=False).head(10).copy()
-    azalan_10 = df_gecerli[df_gecerli['Fark_Yuzde'] < 0].sort_values('Fark_Yuzde', ascending=True).head(10).copy()
+    # Fiyatları sayısal değere çevirip sıfır olan veya hatalı olan verileri temizliyoruz
+    df_fark[baz_col] = pd.to_numeric(df_fark[baz_col], errors='coerce')
+    df_fark[son_col] = pd.to_numeric(df_fark[son_col], errors='coerce')
+    df_fark = df_fark[(df_fark[baz_col] > 0) & (df_fark[son_col] > 0)]
+    
+    # NOKTADAN NOKTAYA SAF DEĞİŞİM (Bugün / Geçen Ay Sonu) - 1
+    df_fark['Ilk_Fiyat'] = df_fark[baz_col]
+    df_fark['Son_Fiyat'] = df_fark[son_col]
+    df_fark['Gercek_Fark'] = (df_fark['Son_Fiyat'] / df_fark['Ilk_Fiyat']) - 1
+    df_fark['Fark_Yuzde'] = df_fark['Gercek_Fark'] * 100
+    
+    # Sadece net artış (%0'dan büyük) ve net azalışları alıp listeye koyuyoruz
+    artan_10 = df_fark[df_fark['Fark_Yuzde'] > 0].sort_values('Fark_Yuzde', ascending=False).head(10).copy()
+    azalan_10 = df_fark[df_fark['Fark_Yuzde'] < 0].sort_values('Fark_Yuzde', ascending=True).head(10).copy()
     
     return artan_10, azalan_10
 
@@ -1912,6 +1925,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
