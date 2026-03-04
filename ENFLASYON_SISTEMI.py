@@ -300,9 +300,9 @@ def apply_theme():
         .pg-name { font-size: 13px; font-weight: 600; color: #e2e8f0 !important; margin-bottom: 8px; height: 36px; overflow: hidden; }
         .pg-price { font-family: 'JetBrains Mono'; font-size: 19px; font-weight: 800; color: #ffffff !important; }
         .pg-badge { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; margin-top: 10px; display: inline-block; letter-spacing: 0.5px;}
-        .pg-red { background: rgba(239, 68, 68, 0.15); color: #fca5a5 !important; border: 1px solid rgba(239, 68, 68, 0.3); box-shadow: 0 0 10px rgba(239,68,68,0.1); }
-        .pg-green { background: rgba(16, 185, 129, 0.15); color: #6ee7b7 !important; border: 1px solid rgba(16, 185, 129, 0.3); box-shadow: 0 0 10px rgba(16,185,129,0.1); }
-        .pg-yellow { background: rgba(234, 179, 8, 0.15); color: #fde047 !important; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .pg-red { background: rgba(239, 68, 68, 0.15); color: #fca5a5 !important; border: 1px solid rgba(239, 68, 68, 0.4); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+        .pg-green { background: rgba(16, 185, 129, 0.15); color: #6ee7b7 !important; border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+        .pg-yellow { background: rgba(234, 179, 8, 0.15); color: #fde047 !important; border: 1px solid rgba(234, 179, 8, 0.4); box-shadow: 0 0 15px rgba(234, 179, 8, 0.2); }
         /* BUTONLAR (NEON & PULSE EFEKTİ) */
         div.stButton > button {
             background: linear-gradient(90deg, #2563eb, #3b82f6, #2563eb); background-size: 200% auto;
@@ -394,6 +394,49 @@ def apply_theme():
             animation: fadeInUp 0.6s ease-out both, kpiBreathe 4s infinite ease-in-out; 
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative; overflow: hidden;
+        }
+
+        /* NOKTALI TERMİNAL ARKA PLANI */
+        .stApp::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 24px 24px; pointer-events: none; z-index: 0;
+        }
+
+        /* CAM GÖRÜNÜMLÜ ARAMA VE SEÇİM KUTULARI */
+        div[data-baseweb="select"] > div, div[data-baseweb="input"] {
+            background-color: rgba(20, 24, 33, 0.5) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            border-radius: 12px !important;
+            color: white !important;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+        div[data-baseweb="select"] > div:hover, div[data-baseweb="input"]:focus-within {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2) !important;
+            background-color: rgba(30, 33, 40, 0.8) !important;
+        }
+        
+        /* AÇILIR MENÜ İÇİ (DROPDOWN) GÜZELLEŞTİRMESİ */
+        ul[data-baseweb="menu"] {
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            border: 1px solid rgba(59, 130, 246, 0.3) !important;
+            border-radius: 12px !important;
+            backdrop-filter: blur(15px);
+        }
+        li[data-baseweb="option"]:hover {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+        }
+
+        /* NAVİGASYON MENÜSÜNÜ YUKARI SABİTLEME (STICKY) */
+        [data-testid="stRadio"] {
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            padding-bottom: 10px;
+            padding-top: 10px;
+            background: linear-gradient(180deg, rgba(10,15,28,0.9) 40%, transparent);
         }
         
     </style>
@@ -1642,6 +1685,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
