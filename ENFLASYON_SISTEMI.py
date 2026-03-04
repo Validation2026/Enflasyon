@@ -827,15 +827,10 @@ def hesapla_metrikler(df_analiz_base, secilen_tarih, gunler, tum_gunler_sirali, 
     df_analiz['Gunluk_Degisim'] = df_analiz['Gunluk_Degisim'].replace([np.inf, -np.inf], np.nan).fillna(0)
     gun_farki = son_idx
 
-    raw_baz_col = f"{baz_col}_RAW"
-    raw_son_col = f"{son}_RAW"
-    if raw_baz_col in df_analiz.columns and raw_son_col in df_analiz.columns:
-        baz_son_mask = df_analiz[raw_baz_col].notna() & df_analiz[raw_son_col].notna()
-    else:
-        baz_son_mask = df_analiz[baz_col].notna() & df_analiz[son].notna()
-
-    rising_baz_son_count = int(((df_analiz['Fark'] > 0) & baz_son_mask).sum())
-    falling_baz_son_count = int(((df_analiz['Fark'] < 0) & baz_son_mask).sum())
+    # Maddeler sayfasındaki mantıkla birebir aynı olması için Fark_Yuzde baz alınır.
+    # Yalnızca 0'dan kesin büyük veya küçük olanlar sayılır, 0 olanlar yoksayılır.
+    rising_baz_son_count = int((df_analiz['Fark_Yuzde'] > 0).sum())
+    falling_baz_son_count = int((df_analiz['Fark_Yuzde'] < 0).sum())
 
     resmi_aylik_degisim = 2.96
     tahmin = enf_genel
@@ -1481,6 +1476,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
