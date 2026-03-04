@@ -1488,52 +1488,51 @@ def sayfa_tam_liste(ctx):
     st.download_button("📥 Excel Olarak İndir", data=output.getvalue(), file_name="Veri_Seti.xlsx")
 
 def sayfa_rapor_merkezi(ctx):
-    st.markdown("### 📑 Detaylı Rapor Merkezi")
-    st.info("Bu modül, veri setinizin derinlemesine istatistiksel özetini, sektörel risk metriklerini ve uç değer analizlerini sunar.")
+    st.markdown("### 📑 Gelişmiş Rapor Merkezi & İstatistikler")
+    st.info("Kurumsal seviyede risk, volatilite ve uç değer (Z-Score) analizleri.")
 
     df = ctx["df_analiz"].copy()
     df = df.dropna(subset=[ctx['son'], ctx['baz_col'], ctx['ad_col']])
+
+    # İleri Düzey Metrikler (Z-Score Hesaplaması)
+    mean_fark = df['Fark_Yuzde'].mean()
+    std_fark = df['Fark_Yuzde'].std()
+    # Z-Score: Bir verinin ortalamadan kaç standart sapma uzakta olduğunu gösterir. (Anomali tespiti)
+    df['Z_Score'] = (df['Fark_Yuzde'] - mean_fark) / std_fark
 
     # 1. TEMEL İSTATİSTİKLER
     st.markdown("#### 1. Genel İstatistiksel Özet")
     c1, c2, c3, c4 = st.columns(4)
     
-    # Stil verilmiş metrik kartları
     c1.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>İncelenen Ürün</div><div style='font-size:24px; font-weight:800;'>{len(df)}</div></div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Ort. Değişim (Basit)</div><div style='font-size:24px; font-weight:800;'>%{df['Fark_Yuzde'].mean():.2f}</div></div>", unsafe_allow_html=True)
+    c2.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Ort. Değişim (Basit)</div><div style='font-size:24px; font-weight:800;'>%{mean_fark:.2f}</div></div>", unsafe_allow_html=True)
     c3.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Medyan Değişim</div><div style='font-size:24px; font-weight:800;'>%{df['Fark_Yuzde'].median():.2f}</div></div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Standart Sapma (Volatilite)</div><div style='font-size:24px; font-weight:800;'>{df['Fark_Yuzde'].std():.2f}</div></div>", unsafe_allow_html=True)
+    c4.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Standart Sapma (Risk)</div><div style='font-size:24px; font-weight:800;'>{std_fark:.2f}</div></div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 2. EN UÇ DEĞERLER (OUTLIERS)
-    st.markdown("#### 2. Uç Değer Analizi (Outliers)")
-    col_max, col_min = st.columns(2)
-    idx_max = df['Fark_Yuzde'].idxmax()
-    idx_min = df['Fark_Yuzde'].idxmin()
-
-    with col_max:
-        st.markdown(f"""
-        <div style="padding:15px; border-left:4px solid #ef4444; background:rgba(239,68,68,0.1); border-radius:8px;">
-            <div style="font-size:12px; color:#fca5a5;">Maksimum Fiyat Artışı Görülen Ürün:</div>
-            <div style="font-size:18px; font-weight:800; color:#ffffff;">{df.loc[idx_max, ctx['ad_col']]}</div>
-            <div style="font-size:20px; font-weight:900; color:#ef4444;">+ %{df.loc[idx_max, 'Fark_Yuzde']:.2f}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col_min:
-        st.markdown(f"""
-        <div style="padding:15px; border-left:4px solid #22c55e; background:rgba(34,197,94,0.1); border-radius:8px;">
-            <div style="font-size:12px; color:#86efac;">Maksimum Fiyat Düşüşü Görülen Ürün:</div>
-            <div style="font-size:18px; font-weight:800; color:#ffffff;">{df.loc[idx_min, ctx['ad_col']]}</div>
-            <div style="font-size:20px; font-weight:900; color:#22c55e;">%{df.loc[idx_min, 'Fark_Yuzde']:.2f}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    # 2. İLERİ DÜZEY UÇ DEĞER (Z-SCORE) ANALİZİ
+    st.markdown("#### 2. Anomali ve Uç Değer (Z-Score) Tespiti")
+    st.caption("İstatistiki olarak normalin çok dışında hareket eden (Z-Skoru > 2 veya < -2 olan) aykırı ürünler.")
+    
+    outliers = df[df['Z_Score'].abs() > 2].sort_values('Z_Score', ascending=False)
+    if not outliers.empty:
+        st.dataframe(
+            outliers[[ctx['ad_col'], 'Grup', 'Fark_Yuzde', 'Z_Score']],
+            column_config={
+                ctx['ad_col']: "Ürün Adı",
+                "Fark_Yuzde": st.column_config.NumberColumn("Değişim (%)", format="%.2f %%"),
+                "Z_Score": st.column_config.ProgressColumn("Z-Score (Anomali Derecesi)", format="%.2f", min_value=-4, max_value=4)
+            },
+            hide_index=True, use_container_width=True
+        )
+    else:
+        st.success("Veri setinde istatistiksel bir anomali (Z > 2) tespit edilmedi. Piyasa nispeten homojen.")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
     # 3. KATEGORİ BAZLI RİSK VE DAĞILIM
-    st.markdown("#### 3. Sektörel Dağılım ve Volatilite Tablosu")
+    st.markdown("#### 3. Sektörel Risk ve Volatilite Dağılımı")
     cat_stats = df.groupby('Grup').agg(
         Ürün_Sayısı=(ctx['ad_col'], 'count'),
         Ortalama_Değişim=('Fark_Yuzde', 'mean'),
@@ -1557,32 +1556,76 @@ def sayfa_rapor_merkezi(ctx):
         hide_index=True, use_container_width=True
     )
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("---")
 
-    # 4. EXCEL İNDİRME BÖLÜMÜ
-    st.markdown("#### 4. Kapsamlı Rapor Çıktısı")
-    st.caption("Aşağıdaki buton ile bu istatistiksel özeti ve ham verileri ÇOK SEKMELİ bir Excel dosyası olarak indirebilirsiniz.")
+    # 4. ŞEKİLLİ EXCEL İNDİRME BÖLÜMÜ (XLSXWRITER İLE BİÇİMLENDİRME)
+    st.markdown("#### 4. Kapsamlı ve Tasarımlı Rapor Çıktısı")
+    st.caption("Kurumsal renklendirilmiş, otomatik genişlik ayarlı ve hücre içi ısı haritalarına sahip profesyonel Excel raporunu buradan alabilirsiniz.")
 
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        # 1. Sekme: Özet
+        workbook = writer.book
+        
+        # Süslü Excel Formatlarını Tanımlama
+        header_format = workbook.add_format({'bold': True, 'bg_color': '#0f172a', 'font_color': '#ffffff', 'border': 1, 'align': 'center', 'valign': 'vcenter'})
+        num_format = workbook.add_format({'num_format': '0.00', 'border': 1, 'align': 'center'})
+        text_format = workbook.add_format({'border': 1, 'align': 'left'})
+        
+        # --- 1. ÖZET SEKME ---
         summary_df = pd.DataFrame({
-            "Metrik": ["Toplam İncelenen Ürün", "Aylık Ortalama Değişim (%)", "Medyan Değişim (%)", "Standart Sapma"],
-            "Değer": [len(df), df['Fark_Yuzde'].mean(), df['Fark_Yuzde'].median(), df['Fark_Yuzde'].std()]
+            "İstatistiksel Metrik": ["Toplam İncelenen Ürün", "Aylık Ortalama Değişim (%)", "Medyan Değişim (%)", "Standart Sapma (Volatilite)"],
+            "Değer": [len(df), mean_fark, df['Fark_Yuzde'].median(), std_fark]
         })
         summary_df.to_excel(writer, sheet_name="1_Genel_Ozet", index=False)
+        worksheet1 = writer.sheets['1_Genel_Ozet']
+        worksheet1.set_column('A:A', 35, text_format)
+        worksheet1.set_column('B:B', 20, num_format)
+        for col_num, value in enumerate(summary_df.columns.values):
+            worksheet1.write(0, col_num, value, header_format)
         
-        # 2. Sekme: Sektörler
-        cat_stats.to_excel(writer, sheet_name="2_Sektorel_Analiz", index=False)
+        # --- 2. SEKTÖREL RİSK SEKME ---
+        cat_stats.to_excel(writer, sheet_name="2_Sektorel_Risk", index=False)
+        worksheet2 = writer.sheets['2_Sektorel_Risk']
+        worksheet2.set_column('A:A', 40, text_format)
+        worksheet2.set_column('B:F', 18, num_format)
+        for col_num, value in enumerate(cat_stats.columns.values):
+            worksheet2.write(0, col_num, value, header_format)
+            
+        # --- 3. HAM VERİ VE Z-SCORE (ISI HARİTASI İLE) ---
+        export_df = df[[ctx['ad_col'], 'Grup', ctx['baz_col'], ctx['son'], 'Fark_Yuzde', 'Z_Score']].copy()
+        export_df = export_df.sort_values('Fark_Yuzde', ascending=False)
+        export_df.to_excel(writer, sheet_name="3_Gelismiş_Veri", index=False)
+        worksheet3 = writer.sheets['3_Gelismiş_Veri']
         
-        # 3. Sekme: Ham Veri
-        export_df = df[[ctx['ad_col'], 'Grup', ctx['baz_col'], ctx['son'], 'Fark_Yuzde']].copy()
-        export_df.to_excel(writer, sheet_name="3_Ham_Veri", index=False)
+        # Kolon genişlikleri
+        worksheet3.set_column('A:A', 50, text_format)
+        worksheet3.set_column('B:B', 30, text_format)
+        worksheet3.set_column('C:D', 15, num_format)
+        worksheet3.set_column('E:F', 18, num_format)
+        
+        # Başlık Stili
+        for col_num, value in enumerate(export_df.columns.values):
+            worksheet3.write(0, col_num, value, header_format)
+        
+        # Fark_Yuzde Sütununa 3 Renkli Isı Haritası Ekleme (Kırmızı=Artış, Yeşil=Düşüş)
+        max_row = len(export_df)
+        worksheet3.conditional_format(f'E2:E{max_row+1}', {
+            'type': '3_color_scale',
+            'min_color': '#86efac', # Pastel Yeşil
+            'mid_color': '#ffffff', # Beyaz
+            'max_color': '#fca5a5'  # Pastel Kırmızı
+        })
+        
+        # Z-Score Sütununa Veri Çubuğu (Data Bar) Ekleme
+        worksheet3.conditional_format(f'F2:F{max_row+1}', {
+            'type': 'data_bar',
+            'bar_color': '#3b82f6' # Neon Mavi
+        })
 
     st.download_button(
-        label="📥 Çok Sekmeli Detaylı Raporu İndir (.xlsx)",
+        label="📥 Gelişmiş ve Şekilli Raporu İndir (.xlsx)",
         data=output.getvalue(),
-        file_name=f"Enflasyon_Detayli_Rapor_{ctx['son']}.xlsx",
+        file_name=f"Kurumsal_Enflasyon_Raporu_{ctx['son']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         type="primary",
         use_container_width=True
@@ -1822,6 +1865,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
