@@ -59,10 +59,13 @@ def google_sheets_guncelle(ctx, artan_10, azalan_10):
         # --- 3. EN ÇOK ARTAN 10 ÜRÜN (A37 ve B37'den itibaren) ---
         if not artan_10.empty:
             disp_artan = artan_10[[ctx['ad_col'], 'Ilk_Fiyat', 'Son_Fiyat', 'Fark_Yuzde']].copy()
-            # Pandas Styler ile ısı haritası
-            styled_artan = disp_artan.style.background_gradient(
-                cmap='Reds', subset=['Fark_Yuzde'], vmin=0, vmax=disp_artan['Fark_Yuzde'].max() * 1.5
-            ).format({
+            
+            # Koyu temaya uygun özel kırmızı ısı haritası fonksiyonu
+            def style_artan(s):
+                m = s.max() if s.max() > 0 else 1
+                return [f'background-color: rgba(239, 68, 68, {min((v/m)*0.5, 0.5)}); color: #fca5a5; font-weight: 800;' for v in s]
+                
+            styled_artan = disp_artan.style.apply(style_artan, subset=['Fark_Yuzde']).format({
                 'Ilk_Fiyat': '{:.2f} ₺',
                 'Son_Fiyat': '{:.2f} ₺',
                 'Fark_Yuzde': '+{:.2f} %'
@@ -72,10 +75,13 @@ def google_sheets_guncelle(ctx, artan_10, azalan_10):
         # --- 4. EN ÇOK AZALAN 10 ÜRÜN (A49 ve B49'dan itibaren) ---
         if not azalan_10.empty:
             disp_azalan = azalan_10[[ctx['ad_col'], 'Ilk_Fiyat', 'Son_Fiyat', 'Fark_Yuzde']].copy()
-            # Azalanlar için yeşil tonlama (Greens_r kullanarak tersten renklendiriyoruz)
-            styled_azalan = disp_azalan.style.background_gradient(
-                cmap='Greens_r', subset=['Fark_Yuzde'], vmin=disp_azalan['Fark_Yuzde'].min() * 1.5, vmax=0
-            ).format({
+            
+            # Koyu temaya uygun özel yeşil ısı haritası fonksiyonu
+            def style_azalan(s):
+                m = abs(s.min()) if s.min() < 0 else 1
+                return [f'background-color: rgba(34, 197, 94, {min((abs(v)/m)*0.5, 0.5)}); color: #86efac; font-weight: 800;' for v in s]
+                
+            styled_azalan = disp_azalan.style.apply(style_azalan, subset=['Fark_Yuzde']).format({
                 'Ilk_Fiyat': '{:.2f} ₺',
                 'Son_Fiyat': '{:.2f} ₺',
                 'Fark_Yuzde': '{:.2f} %'
@@ -1606,6 +1612,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
