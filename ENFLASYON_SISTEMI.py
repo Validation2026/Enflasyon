@@ -304,6 +304,20 @@ def apply_theme():
         }
         /* TABLOLAR İÇİN MİNİK DÜZENLEME */
         [data-testid="stDataFrame"] { border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        /* ÖZEL SCROLLBAR (KAYDIRMA ÇUBUĞU) */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(10, 15, 28, 0.8); }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #3b82f6, #1d4ed8); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #60a5fa, #2563eb); }
+
+        /* NEON AYIRICI ÇİZGİLER (st.markdown("---") için) */
+        hr {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.4), transparent);
+            margin: 2rem 0;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -968,19 +982,19 @@ def sayfa_piyasa_ozeti(ctx):
 
     with c1:
         st.markdown(
-            f'<div class="kpi-card"><div class="kpi-title">GENEL ENFLASYON</div><div class="kpi-value">%{ctx["enf_genel"]:.2f}</div><div class="kpi-sub" style="color:#ef4444; font-size:12px; font-weight:600; margin-top:5px;">Aylık Değişim (Simüle)</div></div>',
+            f'<div class="kpi-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent); border-top: 2px solid #3b82f6;"><div class="kpi-title">📊 GENEL ENFLASYON</div><div class="kpi-value">%{ctx["enf_genel"]:.2f}</div><div class="kpi-sub" style="color:#ef4444; font-size:12px; font-weight:600; margin-top:5px;">Aylık Değişim (Simüle)</div></div>',
             unsafe_allow_html=True)
     with c2:
         st.markdown(
-            f'<div class="kpi-card"><div class="kpi-title">GIDA ENFLASYONU</div><div class="kpi-value">%{ctx["enf_gida"]:.2f}</div><div class="kpi-sub" style="color:#fca5a5; font-size:12px; font-weight:600; margin-top:5px;">Mutfak Sepeti</div></div>',
+            f'<div class="kpi-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), transparent); border-top: 2px solid #ef4444;"><div class="kpi-title">🛒 GIDA ENFLASYONU</div><div class="kpi-value">%{ctx["enf_gida"]:.2f}</div><div class="kpi-sub" style="color:#fca5a5; font-size:12px; font-weight:600; margin-top:5px;">Mutfak Sepeti</div></div>',
             unsafe_allow_html=True)
     with c3:
         st.markdown(
-            '<div class="kpi-card"><div class="kpi-title">YILLIK ENFLASYON</div><div class="kpi-value">%29.73</div><div class="kpi-sub" style="color:#a78bfa; font-size:12px; font-weight:600; margin-top:5px;">Yıllık Projeksiyon</div></div>',
+            '<div class="kpi-card" style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), transparent); border-top: 2px solid #a78bfa;"><div class="kpi-title">📅 YILLIK ENFLASYON</div><div class="kpi-value">%29.73</div><div class="kpi-sub" style="color:#c4b5fd; font-size:12px; font-weight:600; margin-top:5px;">Yıllık Projeksiyon</div></div>',
             unsafe_allow_html=True)
     with c4:
         st.markdown(
-            f'<div class="kpi-card"><div class="kpi-title">RESMİ (TÜİK) VERİSİ</div><div class="kpi-value">%{ctx["resmi_aylik_degisim"]:.2f}</div><div class="kpi-sub" style="color:#fbbf24; font-size:12px; font-weight:600; margin-top:5px;">Sabit Veri</div></div>',
+            f'<div class="kpi-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), transparent); border-top: 2px solid #f59e0b;"><div class="kpi-title">🏛️ RESMİ (TÜİK) VERİSİ</div><div class="kpi-value">%{ctx["resmi_aylik_degisim"]:.2f}</div><div class="kpi-sub" style="color:#fcd34d; font-size:12px; font-weight:600; margin-top:5px;">Sabit Veri</div></div>',
             unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -1478,6 +1492,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
