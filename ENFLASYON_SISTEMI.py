@@ -304,6 +304,7 @@ def apply_theme():
         }
         /* TABLOLAR İÇİN MİNİK DÜZENLEME */
         [data-testid="stDataFrame"] { border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        
         /* ÖZEL SCROLLBAR (KAYDIRMA ÇUBUĞU) */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: rgba(10, 15, 28, 0.8); }
@@ -317,6 +318,12 @@ def apply_theme():
             background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.4), transparent);
             margin: 2rem 0;
             box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+
+        /* AKTİF MENÜ BUTONU EKSTRA PARLAKLIK */
+        [data-testid="stRadio"] label[data-checked="true"] {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), inset 0 2px 4px rgba(255,255,255,0.3);
+            border: 1px solid #93c5fd;
         }
     </style>
     """
@@ -952,9 +959,12 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
             ek_not = "<br><span style='font-size:10px; color:#fca5a5;'>⚠️ Mutfak enflasyonu ortalamadan yüksek!</span>"
 
         st.markdown(f"""
-        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border-left: 3px solid {renk}; margin-bottom:10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-            <div style="color:{renk}; font-weight:800; font-size:13px; letter-spacing:1px;">{durum}</div>
-            <div style="font-size:11px; margin-top:4px; opacity:0.9;">{yorum}</div>
+        <div style="background:rgba(20,24,33,0.8); padding:15px; border-radius:12px; border: 1px solid rgba(255,255,255,0.05); border-left: 4px solid {renk}; margin-bottom:10px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); backdrop-filter: blur(10px);">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div style="animation: pulseGlow 2s infinite; font-size:16px;">🤖</div>
+                <div style="color:{renk}; font-weight:800; font-size:13px; letter-spacing:1px;">{durum}</div>
+            </div>
+            <div style="font-size:12px; margin-top:8px; opacity:0.9; line-height:1.5;">{yorum}</div>
             {ek_not}
         </div>
         """, unsafe_allow_html=True)
@@ -982,19 +992,19 @@ def sayfa_piyasa_ozeti(ctx):
 
     with c1:
         st.markdown(
-            f'<div class="kpi-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent); border-top: 2px solid #3b82f6;"><div class="kpi-title">📊 GENEL ENFLASYON</div><div class="kpi-value">%{ctx["enf_genel"]:.2f}</div><div class="kpi-sub" style="color:#ef4444; font-size:12px; font-weight:600; margin-top:5px;">Aylık Değişim (Simüle)</div></div>',
+            f'<div class="kpi-card" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), transparent); border-top: 2px solid #3b82f6;"><div class="kpi-title">📊 GENEL ENFLASYON</div><div class="kpi-value">%{ctx["enf_genel"]:.2f}</div><div class="kpi-sub" style="color:#ef4444; font-size:12px; font-weight:600; margin-top:5px;">Aylık Değişim (Simüle)</div></div>',
             unsafe_allow_html=True)
     with c2:
         st.markdown(
-            f'<div class="kpi-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), transparent); border-top: 2px solid #ef4444;"><div class="kpi-title">🛒 GIDA ENFLASYONU</div><div class="kpi-value">%{ctx["enf_gida"]:.2f}</div><div class="kpi-sub" style="color:#fca5a5; font-size:12px; font-weight:600; margin-top:5px;">Mutfak Sepeti</div></div>',
+            f'<div class="kpi-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), transparent); border-top: 2px solid #ef4444;"><div class="kpi-title">🛒 GIDA ENFLASYONU</div><div class="kpi-value">%{ctx["enf_gida"]:.2f}</div><div class="kpi-sub" style="color:#fca5a5; font-size:12px; font-weight:600; margin-top:5px;">Mutfak Sepeti</div></div>',
             unsafe_allow_html=True)
     with c3:
         st.markdown(
-            '<div class="kpi-card" style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), transparent); border-top: 2px solid #a78bfa;"><div class="kpi-title">📅 YILLIK ENFLASYON</div><div class="kpi-value">%29.73</div><div class="kpi-sub" style="color:#c4b5fd; font-size:12px; font-weight:600; margin-top:5px;">Yıllık Projeksiyon</div></div>',
+            '<div class="kpi-card" style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.08), transparent); border-top: 2px solid #a78bfa;"><div class="kpi-title">📅 YILLIK ENFLASYON</div><div class="kpi-value">%29.73</div><div class="kpi-sub" style="color:#c4b5fd; font-size:12px; font-weight:600; margin-top:5px;">Yıllık Projeksiyon</div></div>',
             unsafe_allow_html=True)
     with c4:
         st.markdown(
-            f'<div class="kpi-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), transparent); border-top: 2px solid #f59e0b;"><div class="kpi-title">🏛️ RESMİ (TÜİK) VERİSİ</div><div class="kpi-value">%{ctx["resmi_aylik_degisim"]:.2f}</div><div class="kpi-sub" style="color:#fcd34d; font-size:12px; font-weight:600; margin-top:5px;">Sabit Veri</div></div>',
+            f'<div class="kpi-card" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), transparent); border-top: 2px solid #f59e0b;"><div class="kpi-title">🏛️ RESMİ (TÜİK) VERİSİ</div><div class="kpi-value">%{ctx["resmi_aylik_degisim"]:.2f}</div><div class="kpi-sub" style="color:#fcd34d; font-size:12px; font-weight:600; margin-top:5px;">Sabit Veri</div></div>',
             unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -1084,14 +1094,10 @@ def sayfa_piyasa_ozeti(ctx):
             fig_trend = px.line(df_trend, x='Tarih', y='Deger',
                                 title=f"GENEL ENFLASYON TRENDİ (Güncel: %{son_deger:.2f})",
                                 markers=True)
-            fig_trend.update_traces(
-                line_color='#3b82f6', 
-                line_width=4, 
-                marker_size=8,
-                fill='tozeroy', # Çizginin altını doldurur
-                fillcolor='rgba(59, 130, 246, 0.1)', # Saydam neon mavi dolgu
-                connectgaps=True
-            )
+            fig_trend.update_traces(line_color='#3b82f6', line_width=4, marker_size=8,
+                                    fill='tozeroy', fillcolor='rgba(59, 130, 246, 0.1)',
+                                    hovertemplate='Tarih: %{x}<br>Enflasyon: %%{y:.2f}<extra></extra>',
+                                    connectgaps=True)
                                     
             fig_trend.update_layout(yaxis_range=[y_min, y_max])
             st.plotly_chart(style_chart(fig_trend), use_container_width=True)
@@ -1160,7 +1166,7 @@ def sayfa_piyasa_ozeti(ctx):
     st.subheader("Sektörel Isı Haritası")
     fig_tree = px.treemap(df, path=[px.Constant("Enflasyon Sepeti"), 'Grup', ctx['ad_col']], values=ctx['agirlik_col'],
                           color='Fark', color_continuous_scale='RdYlGn_r')
-    fig_tree.update_traces(marker=dict(line=dict(color='#0a0f1c', width=2)))
+    fig_tree.update_traces(marker=dict(line=dict(color='#0f172a', width=2)))
     st.plotly_chart(style_chart(fig_tree, is_sunburst=True), use_container_width=True)
 
 
@@ -1354,7 +1360,7 @@ def sayfa_trend_analizi(ctx):
         # Grafiği bir değişkene alıp boşlukları bağla
         fig_urun = px.line(df_melted, x='Tarih', y='Yuzde_Degisim', color=ctx['ad_col'], 
                            title="Ürün Bazlı Kümülatif Değişim (%)", markers=True)
-        fig_urun.update_traces(connectgaps=True) # <-- BOŞLUKLARI BAĞLAYAN KOD
+        fig_urun.update_traces(connectgaps=True, fill='tozeroy')
         
         st.plotly_chart(style_chart(fig_urun), use_container_width=True)
 
@@ -1391,10 +1397,13 @@ def main():
     SENKRONIZASYON_AKTIF = True
 
     # ÜST KISIM (BAŞLIK VE TASARIM - YENİ RGB EFEKTLERİ EKLENDİ)
+    # ÜST KISIM (BAŞLIK VE TASARIM - YENİ RGB EFEKTLERİ EKLENDİ)
     st.markdown(f"""
     <div style="display:flex; justify-content:space-between; align-items:center; padding:20px 30px; 
-        background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); 
-        border-radius:16px; margin-bottom:25px; margin-top:-30px; animation: fadeInUp 0.5s; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(25px); 
+        border: 1px solid rgba(255,255,255,0.08); border-bottom: 2px solid rgba(59,130,246,0.4);
+        border-radius:16px; margin-bottom:25px; margin-top:-30px; animation: fadeInUp 0.5s; 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);">
         <div>
             <div style="font-weight:800; font-size:28px;" class="gradient-text">
                 Enflasyon Monitörü 
@@ -1446,12 +1455,12 @@ def main():
             if "OK" in res:
                 st.cache_data.clear()
                 st.session_state.clear()
-                st.success('Sistem Senkronize Edildi! Sayfa yenileniyor...', icon='🚀')
+                st.toast('Sistem Senkronize Edildi! Sayfa yenileniyor...', icon='🚀')
                 time.sleep(1)
                 st.rerun()
 
             elif "Veri bulunamadı" in res:
-                st.warning("⚠️ Yeni veri akışı yok. Güncellenecek yeni fiyat veya ZIP dosyası bulunamadı.")
+                st.toast("Yeni veri akışı yok. Güncellenecek yeni fiyat veya ZIP dosyası bulunamadı.", icon="⚠️")
             else:
                 st.error(f"⚠️ Senkronizasyon sırasında hata oluştu: {res}")
 
@@ -1466,15 +1475,16 @@ def main():
         ctx = ui_sidebar_ve_veri_hazirlama(df_base, r_dates, col_name)
 
     # --- E-TABLOYA AKTAR İŞLEMİ (Eğer butona basıldıysa) ---
+    # --- E-TABLOYA AKTAR İŞLEMİ (Eğer butona basıldıysa) ---
     if export_clicked and ctx:
         with st.spinner("Tablo güncelleniyor..."):
             artan_10, azalan_10 = sabit_kademeli_top10_hazirla(ctx)
             sonuc = google_sheets_guncelle(ctx, artan_10, azalan_10)
             if sonuc is True:
-                st.toast("Google Sheets başarıyla güncellendi!", icon="✅") # Değişen kısım
+                st.toast("Google Sheets başarıyla güncellendi!", icon="✅")
             else:
-                st.toast(f"Hata oluştu: {sonuc}", icon="❌") # Değişen kısım
-
+                st.toast(f"Hata oluştu: {sonuc}", icon="❌")
+                
     # --- SAYFALARI RENDER ETME ---
     if ctx:
         if secim == "Enflasyon Özeti":
@@ -1498,6 +1508,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
