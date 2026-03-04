@@ -715,9 +715,58 @@ def verileri_getir_cache():
         pivot_raw_export = pivot_raw.reset_index()
         pivot_raw_export.columns = ['Kod'] + [f"{c}_RAW" for c in pivot_raw_export.columns if c != 'Kod']
 
-        if 'Grup' not in df_s.columns:
-            grup_map = {"01": "Gıda", "02": "Alkol-Tütün", "03": "Giyim", "04": "Konut"}
-            df_s['Grup'] = df_s['Kod'].str[:2].map(grup_map).fillna("Diğer")
+        # --- COICOP Kategorileri ---
+        kategori_haritasi = {
+            "01": "Gıda ve alkolsüz içecekler",
+            "02": "Alkollü içecekler, tütün ve tütün ürünleri",
+            "03": "Giyim ve ayakkabı",
+            "04": "Konut, su, elektrik, gaz ve diğer yakıtlar",
+            "05": "Mobilya, mefruşat ve evde kullanılan ekipmanlar ile rutin ev bakım ve onarımı",
+            "06": "Sağlık",
+            "07": "Ulaştırma",
+            "08": "Bilgi ve iletişim",
+            "09": "Eğlence, dinlence, spor ve kültür",
+            "10": "Eğitim hizmetleri",
+            "11": "Lokantalar ve konaklama hizmetleri",
+            "12": "Sigorta ve finansal hizmetler",
+            "13": "Kişisel bakım, sosyal koruma ve çeşitli mal ve hizmetler"
+        }
+
+        # --- DEĞİŞTİRİLEN KISIM: Sadece veri çekilenleri değil, tüm ürünleri tarıyoruz ---
+        for kod, urun_adi in urun_isimleri.items():
+            fiyatlar = veri_havuzu.get(kod, [])
+            clean_vals = [p for p in fiyatlar if p > 0]
+
+            if clean_vals:
+                if len(clean_vals) > 1:
+                    final_fiyat = float(max(clean_vals))
+                    kaynak_str = f"Max ({len(clean_vals)} Kaynak)"
+                else:
+                    final_fiyat = clean_vals[0]
+                    kaynak_str = "Single Source"
+            else:
+                # Yeni fiyat yoksa, eski fiyatı kontrol et
+                if kod in eski_fiyatlar and eski_fiyatlar[kod] > 0:
+                    final_fiyat = eski_fiyatlar[kod]
+                    kaynak_str = "Önceki Günden Devir"
+                else:
+                    continue # Ne yeni fiyat çekilebilmiş, ne de eskisinde var (atla)
+
+            # Ürün kodunun ilk 2 hanesini alarak kategoriyi bul
+            kategori_kodu = str(kod).zfill(7)[:2]
+            ana_kategori = kategori_haritasi.get(kategori_kodu, "Bilinmeyen Kategori")
+
+            final_list.append({
+                "Tarih": bugun, 
+                "Zaman": simdi, 
+                "Kod": kod,
+                "Madde_Adi": urun_adi,
+                "Ana_Kategori": ana_kategori,  # <-- EXCEL'E YAZILACAK YENİ SÜTUN
+                "Fiyat": final_fiyat, 
+                "Kaynak": kaynak_str, 
+                "URL": "ZIP_ARCHIVE"
+            })
+        # ----------------------------------------------------------------------------------
 
         df_analiz_base = pd.merge(df_s, pivot, on='Kod', how='left')
         df_analiz_base = pd.merge(df_analiz_base, pivot_raw_export, on='Kod', how='left')
@@ -1450,6 +1499,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
