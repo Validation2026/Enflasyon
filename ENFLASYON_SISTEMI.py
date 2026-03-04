@@ -1773,31 +1773,29 @@ def sayfa_trend_analizi(ctx):
 
 
 def sabit_kademeli_top10_hazirla(ctx):
-    """Top 10 artan/azalan listesini gerçek veriyle hesaplar."""
+    """Top 10 artan/azalan listesini Maddeler sayfasıyla (Fark_Yuzde) birebir eşler."""
     df_analiz = ctx["df_analiz"].copy()
+    baz_col = ctx['baz_col']
     son_col = ctx['son']
-    ad_col = ctx['ad_col']
 
-    ay_ilk_gunu = f"{son_col[:8]}01"
-    if ay_ilk_gunu not in df_analiz.columns:
-        return pd.DataFrame(), pd.DataFrame()
-
-    cols = [ad_col, ay_ilk_gunu, son_col]
-    df_fark = df_analiz.dropna(subset=cols).copy()
-    df_fark[ay_ilk_gunu] = pd.to_numeric(df_fark[ay_ilk_gunu], errors='coerce')
+    # Gerekli sütunlarda boşluk (NaN) olanları temizliyoruz
+    cols_to_check = [ctx['ad_col'], baz_col, son_col, 'Fark_Yuzde']
+    df_fark = df_analiz.dropna(subset=cols_to_check).copy()
+    
+    # Fiyatların 0'dan büyük olduğundan emin olalım
+    df_fark[baz_col] = pd.to_numeric(df_fark[baz_col], errors='coerce')
     df_fark[son_col] = pd.to_numeric(df_fark[son_col], errors='coerce')
-    df_fark = df_fark[(df_fark[ay_ilk_gunu] > 0) & (df_fark[son_col] > 0)]
+    df_fark = df_fark[(df_fark[baz_col] > 0) & (df_fark[son_col] > 0)]
 
-    df_fark['Ilk_Fiyat'] = df_fark[ay_ilk_gunu]
+    # Ön yüzdeki UI kodlarının (html_artan, vb.) bozulmaması için aracı sütunları atıyoruz
+    df_fark['Ilk_Fiyat'] = df_fark[baz_col]
     df_fark['Son_Fiyat'] = df_fark[son_col]
-    df_fark['Fark'] = (df_fark['Son_Fiyat'] / df_fark['Ilk_Fiyat']) - 1
-    df_fark['Fark_Yuzde'] = df_fark['Fark'] * 100
 
-    artan_10 = df_fark[df_fark['Fark'] > 0].sort_values('Fark', ascending=False).head(10).copy()
-    azalan_10 = df_fark[df_fark['Fark'] < 0].sort_values('Fark', ascending=True).head(10).copy()
+    # Maddeler sayfasındaki mantıkla tamamen aynı: Fark_Yuzde üzerinden sıralama
+    artan_10 = df_fark[df_fark['Fark_Yuzde'] > 0].sort_values('Fark_Yuzde', ascending=False).head(10).copy()
+    azalan_10 = df_fark[df_fark['Fark_Yuzde'] < 0].sort_values('Fark_Yuzde', ascending=True).head(10).copy()
 
     return artan_10, azalan_10
-
 
 # --- ANA MAIN ---
 def main():
@@ -1922,6 +1920,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
