@@ -381,6 +381,20 @@ def apply_theme():
         
         /* TABLOLAR İÇİN MİNİK HOVER EFEKTİ */
         tr:hover { background-color: rgba(59, 130, 246, 0.05) !important; }
+
+        @keyframes kpiBreathe {
+            0% { box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+            50% { box-shadow: 0 8px 32px 0 rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.3); }
+            100% { box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+        }
+        
+        .kpi-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px; backdrop-filter: blur(12px);
+            animation: fadeInUp 0.6s ease-out both, kpiBreathe 4s infinite ease-in-out; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden;
+        }
         
     </style>
     """
@@ -1628,6 +1642,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
