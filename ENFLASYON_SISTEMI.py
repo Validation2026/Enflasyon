@@ -325,6 +325,37 @@ def apply_theme():
             box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), inset 0 2px 4px rgba(255,255,255,0.3);
             border: 1px solid #93c5fd;
         }
+
+        /* SEÇİLİ METİN RENGİ (Neon Vurgu) */
+        ::selection { background: rgba(59, 130, 246, 0.5); color: #ffffff; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        ::-moz-selection { background: rgba(59, 130, 246, 0.5); color: #ffffff; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+
+        /* AÇILIR KAPANIR MENÜ (EXPANDER) GÜZELLEŞTİRMESİ */
+        [data-testid="stExpander"] {
+            background: rgba(20, 24, 33, 0.5) !important;
+            border: 1px solid rgba(255,255,255,0.05) !important;
+            border-radius: 12px !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+            overflow: hidden;
+        }
+        [data-testid="stExpander"] summary {
+            padding: 10px 15px !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        [data-testid="stExpander"] summary:hover {
+            background: rgba(59, 130, 246, 0.15) !important;
+        }
+
+        /* TABLO (DATAFRAME) ÇERÇEVE IŞIMASI */
+        [data-testid="stDataFrame"] {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255,255,255,0.05);
+            transition: all 0.3s;
+        }
+        [data-testid="stDataFrame"]:hover {
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15), inset 0 0 0 1px rgba(59, 130, 246, 0.3);
+        }
+        
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -658,6 +689,7 @@ def html_isleyici(progress_callback):
 
 
 # --- GRAFİK STİLİ ---
+# --- GRAFİK STİLİ ---
 def style_chart(fig, is_pdf=False, is_sunburst=False):
     if is_pdf:
         fig.update_layout(template="plotly_white", font=dict(family="Arial", size=14, color="black"))
@@ -667,8 +699,16 @@ def style_chart(fig, is_pdf=False, is_sunburst=False):
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Inter, sans-serif", color="#a1a1aa", size=12),
-            margin=dict(l=0, r=0, t=40, b=0)
+            margin=dict(l=0, r=0, t=40, b=0),
+            # YENİ EKLENEN TOOLTIP TASARIMI
+            hoverlabel=dict(
+                bgcolor="rgba(15, 23, 42, 0.9)", 
+                font_size=13, 
+                font_family="Inter, sans-serif",
+                bordercolor="rgba(59, 130, 246, 0.5)"
+            )
         )
+        # ... geri kalanı aynı
         if not is_sunburst:
             layout_args.update(dict(
                 xaxis=dict(showgrid=False, zeroline=False, showline=True, linecolor="rgba(255,255,255,0.1)",
@@ -880,7 +920,20 @@ def ui_sidebar_ve_veri_hazirlama(df_analiz_base, raw_dates, ad_col):
         st.write(raw_dates[-3:] if len(raw_dates) > 2 else raw_dates)
 
     ai_container = st.sidebar.container()
-    st.sidebar.markdown("---")
+    # YAN MENÜ PROFİL KARTI
+    st.sidebar.markdown(f"""
+    <div style="background: linear-gradient(135deg, rgba(30,33,40,0.8), rgba(15,18,25,0.8)); 
+        border: 1px solid rgba(59,130,246,0.3); border-radius: 12px; padding: 15px; 
+        margin-bottom: 20px; margin-top: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; transition: all 0.3s;">
+        <div style="background: rgba(59,130,246,0.2); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(59,130,246,0.5); font-size: 20px; box-shadow: inset 0 0 10px rgba(59,130,246,0.3);">
+            👩‍💻
+        </div>
+        <div>
+            <div style="color: #94a3b8; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">Yetkili Veri Analisti</div>
+            <div style="color: #ffffff; font-size: 15px; font-weight: 800; margin-top: 2px;">Ezgi</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     st.sidebar.markdown("### ⚙️ Veri Ayarları")
 
     lottie_url = "https://lottie.host/98606416-297c-4a37-9b2a-714013063529/5D6o8k8fW0.json"
@@ -1508,6 +1561,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
