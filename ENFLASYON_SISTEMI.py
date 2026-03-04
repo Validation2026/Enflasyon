@@ -1489,7 +1489,7 @@ def sayfa_tam_liste(ctx):
 
 def sayfa_rapor_merkezi(ctx):
     st.markdown("### 📑 Gelişmiş Rapor Merkezi & İstatistikler")
-    st.info("Kurumsal seviyede risk, volatilite ve uç değer (Z-Score) analizleri.")
+    st.info("Kurumsal seviyede risk, volatilite, anomali tespiti ve makro-ekonomik dağılım analizleri.")
 
     df = ctx["df_analiz"].copy()
     df = df.dropna(subset=[ctx['son'], ctx['baz_col'], ctx['ad_col']])
@@ -1497,23 +1497,86 @@ def sayfa_rapor_merkezi(ctx):
     # İleri Düzey Metrikler (Z-Score Hesaplaması)
     mean_fark = df['Fark_Yuzde'].mean()
     std_fark = df['Fark_Yuzde'].std()
-    # Z-Score: Bir verinin ortalamadan kaç standart sapma uzakta olduğunu gösterir. (Anomali tespiti)
+    resmi_veri = ctx.get("resmi_aylik_degisim", 2.96)
+    
     df['Z_Score'] = (df['Fark_Yuzde'] - mean_fark) / std_fark
 
-    # 1. TEMEL İSTATİSTİKLER
+    # --- 1. TEMEL İSTATİSTİKLER ---
     st.markdown("#### 1. Genel İstatistiksel Özet")
     c1, c2, c3, c4 = st.columns(4)
     
     c1.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>İncelenen Ürün</div><div style='font-size:24px; font-weight:800;'>{len(df)}</div></div>", unsafe_allow_html=True)
     c2.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Ort. Değişim (Basit)</div><div style='font-size:24px; font-weight:800;'>%{mean_fark:.2f}</div></div>", unsafe_allow_html=True)
     c3.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Medyan Değişim</div><div style='font-size:24px; font-weight:800;'>%{df['Fark_Yuzde'].median():.2f}</div></div>", unsafe_allow_html=True)
-    c4.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Standart Sapma (Risk)</div><div style='font-size:24px; font-weight:800;'>{std_fark:.2f}</div></div>", unsafe_allow_html=True)
+    
+    # Kritik Eşik Hesaplaması (Resmi veriyi aşan ürün yüzdesi)
+    resmi_asan_sayi = len(df[df['Fark_Yuzde'] > resmi_veri])
+    resmi_asan_oran = (resmi_asan_sayi / len(df)) * 100
+    c4.markdown(f"<div class='pg-card' style='border-left: 3px solid #f59e0b;'><div style='color:#fcd34d; font-size:12px;'>TÜİK'i Aşan Ürün Oranı</div><div style='font-size:24px; font-weight:800; color:#f59e0b;'>%{resmi_asan_oran:.1f}</div><div style='font-size:10px; opacity:0.7;'>({resmi_asan_sayi} Ürün)</div></div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 2. İLERİ DÜZEY UÇ DEĞER (Z-SCORE) ANALİZİ
-    st.markdown("#### 2. Anomali ve Uç Değer (Z-Score) Tespiti")
-    st.caption("İstatistiki olarak normalin çok dışında hareket eden (Z-Skoru > 2 veya < -2 olan) aykırı ürünler.")
+    # --- YENİ EKLENTİ: 2. MAKRO GÖRSEL ANALİZ (GRAFİKLER) ---
+    st.markdown("#### 2. Makro-Ekonomik Dağılım ve Risk Haritası")
+    col_hist, col_scatter = st.columns(2)
+
+    with col_hist:
+        # Histogram ve Kutu Grafiği (Çan Eğrisi)
+        fig_hist = px.histogram(
+            df, x='Fark_Yuzde', nbins=50,
+            title='Fiyat Değişim Dağılımı (Histogram)',
+            color_discrete_sequence=['#8b5cf6'],
+            marginal='box', # Üstte aykırı değerleri gösteren Box Plot
+            hover_data=[ctx['ad_col']]
+        )
+        fig_hist.update_layout(
+            xaxis_title="Değişim Oranı (%)",
+            yaxis_title="Ürün Adedi",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#a1a1aa"),
+            showlegend=False,
+            margin=dict(t=50, l=10, r=10, b=10)
+        )
+        st.plotly_chart(style_chart(fig_hist), use_container_width=True)
+
+    # Kategori İstatistiklerini Önceden Hesaplayalım (Scatter için lazım)
+    cat_stats = df.groupby('Grup').agg(
+        Ürün_Sayısı=(ctx['ad_col'], 'count'),
+        Ortalama_Değişim=('Fark_Yuzde', 'mean'),
+        Maks_Artış=('Fark_Yuzde', 'max'),
+        En_Düşük=('Fark_Yuzde', 'min'),
+        Volatilite_Std=('Fark_Yuzde', 'std')
+    ).reset_index().fillna(0)
+
+    with col_scatter:
+        # Scatter Plot: Volatilite vs Ortalama Değişim (Balon Grafiği)
+        fig_scatter = px.scatter(
+            cat_stats, x='Volatilite_Std', y='Ortalama_Değişim',
+            size='Ürün_Sayısı', color='Ortalama_Değişim',
+            hover_name='Grup', text='Grup',
+            color_continuous_scale=['#10b981', '#f59e0b', '#ef4444'],
+            title='Sektörel Risk Haritası (Volatilite vs Enflasyon)'
+        )
+        fig_scatter.update_traces(
+            textposition='top center', 
+            marker=dict(line=dict(width=1, color='rgba(255,255,255,0.2)'))
+        )
+        fig_scatter.update_layout(
+            xaxis_title="Risk Skoru (Standart Sapma)",
+            yaxis_title="Sektör Enflasyonu (%)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#a1a1aa"),
+            margin=dict(t=50, l=10, r=10, b=10)
+        )
+        st.plotly_chart(style_chart(fig_scatter), use_container_width=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- 3. İLERİ DÜZEY UÇ DEĞER (Z-SCORE) ANALİZİ ---
+    st.markdown("#### 3. Anomali ve Uç Değer (Z-Score) Tespiti")
+    st.caption(f"İstatistiki olarak normalin dışında hareket eden (Z-Skoru > 2 veya < -2 olan) ürünler. (Şu anki Sapma Eşiği: {std_fark:.2f})")
     
     outliers = df[df['Z_Score'].abs() > 2].sort_values('Z_Score', ascending=False)
     if not outliers.empty:
@@ -1531,20 +1594,11 @@ def sayfa_rapor_merkezi(ctx):
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 3. KATEGORİ BAZLI RİSK VE DAĞILIM
-    st.markdown("#### 3. Sektörel Risk ve Volatilite Dağılımı")
-    cat_stats = df.groupby('Grup').agg(
-        Ürün_Sayısı=(ctx['ad_col'], 'count'),
-        Ortalama_Değişim=('Fark_Yuzde', 'mean'),
-        Maks_Artış=('Fark_Yuzde', 'max'),
-        En_Düşük=('Fark_Yuzde', 'min'),
-        Volatilite_Std=('Fark_Yuzde', 'std')
-    ).reset_index()
-
-    cat_stats = cat_stats.sort_values('Ortalama_Değişim', ascending=False).fillna(0)
+    # --- 4. KATEGORİ BAZLI RİSK TABLOSU ---
+    st.markdown("#### 4. Sektörel Risk ve Volatilite Dağılımı")
 
     st.dataframe(
-        cat_stats,
+        cat_stats.sort_values('Ortalama_Değişim', ascending=False),
         column_config={
             "Grup": "Sektör / Kategori",
             "Ürün_Sayısı": st.column_config.NumberColumn("Ürün Sayısı"),
@@ -1558,8 +1612,8 @@ def sayfa_rapor_merkezi(ctx):
 
     st.markdown("---")
 
-    # 4. ŞEKİLLİ EXCEL İNDİRME BÖLÜMÜ (XLSXWRITER İLE BİÇİMLENDİRME)
-    st.markdown("#### 4. Kapsamlı ve Tasarımlı Rapor Çıktısı")
+    # --- 5. ŞEKİLLİ EXCEL İNDİRME BÖLÜMÜ ---
+    st.markdown("#### 5. Kapsamlı ve Tasarımlı Rapor Çıktısı")
     st.caption("Kurumsal renklendirilmiş, otomatik genişlik ayarlı ve hücre içi ısı haritalarına sahip profesyonel Excel raporunu buradan alabilirsiniz.")
 
     output = BytesIO()
@@ -1571,10 +1625,10 @@ def sayfa_rapor_merkezi(ctx):
         num_format = workbook.add_format({'num_format': '0.00', 'border': 1, 'align': 'center'})
         text_format = workbook.add_format({'border': 1, 'align': 'left'})
         
-        # --- 1. ÖZET SEKME ---
+        # 1. ÖZET SEKME
         summary_df = pd.DataFrame({
-            "İstatistiksel Metrik": ["Toplam İncelenen Ürün", "Aylık Ortalama Değişim (%)", "Medyan Değişim (%)", "Standart Sapma (Volatilite)"],
-            "Değer": [len(df), mean_fark, df['Fark_Yuzde'].median(), std_fark]
+            "İstatistiksel Metrik": ["Toplam İncelenen Ürün", "Aylık Ortalama Değişim (%)", "Medyan Değişim (%)", "Standart Sapma (Volatilite)", "TÜİK Oranını Aşan Ürün Yüzdesi (%)"],
+            "Değer": [len(df), mean_fark, df['Fark_Yuzde'].median(), std_fark, resmi_asan_oran]
         })
         summary_df.to_excel(writer, sheet_name="1_Genel_Ozet", index=False)
         worksheet1 = writer.sheets['1_Genel_Ozet']
@@ -1583,43 +1637,35 @@ def sayfa_rapor_merkezi(ctx):
         for col_num, value in enumerate(summary_df.columns.values):
             worksheet1.write(0, col_num, value, header_format)
         
-        # --- 2. SEKTÖREL RİSK SEKME ---
-        cat_stats.to_excel(writer, sheet_name="2_Sektorel_Risk", index=False)
+        # 2. SEKTÖREL RİSK SEKME
+        cat_stats.sort_values('Ortalama_Değişim', ascending=False).to_excel(writer, sheet_name="2_Sektorel_Risk", index=False)
         worksheet2 = writer.sheets['2_Sektorel_Risk']
         worksheet2.set_column('A:A', 40, text_format)
         worksheet2.set_column('B:F', 18, num_format)
         for col_num, value in enumerate(cat_stats.columns.values):
             worksheet2.write(0, col_num, value, header_format)
             
-        # --- 3. HAM VERİ VE Z-SCORE (ISI HARİTASI İLE) ---
+        # 3. HAM VERİ VE Z-SCORE (ISI HARİTASI İLE)
         export_df = df[[ctx['ad_col'], 'Grup', ctx['baz_col'], ctx['son'], 'Fark_Yuzde', 'Z_Score']].copy()
         export_df = export_df.sort_values('Fark_Yuzde', ascending=False)
         export_df.to_excel(writer, sheet_name="3_Gelismiş_Veri", index=False)
         worksheet3 = writer.sheets['3_Gelismiş_Veri']
         
-        # Kolon genişlikleri
         worksheet3.set_column('A:A', 50, text_format)
         worksheet3.set_column('B:B', 30, text_format)
         worksheet3.set_column('C:D', 15, num_format)
         worksheet3.set_column('E:F', 18, num_format)
         
-        # Başlık Stili
         for col_num, value in enumerate(export_df.columns.values):
             worksheet3.write(0, col_num, value, header_format)
         
-        # Fark_Yuzde Sütununa 3 Renkli Isı Haritası Ekleme (Kırmızı=Artış, Yeşil=Düşüş)
         max_row = len(export_df)
         worksheet3.conditional_format(f'E2:E{max_row+1}', {
             'type': '3_color_scale',
-            'min_color': '#86efac', # Pastel Yeşil
-            'mid_color': '#ffffff', # Beyaz
-            'max_color': '#fca5a5'  # Pastel Kırmızı
+            'min_color': '#86efac', 'mid_color': '#ffffff', 'max_color': '#fca5a5'
         })
-        
-        # Z-Score Sütununa Veri Çubuğu (Data Bar) Ekleme
         worksheet3.conditional_format(f'F2:F{max_row+1}', {
-            'type': 'data_bar',
-            'bar_color': '#3b82f6' # Neon Mavi
+            'type': 'data_bar', 'bar_color': '#3b82f6'
         })
 
     st.download_button(
@@ -1865,6 +1911,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
