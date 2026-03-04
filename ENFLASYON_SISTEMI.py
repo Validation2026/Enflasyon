@@ -283,6 +283,9 @@ def apply_theme():
             border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);
             padding: 12px 0; margin-bottom: 25px; white-space: nowrap; position: relative;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            /* KAYAN YAZI SİS EFEKTİ */
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
         }
         .ticker-move { display: inline-block; white-space: nowrap; animation: marquee 40s linear infinite; }
 
@@ -438,7 +441,44 @@ def apply_theme():
             padding-top: 10px;
             background: linear-gradient(180deg, rgba(10,15,28,0.9) 40%, transparent);
         }
-        
+
+        /* ANA AKSİYON BUTONLARI (PRIMARY) HOLOGRAFİK EFEKT */
+        [data-testid="baseButton-primary"] {
+            background: linear-gradient(45deg, #1e3a8a, #3b82f6, #8b5cf6, #1e3a8a) !important;
+            background-size: 300% auto !important;
+            border: 1px solid rgba(139, 92, 246, 0.5) !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1.5px !important;
+            font-weight: 900 !important;
+            border-radius: 10px !important;
+            transition: all 0.5s ease !important;
+            animation: textShine 4s linear infinite !important;
+        }
+        [data-testid="baseButton-primary"]:hover {
+            background-position: right center !important;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.8), inset 0 0 10px rgba(255,255,255,0.3) !important;
+            transform: translateY(-3px) scale(1.02) !important;
+        }
+
+        /* RGB LAZER YÜKLENME ÇUBUĞU */
+        [data-testid="stProgress"] > div > div {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899) !important;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.8) !important;
+            border-radius: 10px !important;
+        }
+
+        /* KPI RAKAMLARI ETKİLEŞİM EFEKTİ */
+        .kpi-value { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .kpi-card:hover .kpi-value {
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.9), 0 0 15px rgba(59, 130, 246, 1) !important;
+            transform: scale(1.08);
+            color: #ffffff !important;
+        }
+        /* STREAMLIT İZLERİNİ SİL (TAM EKRAN UYGULAMA HİSSİYATI) */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        [data-testid="stDecoration"] {display: none;} /* En üstteki ince renkli çizgiyi gizler */
     </style>
     """
     st.markdown(final_css, unsafe_allow_html=True)
@@ -1685,6 +1725,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
