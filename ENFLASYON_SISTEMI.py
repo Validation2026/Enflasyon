@@ -1773,28 +1773,20 @@ def sayfa_trend_analizi(ctx):
 
 
 def sabit_kademeli_top10_hazirla(ctx):
-    """Top 10 artan/azalan listesini Maddeler sayfasıyla (Fark_Yuzde) birebir eşler."""
+    # Ana hesaplama verisini alıyoruz (Maddeler sayfası da tam olarak bunu kullanıyor)
     df_analiz = ctx["df_analiz"].copy()
-    baz_col = ctx['baz_col']
-    son_col = ctx['son']
-
-    # Gerekli sütunlarda boşluk (NaN) olanları temizliyoruz
-    cols_to_check = [ctx['ad_col'], baz_col, son_col, 'Fark_Yuzde']
-    df_fark = df_analiz.dropna(subset=cols_to_check).copy()
     
-    # Fiyatların 0'dan büyük olduğundan emin olalım
-    df_fark[baz_col] = pd.to_numeric(df_fark[baz_col], errors='coerce')
-    df_fark[son_col] = pd.to_numeric(df_fark[son_col], errors='coerce')
-    df_fark = df_fark[(df_fark[baz_col] > 0) & (df_fark[son_col] > 0)]
-
-    # Ön yüzdeki UI kodlarının (html_artan, vb.) bozulmaması için aracı sütunları atıyoruz
-    df_fark['Ilk_Fiyat'] = df_fark[baz_col]
-    df_fark['Son_Fiyat'] = df_fark[son_col]
-
-    # Maddeler sayfasındaki mantıkla tamamen aynı: Fark_Yuzde üzerinden sıralama
-    artan_10 = df_fark[df_fark['Fark_Yuzde'] > 0].sort_values('Fark_Yuzde', ascending=False).head(10).copy()
-    azalan_10 = df_fark[df_fark['Fark_Yuzde'] < 0].sort_values('Fark_Yuzde', ascending=True).head(10).copy()
-
+    # Sadece Fark_Yuzde sütunu hesaplanabilmiş olanları al (Gereksiz hiçbir filtre yok)
+    df_gecerli = df_analiz.dropna(subset=['Fark_Yuzde', ctx['ad_col']]).copy()
+    
+    # Ön yüzdeki kutucuklar hata vermesin diye Ilk_Fiyat ve Son_Fiyat atamalarını yapıyoruz
+    df_gecerli['Ilk_Fiyat'] = pd.to_numeric(df_gecerli.get(ctx['baz_col'], 0), errors='coerce').fillna(0)
+    df_gecerli['Son_Fiyat'] = pd.to_numeric(df_gecerli.get(ctx['son'], 0), errors='coerce').fillna(0)
+    
+    # Sadece 0'dan büyük/küçük olanları al ve Maddeler sayfasındaki gibi sırala
+    artan_10 = df_gecerli[df_gecerli['Fark_Yuzde'] > 0].sort_values('Fark_Yuzde', ascending=False).head(10).copy()
+    azalan_10 = df_gecerli[df_gecerli['Fark_Yuzde'] < 0].sort_values('Fark_Yuzde', ascending=True).head(10).copy()
+    
     return artan_10, azalan_10
 
 # --- ANA MAIN ---
@@ -1920,6 +1912,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
