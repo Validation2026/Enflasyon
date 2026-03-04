@@ -496,7 +496,6 @@ def html_isleyici(progress_callback):
 
     progress_callback(0.05)
     try:
-        # 1. Konfigürasyon Dosyasını Oku
         df_conf = pd.DataFrame()
         c = repo.get_contents(EXCEL_DOSYASI, ref=st.secrets["github"]["branch"])
         df_conf = pd.read_excel(BytesIO(github_file_to_bytes(c, repo)), sheet_name=SAYFA_ADI, dtype=str)
@@ -510,7 +509,6 @@ def html_isleyici(progress_callback):
                                   index=df_conf[kod_col].astype(str).apply(kod_standartlastir)).to_dict()
         veri_havuzu = {}
 
-        # --- YENİ EKLENEN KISIM: ÖNCEKİ FİYATLARI ÇEK (Eksik verileri doldurmak için) ---
         eski_fiyatlar = {}
         try:
             c_fiyat = repo.get_contents(FIYAT_DOSYASI, ref=st.secrets["github"]["branch"])
@@ -524,7 +522,6 @@ def html_isleyici(progress_callback):
                     eski_fiyatlar[row['Kod']] = row['Fiyat']
         except Exception as e:
             print(f"Önceki fiyatlar alınamadı: {e}")
-        # ----------------------------------------------------------------------------------
 
         if manuel_col:
             for _, row in df_conf.iterrows():
@@ -583,9 +580,23 @@ def html_isleyici(progress_callback):
         bugun = tr_saati.strftime("%Y-%m-%d")
         simdi = tr_saati.strftime("%H:%M")
 
+        kategori_haritasi = {
+            "01": "Gıda ve alkolsüz içecekler",
+            "02": "Alkollü içecekler, tütün ve tütün ürünleri",
+            "03": "Giyim ve ayakkabı",
+            "04": "Konut, su, elektrik, gaz ve diğer yakıtlar",
+            "05": "Mobilya, mefruşat ve evde kullanılan ekipmanlar ile rutin ev bakım ve onarımı",
+            "06": "Sağlık",
+            "07": "Ulaştırma",
+            "08": "Bilgi ve iletişim",
+            "09": "Eğlence, dinlence, spor ve kültür",
+            "10": "Eğitim hizmetleri",
+            "11": "Lokantalar ve konaklama hizmetleri",
+            "12": "Sigorta ve finansal hizmetler",
+            "13": "Kişisel bakım, sosyal koruma ve çeşitli mal ve hizmetler"
+        }
+
         final_list = []
-        
-        # --- DEĞİŞTİRİLEN KISIM: Sadece veri çekilenleri değil, tüm ürünleri tarıyoruz ---
         for kod, urun_adi in urun_isimleri.items():
             fiyatlar = veri_havuzu.get(kod, [])
             clean_vals = [p for p in fiyatlar if p > 0]
@@ -598,19 +609,22 @@ def html_isleyici(progress_callback):
                     final_fiyat = clean_vals[0]
                     kaynak_str = "Single Source"
             else:
-                # Yeni fiyat yoksa, eski fiyatı kontrol et
                 if kod in eski_fiyatlar and eski_fiyatlar[kod] > 0:
                     final_fiyat = eski_fiyatlar[kod]
                     kaynak_str = "Önceki Günden Devir"
                 else:
-                    continue # Ne yeni fiyat çekilebilmiş, ne de eskisinde var (atla)
+                    continue 
+
+            # Kategori sütununu otomatik olarak ekle
+            kategori_kodu = str(kod).zfill(7)[:2]
+            ana_kategori = kategori_haritasi.get(kategori_kodu, "Diğer")
 
             final_list.append({
                 "Tarih": bugun, "Zaman": simdi, "Kod": kod,
                 "Madde_Adi": urun_adi,
+                "Ana_Kategori": ana_kategori,
                 "Fiyat": final_fiyat, "Kaynak": kaynak_str, "URL": "ZIP_ARCHIVE"
             })
-        # ----------------------------------------------------------------------------------
 
         progress_callback(0.95)
         if final_list:
@@ -715,9 +729,26 @@ def verileri_getir_cache():
         pivot_raw_export = pivot_raw.reset_index()
         pivot_raw_export.columns = ['Kod'] + [f"{c}_RAW" for c in pivot_raw_export.columns if c != 'Kod']
 
-        if 'Grup' not in df_s.columns:
-            grup_map = {"01": "Gıda", "02": "Alkol-Tütün", "03": "Giyim", "04": "Konut"}
-            df_s['Grup'] = df_s['Kod'].str[:2].map(grup_map).fillna("Diğer")
+        # --- YENİ EKLENEN KATEGORİ HARİTASI ---
+        kategori_haritasi = {
+            "01": "Gıda ve alkolsüz içecekler",
+            "02": "Alkollü içecekler, tütün ve tütün ürünleri",
+            "03": "Giyim ve ayakkabı",
+            "04": "Konut, su, elektrik, gaz ve diğer yakıtlar",
+            "05": "Mobilya, mefruşat ve evde kullanılan ekipmanlar ile rutin ev bakım ve onarımı",
+            "06": "Sağlık",
+            "07": "Ulaştırma",
+            "08": "Bilgi ve iletişim",
+            "09": "Eğlence, dinlence, spor ve kültür",
+            "10": "Eğitim hizmetleri",
+            "11": "Lokantalar ve konaklama hizmetleri",
+            "12": "Sigorta ve finansal hizmetler",
+            "13": "Kişisel bakım, sosyal koruma ve çeşitli mal ve hizmetler"
+        }
+        
+        # 'Grup' sütununa otomatik atama yapıyoruz
+        df_s['Grup'] = df_s['Kod'].astype(str).str.zfill(7).str[:2].map(kategori_haritasi).fillna("Diğer")
+        # --------------------------------------
 
         df_analiz_base = pd.merge(df_s, pivot, on='Kod', how='left')
         df_analiz_base = pd.merge(df_analiz_base, pivot_raw_export, on='Kod', how='left')
@@ -1450,6 +1481,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
