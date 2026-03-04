@@ -1194,17 +1194,25 @@ def sayfa_piyasa_ozeti(ctx):
             "<div style='color:#ef4444; font-weight:800; font-size:16px; margin-bottom:15px; text-shadow: 0 0 10px rgba(239,68,68,0.3);'>🔺 EN ÇOK ARTAN 10 ÜRÜN</div>",
             unsafe_allow_html=True)
         if not artan_10.empty:
-            disp_artan = artan_10[[ctx['ad_col'], 'Ilk_Fiyat', 'Son_Fiyat', 'Fark_Yuzde']].copy()
-            st.dataframe(
-                disp_artan,
-                column_config={
-                    ctx['ad_col']: "Ürün Adı",
-                    'Ilk_Fiyat': st.column_config.NumberColumn("İlk Fiyat", format="%.2f ₺"),
-                    'Son_Fiyat': st.column_config.NumberColumn("Son Fiyat", format="%.2f ₺"),
-                    'Fark_Yuzde': st.column_config.NumberColumn("% Değişim", format="+%.2f %%")
-                },
-                hide_index=True, use_container_width=True
-            )
+            html_artan = '<div style="display:flex; flex-direction:column; gap:8px;">'
+            for _, r in artan_10.iterrows():
+                ad = r[ctx['ad_col']]
+                ilk = r['Ilk_Fiyat']
+                son = r['Son_Fiyat']
+                fark = r['Fark_Yuzde']
+                
+                # Borsa tarzı satır tasarımı
+                html_artan += f'''
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; 
+                    background:linear-gradient(90deg, rgba(239,68,68,0.1), rgba(20,24,33,0.6)); 
+                    border-left: 3px solid #ef4444; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+                    border-right: 1px solid rgba(255,255,255,0.02);">
+                    <div style="flex:2; font-size:13px; font-weight:600; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;" title="{ad}">{ad}</div>
+                    <div style="flex:1.5; text-align:right; font-family:'JetBrains Mono'; font-size:12px; color:#94a3b8;">{ilk:.2f}₺ <span style="font-size:10px; color:#64748b;">➔</span> <span style="color:#ffffff; font-weight:700;">{son:.2f}₺</span></div>
+                    <div style="flex:1; text-align:right; font-weight:900; color:#ef4444; font-size:13px; text-shadow: 0 0 10px rgba(239,68,68,0.4);">▲ %{fark:.2f}</div>
+                </div>'''
+            html_artan += '</div>'
+            st.markdown(html_artan, unsafe_allow_html=True)
         else:
             st.info("Fiyatı artan ürün tespit edilmedi.")
 
@@ -1213,17 +1221,25 @@ def sayfa_piyasa_ozeti(ctx):
             "<div style='color:#22c55e; font-weight:800; font-size:16px; margin-bottom:15px; text-shadow: 0 0 10px rgba(34,197,94,0.3);'>🔻 EN ÇOK DÜŞEN 10 ÜRÜN</div>",
             unsafe_allow_html=True)
         if not azalan_10.empty:
-            disp_azalan = azalan_10[[ctx['ad_col'], 'Ilk_Fiyat', 'Son_Fiyat', 'Fark_Yuzde']].copy()
-            st.dataframe(
-                disp_azalan,
-                column_config={
-                    ctx['ad_col']: "Ürün Adı",
-                    'Ilk_Fiyat': st.column_config.NumberColumn("İlk Fiyat", format="%.2f ₺"),
-                    'Son_Fiyat': st.column_config.NumberColumn("Son Fiyat", format="%.2f ₺"),
-                    'Fark_Yuzde': st.column_config.NumberColumn("% Değişim", format="%.2f %%")
-                },
-                hide_index=True, use_container_width=True
-            )
+            html_azalan = '<div style="display:flex; flex-direction:column; gap:8px;">'
+            for _, r in azalan_10.iterrows():
+                ad = r[ctx['ad_col']]
+                ilk = r['Ilk_Fiyat']
+                son = r['Son_Fiyat']
+                fark = abs(r['Fark_Yuzde']) # Eksiyi kaldırıp sadece değeri alıyoruz
+                
+                # Borsa tarzı satır tasarımı (Yeşil Tonları)
+                html_azalan += f'''
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; 
+                    background:linear-gradient(90deg, rgba(34,197,94,0.1), rgba(20,24,33,0.6)); 
+                    border-left: 3px solid #22c55e; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+                    border-right: 1px solid rgba(255,255,255,0.02);">
+                    <div style="flex:2; font-size:13px; font-weight:600; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;" title="{ad}">{ad}</div>
+                    <div style="flex:1.5; text-align:right; font-family:'JetBrains Mono'; font-size:12px; color:#94a3b8;">{ilk:.2f}₺ <span style="font-size:10px; color:#64748b;">➔</span> <span style="color:#ffffff; font-weight:700;">{son:.2f}₺</span></div>
+                    <div style="flex:1; text-align:right; font-weight:900; color:#22c55e; font-size:13px; text-shadow: 0 0 10px rgba(34,197,94,0.4);">▼ %{fark:.2f}</div>
+                </div>'''
+            html_azalan += '</div>'
+            st.markdown(html_azalan, unsafe_allow_html=True)
         else:
             st.info("Fiyatı düşen ürün tespit edilmedi.")
 
@@ -1612,6 +1628,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
