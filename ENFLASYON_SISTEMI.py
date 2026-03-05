@@ -1620,12 +1620,10 @@ def sayfa_rapor_merkezi(ctx):
         """
         
         for _, r in asi_urunler_df.iterrows():
-            bulten_html += f"""
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0;">
-                    <span style="font-size: 12px; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">{r[ctx['ad_col']]}</span>
-                    <span style="font-size: 12px; font-weight: 800; color: #fca5a5;">%{r['Fark_Yuzde']:.1f}</span>
-                </div>
-            """
+            bulten_html += f"""<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0;">
+<span style="font-size: 12px; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">{r[ctx['ad_col']]}</span>
+<span style="font-size: 12px; font-weight: 800; color: #fca5a5;">%{r['Fark_Yuzde']:.1f}</span>
+</div>"""
             
         bulten_html += "</div></div>"
         
@@ -2169,6 +2167,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
