@@ -1573,7 +1573,111 @@ def sayfa_rapor_merkezi(ctx):
     </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
+    # ... (Yukarıdaki 4'lü KPI kartları kodun aynı kalacak) ...
+    # ==========================================
+    # 🌟 ŞOV KISMI BAŞLIYOR: HARARET İBRESİ VE KIRMIZI BÜLTEN
+    # ==========================================
+    st.markdown("#### 🚀 Piyasa Harareti ve Tehlike Çanları")
+    col_gauge, col_bulten = st.columns([1.2, 1])
 
+    with col_gauge:
+        # PİYASA HARARET İBRESİ (GAUGE CHART)
+        fig_gauge = go.Figure(go.Indicator(
+            mode="gauge+number+delta",
+            value=mean_fark,
+            domain={'x': [0, 1], 'y': [0, 1]},
+            title={'text': "Piyasa Hararet Göstergesi<br><span style='font-size:12px;color:#94a3b8'>Ortalama Zam Hızı (%)</span>", 'font': {'size': 16, 'color': '#e2e8f0'}},
+            delta={'reference': resmi_veri, 'increasing': {'color': "#ef4444"}, 'decreasing': {'color': "#22c55e"}},
+            gauge={
+                'axis': {'range': [None, max(10, mean_fark * 1.5)], 'tickwidth': 1, 'tickcolor': "rgba(255,255,255,0.2)"},
+                'bar': {'color': "rgba(255, 255, 255, 0.8)", 'thickness': 0.3},
+                'bgcolor': "rgba(0,0,0,0)",
+                'borderwidth': 0,
+                'steps': [
+                    {'range': [0, resmi_veri], 'color': "rgba(16, 185, 129, 0.3)"},     # Yeşil: TÜİK'in altı (Güvenli)
+                    {'range': [resmi_veri, p90], 'color': "rgba(245, 158, 11, 0.4)"},   # Sarı: TÜİK ile Şok Sınırı arası (Uyarı)
+                    {'range': [p90, max(10, mean_fark * 1.5)], 'color': "rgba(239, 68, 68, 0.5)"}], # Kırmızı: Şok Sınırı üstü (Tehlike)
+                'threshold': {
+                    'line': {'color': "white", 'width': 4},
+                    'thickness': 0.75,
+                    'value': mean_fark}
+            }
+        ))
+        fig_gauge.update_layout(height=280, margin=dict(l=20, r=20, t=50, b=20), paper_bgcolor="rgba(0,0,0,0)", font={'family': "Inter"})
+        st.plotly_chart(fig_gauge, use_container_width=True)
+
+    with col_bulten:
+        # KIRMIZI BÜLTEN (KAYDIRILABİLİR NEON LİSTE)
+        asi_urunler_df = df[df['Fark_Yuzde'] > resmi_veri].sort_values('Fark_Yuzde', ascending=False)
+        
+        bulten_html = f"""
+        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 12px; padding: 15px; height: 280px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); display: flex; flex-direction: column;">
+            <div style="color: #ef4444; font-weight: 800; font-size: 14px; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                <span style="animation: pulseGlow 2s infinite;">🚨</span> KIRMIZI BÜLTEN ({len(asi_urunler_df)} Ürün)
+            </div>
+            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 10px;">Resmi enflasyon sınırını (%{resmi_veri:.2f}) aşarak bütçeyi delenler:</div>
+            <div style="overflow-y: auto; flex-grow: 1; padding-right: 5px;" class="custom-scrollbar">
+        """
+        
+        for _, r in asi_urunler_df.iterrows():
+            bulten_html += f"""
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0;">
+                    <span style="font-size: 12px; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">{r[ctx['ad_col']]}</span>
+                    <span style="font-size: 12px; font-weight: 800; color: #fca5a5;">%{r['Fark_Yuzde']:.1f}</span>
+                </div>
+            """
+            
+        bulten_html += "</div></div>"
+        
+        # Sadece bu kutuya özel ince kırmızı scrollbar stili
+        st.markdown("""
+        <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(239, 68, 68, 0.5); border-radius: 10px; }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(bulten_html, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ==========================================
+    # CÜZDAN ERİME SİMÜLASYONU (KELEBEK ETKİSİ)
+    # ==========================================
+    st.markdown("#### 🦋 Kelebek Etkisi: 6 Aylık Cüzdan Erime Simülasyonu")
+    st.caption("Eğer bu ay enflasyon motoru olan ilk 3 ürün, önümüzdeki 6 ay boyunca aynı oranda zamlanmaya devam ederse cüzdandan çıkacak ekstra para.")
+    
+    sim_df = df.sort_values('Cuzdan_Etkisi', ascending=False).head(3)
+    sim_cols = st.columns(3)
+    
+    for i, (_, r) in enumerate(sim_df.iterrows()):
+        aylik_artis = r['Fark_Yuzde'] / 100
+        suanki_fiyat = r[ctx['son']]
+        # Bileşik faiz mantığıyla 6 ay sonrasını hesaplıyoruz: Fiyat * (1 + aylık_artış)^6
+        alti_ay_sonraki_fiyat = suanki_fiyat * ((1 + aylık_artis) ** 6)
+        
+        with sim_cols[i]:
+            st.markdown(f"""
+            <div style="background: rgba(30, 41, 59, 0.5); border: 1px dashed rgba(96, 165, 250, 0.4); border-radius: 10px; padding: 15px; text-align: center; backdrop-filter: blur(5px); transition: transform 0.3s; cursor: crosshair;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <div style="font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 8px; height: 36px; overflow: hidden;">{r[ctx['ad_col']]}</div>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    <div style="text-align: right;">
+                        <div style="font-size: 10px; color: #94a3b8;">Bugün</div>
+                        <div style="font-size: 16px; font-weight: 800; color: #ffffff; font-family: 'JetBrains Mono';">{suanki_fiyat:.2f} ₺</div>
+                    </div>
+                    <div style="color: #60a5fa; font-size: 18px;">➔</div>
+                    <div style="text-align: left;">
+                        <div style="font-size: 10px; color: #94a3b8;">6 Ay Sonra</div>
+                        <div style="font-size: 18px; font-weight: 900; color: #ef4444; font-family: 'JetBrains Mono'; text-shadow: 0 0 10px rgba(239,68,68,0.5);">{alti_ay_sonraki_fiyat:.2f} ₺</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    st.markdown("<br>", unsafe_allow_html=True)
+    # ... (2. Enflasyon Motorları kısmından itibaren kodun aynen devam edebilir) ...
+    
     # --- 2. ENFLASYON MOTORLARI ---
     st.markdown("#### 2. Enflasyonun Ana Motorları (Bütçe Düşmanları)")
     st.caption("Fiyatı artan ve aynı zamanda hayatımızda/sepette çok yer kapladığı için manşet enflasyonu tek başına sırtlayan ürünler.")
@@ -2063,6 +2167,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
