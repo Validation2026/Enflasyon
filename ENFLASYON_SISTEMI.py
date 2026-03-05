@@ -1681,27 +1681,23 @@ def sayfa_rapor_merkezi(ctx):
         reel_deger = 1000
         kayip_tutar = 0
         
-    st.markdown(f"""
-    <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(239, 68, 68, 0.1);">
-        <div style="flex:1;">
-            <div style="font-size:12px; color:#94a3b8; font-weight:800; letter-spacing:2px; margin-bottom:5px;">BAŞLANGIÇ BAKİYESİ</div>
-            <div style="font-size:36px; font-family:'JetBrains Mono'; font-weight:900; color:#10b981;">1,000.00 ₺</div>
-        </div>
-        
-        <div style="flex:1; text-align:center; position:relative;">
-            <div style="font-size:24px; color:#ef4444; animation: pulseGlow 1.5s infinite;">⚡ ENFLASYON VURUŞU ⚡</div>
-            <div style="font-size:14px; color:#fca5a5; font-weight:700; margin-top:5px;">-{kayip_tutar:.2f} ₺ Kayıp</div>
-            <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 15px; border-radius: 2px; overflow: hidden;">
-                <div style="width: {(reel_deger/1000)*100}%; height: 100%; background: #ef4444; box-shadow: 0 0 10px #ef4444;"></div>
-            </div>
-        </div>
-        
-        <div style="flex:1; text-align:right;">
-            <div style="font-size:12px; color:#94a3b8; font-weight:800; letter-spacing:2px; margin-bottom:5px;">REEL SATIN ALMA GÜCÜ</div>
-            <div style="font-size:36px; font-family:'JetBrains Mono'; font-weight:900; color:#ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);">{reel_deger:.2f} ₺</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"""<div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(239, 68, 68, 0.1);">
+<div style="flex:1;">
+<div style="font-size:12px; color:#94a3b8; font-weight:800; letter-spacing:2px; margin-bottom:5px;">BAŞLANGIÇ BAKİYESİ</div>
+<div style="font-size:36px; font-family:'JetBrains Mono'; font-weight:900; color:#10b981;">1,000.00 ₺</div>
+</div>
+<div style="flex:1; text-align:center; position:relative;">
+<div style="font-size:24px; color:#ef4444; animation: pulseGlow 1.5s infinite;">⚡ ENFLASYON VURUŞU ⚡</div>
+<div style="font-size:14px; color:#fca5a5; font-weight:700; margin-top:5px;">-{kayip_tutar:.2f} ₺ Kayıp</div>
+<div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 15px; border-radius: 2px; overflow: hidden;">
+<div style="width: {(reel_deger/1000)*100}%; height: 100%; background: #ef4444; box-shadow: 0 0 10px #ef4444;"></div>
+</div>
+</div>
+<div style="flex:1; text-align:right;">
+<div style="font-size:12px; color:#94a3b8; font-weight:800; letter-spacing:2px; margin-bottom:5px;">REEL SATIN ALMA GÜCÜ</div>
+<div style="font-size:36px; font-family:'JetBrains Mono'; font-weight:900; color:#ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);">{reel_deger:.2f} ₺</div>
+</div>
+</div>""", unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -2246,6 +2242,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
