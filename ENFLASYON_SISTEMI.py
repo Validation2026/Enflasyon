@@ -1510,177 +1510,226 @@ def sayfa_tam_liste(ctx):
     st.download_button("📥 Excel Olarak İndir", data=output.getvalue(), file_name="Veri_Seti.xlsx")
 
 def sayfa_rapor_merkezi(ctx):
-    st.markdown("### 📑 Gelişmiş Rapor Merkezi & İstatistikler")
-    st.info("Kurumsal seviyede risk, anomali tespiti ve ağırlıklı enflasyon etki (contribution) analizleri.")
+    st.markdown("### 📑 Gelişmiş Rapor Merkezi & İçgörüler")
+    st.info("💡 Bu sayfa, karmaşık ekonomik verileri herkesin anlayabileceği net, eyleme dönüştürülebilir içgörülere çevirir. Sepetteki gizli tehlikeleri ve ana trendleri keşfedin.")
 
     df = ctx["df_analiz"].copy()
     df = df.dropna(subset=[ctx['son'], ctx['baz_col'], ctx['ad_col']])
 
-    # --- İLERİ DÜZEY MATEMATİKSEL HESAPLAMALAR ---
+    # --- HESAPLAMALAR (Matematik aynı, isimler kullanıcı dostu) ---
     mean_fark = df['Fark_Yuzde'].mean()
     std_fark = df['Fark_Yuzde'].std()
     resmi_veri = ctx.get("resmi_aylik_degisim", 2.96)
     
-    # Z-Score Hesaplaması
-    df['Z_Score'] = (df['Fark_Yuzde'] - mean_fark) / std_fark
+    # Şok Skoru (Eski Z-Score): Ürünün fiyatı normal piyasa gidişatından ne kadar sapmış?
+    # 2'den büyükse "Aşırı Şok", 1-2 arası "Uyarı"
+    if std_fark > 0:
+        df['Sok_Skoru'] = (df['Fark_Yuzde'] - mean_fark) / std_fark
+    else:
+        df['Sok_Skoru'] = 0
 
-    # Ağırlıklı Etki Puanı (Hangi ürün enflasyonu ne kadar tetikledi?)
+    # Cüzdan Etkisi (Eski Etki Puanı): Hem fiyatı çok artan hem de çok sık aldığımız (ağırlığı yüksek) ürünlerin enflasyonu nasıl zıplattığı.
     agirlik_sutunu = ctx.get("agirlik_col")
     if agirlik_sutunu and agirlik_sutunu in df.columns:
         df['Agirlik'] = pd.to_numeric(df[agirlik_sutunu], errors='coerce').fillna(0)
         toplam_agirlik = df['Agirlik'].sum()
-        df['Etki_Puani'] = df.apply(lambda r: (r['Fark_Yuzde'] * (r['Agirlik'] / toplam_agirlik)) if toplam_agirlik > 0 else 0, axis=1)
+        df['Cuzdan_Etkisi'] = df.apply(lambda r: (r['Fark_Yuzde'] * (r['Agirlik'] / toplam_agirlik)) if toplam_agirlik > 0 else 0, axis=1)
     else:
-        df['Etki_Puani'] = 0
+        df['Cuzdan_Etkisi'] = 0
 
-    # --- 1. TEMEL VE KANTİTATİF İSTATİSTİKLER ---
-    st.markdown("#### 1. Makro İstatistiksel Özet")
+    # --- 1. HİKAYELEŞTİRİLMİŞ ÖZET METRİKLER ---
+    st.markdown("#### 1. Piyasaya Genel Bakış")
     c1, c2, c3, c4 = st.columns(4)
     
-    c1.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>İncelenen Ürün</div><div style='font-size:24px; font-weight:800;'>{len(df)}</div></div>", unsafe_allow_html=True)
-    c2.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>Medyan Değişim</div><div style='font-size:24px; font-weight:800;'>%{df['Fark_Yuzde'].median():.2f}</div></div>", unsafe_allow_html=True)
+    c1.markdown(f"""
+    <div class='pg-card'>
+        <div style='color:#94a3b8; font-size:12px; font-weight:700;'>Takip Edilen Etiket Sayısı</div>
+        <div style='font-size:28px; font-weight:800; color:#38bdf8;'>{len(df)} <span style='font-size:12px; color:#94a3b8;'>ürün</span></div>
+        <div style='font-size:10px; opacity:0.7; margin-top:5px;'>Sepetteki aktif ürün çeşitliliği</div>
+    </div>""", unsafe_allow_html=True)
     
-    # Yüzdelik Dilimler (Percentiles)
+    c2.markdown(f"""
+    <div class='pg-card'>
+        <div style='color:#94a3b8; font-size:12px; font-weight:700;'>Tipik Fiyat Değişimi (Ortanca)</div>
+        <div style='font-size:28px; font-weight:800; color:#a78bfa;'>%{df['Fark_Yuzde'].median():.2f}</div>
+        <div style='font-size:10px; opacity:0.7; margin-top:5px;'>Aşırı uçlar çıkarıldığındaki gerçekçi zam</div>
+    </div>""", unsafe_allow_html=True)
+    
     p90 = df['Fark_Yuzde'].quantile(0.90)
-    c3.markdown(f"<div class='pg-card'><div style='color:#94a3b8; font-size:12px;'>90. Yüzdelik Dilim (P90)</div><div style='font-size:24px; font-weight:800; color:#fca5a5;'>%{p90:.2f}</div><div style='font-size:10px; opacity:0.7;'>Ürünlerin %90'ı bu oranın altında</div></div>", unsafe_allow_html=True)
+    c3.markdown(f"""
+    <div class='pg-card' style='border-left: 3px solid #fca5a5;'>
+        <div style='color:#fca5a5; font-size:12px; font-weight:700;'>Kırmızı Çizgi (En Kötü %10)</div>
+        <div style='font-size:28px; font-weight:800; color:#ef4444;'>%{p90:.2f}</div>
+        <div style='font-size:10px; opacity:0.7; margin-top:5px;'>Ürünlerin %90'ı bu oranın altında kaldı</div>
+    </div>""", unsafe_allow_html=True)
     
     resmi_asan_sayi = len(df[df['Fark_Yuzde'] > resmi_veri])
     resmi_asan_oran = (resmi_asan_sayi / len(df)) * 100
-    c4.markdown(f"<div class='pg-card' style='border-left: 3px solid #f59e0b;'><div style='color:#fcd34d; font-size:12px;'>TÜİK'i Aşan Ürün Oranı</div><div style='font-size:24px; font-weight:800; color:#f59e0b;'>%{resmi_asan_oran:.1f}</div><div style='font-size:10px; opacity:0.7;'>({resmi_asan_sayi} Ürün)</div></div>", unsafe_allow_html=True)
+    c4.markdown(f"""
+    <div class='pg-card' style='border-left: 3px solid #fcd34d;'>
+        <div style='color:#fcd34d; font-size:12px; font-weight:700;'>Resmi Veriyi Aşanlar</div>
+        <div style='font-size:28px; font-weight:800; color:#f59e0b;'>%{resmi_asan_oran:.1f}</div>
+        <div style='font-size:10px; opacity:0.7; margin-top:5px;'>Toplam {resmi_asan_sayi} ürün TÜİK'i geçti</div>
+    </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- 2. ENFLASYONU SIRTLAYANLAR (ETKİ PUANI) ---
-    st.markdown("#### 2. Enflasyonun Ana Motorları (Ağırlıklı Etki Analizi)")
-    st.caption("Fiyat değişimi ve sepet ağırlığı çarpılarak hesaplanan, manşet enflasyona en çok etki eden ürünler.")
+    # --- 2. ENFLASYON MOTORLARI ---
+    st.markdown("#### 2. Enflasyonun Ana Motorları (Bütçe Düşmanları)")
+    st.caption("Fiyatı artan ve aynı zamanda hayatımızda/sepette çok yer kapladığı için manşet enflasyonu tek başına sırtlayan ürünler.")
     
-    etki_df = df.sort_values('Etki_Puani', ascending=False).head(5)
+    etki_df = df.sort_values('Cuzdan_Etkisi', ascending=False).head(5)
     
     cols_etki = st.columns(5)
     for i, (_, row) in enumerate(etki_df.iterrows()):
         with cols_etki[i]:
             st.markdown(f"""
             <div style="background:linear-gradient(180deg, rgba(239,68,68,0.1), transparent); border-top:2px solid #ef4444; padding:15px; border-radius:8px; text-align:center; height:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-                <div style="font-size:20px; margin-bottom:5px;">🔥</div>
+                <div style="font-size:24px; margin-bottom:5px;">🔥</div>
                 <div style="font-size:12px; font-weight:700; color:#e2e8f0; height:36px; overflow:hidden;">{row[ctx['ad_col']]}</div>
-                <div style="font-size:18px; font-weight:900; color:#ef4444; margin-top:5px;">+{row['Etki_Puani']:.3f} Puan</div>
-                <div style="font-size:10px; color:#94a3b8; margin-top:3px;">Fiyat Artışı: %{row['Fark_Yuzde']:.1f}</div>
+                <div style="font-size:18px; font-weight:900; color:#ef4444; margin-top:5px;">+{row['Cuzdan_Etkisi']:.2f} Puan</div>
+                <div style="font-size:10px; color:#94a3b8; margin-top:3px;">Net Fiyat Artışı: %{row['Fark_Yuzde']:.1f}</div>
             </div>
             """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- 3. MAKRO GÖRSEL ANALİZ (GRAFİKLER) ---
-    st.markdown("#### 3. Makro-Ekonomik Dağılım ve Risk Haritası")
+    # --- 3. GÖRSEL RİSK HARİTASI ---
+    st.markdown("#### 3. Piyasa Karakteri ve Sektörel Riskler")
     col_hist, col_scatter = st.columns(2)
 
     with col_hist:
         fig_hist = px.histogram(
-            df, x='Fark_Yuzde', nbins=50, title='Fiyat Değişim Dağılımı (Çan Eğrisi)',
-            color_discrete_sequence=['#8b5cf6'], marginal='box', hover_data=[ctx['ad_col']]
+            df, x='Fark_Yuzde', nbins=40, title='Ürünlerin Zam Dağılımı (Kim nerede yığıldı?)',
+            color_discrete_sequence=['#8b5cf6'], hover_data=[ctx['ad_col']]
         )
-        fig_hist.update_layout(xaxis_title="Değişim Oranı (%)", yaxis_title="Frekans", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#a1a1aa"), margin=dict(t=40, l=10, r=10, b=10))
+        fig_hist.update_layout(
+            xaxis_title="Yapılan Zam / İndirim Oranı (%)", yaxis_title="Ürün Sayısı", 
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#a1a1aa"), margin=dict(t=40, l=10, r=10, b=10)
+        )
         st.plotly_chart(style_chart(fig_hist), use_container_width=True)
 
     cat_stats = df.groupby('Grup').agg(
         Ürün_Sayısı=(ctx['ad_col'], 'count'),
-        Ortalama_Değişim=('Fark_Yuzde', 'mean'),
-        Volatilite_Std=('Fark_Yuzde', 'std'),
-        Sektör_Etkisi=('Etki_Puani', 'sum')
+        Ortalama_Zam=('Fark_Yuzde', 'mean'),
+        Fiyat_İstikrarsızlığı=('Fark_Yuzde', 'std'),
+        Sektör_Hasarı=('Cuzdan_Etkisi', 'sum')
     ).reset_index().fillna(0)
 
     with col_scatter:
         fig_scatter = px.scatter(
-            cat_stats, x='Volatilite_Std', y='Ortalama_Değişim', size='Ürün_Sayısı', color='Sektör_Etkisi',
-            hover_name='Grup', text='Grup', color_continuous_scale=['#10b981', '#f59e0b', '#ef4444'], title='Sektörel Risk ve Etki Matrisi'
+            cat_stats, x='Fiyat_İstikrarsızlığı', y='Ortalama_Zam', size='Ürün_Sayısı', color='Sektör_Hasarı',
+            hover_name='Grup', text='Grup', color_continuous_scale=['#10b981', '#f59e0b', '#ef4444'], title='Sektörlerin Karakter Analizi'
         )
         fig_scatter.update_traces(textposition='top center', marker=dict(line=dict(width=1, color='rgba(255,255,255,0.2)')))
-        fig_scatter.update_layout(xaxis_title="Risk Skoru (Volatilite)", yaxis_title="Sektör Enflasyonu (%)", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#a1a1aa"), margin=dict(t=40, l=10, r=10, b=10))
+        fig_scatter.update_layout(
+            xaxis_title="Fiyatlardaki Oynaklık (Dengesizlik)", yaxis_title="Sektörün Genel Zam Oranı (%)", 
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#a1a1aa"), margin=dict(t=40, l=10, r=10, b=10)
+        )
         st.plotly_chart(style_chart(fig_scatter), use_container_width=True)
 
     st.markdown("---")
 
-    # --- 4. EXTREME RAPOR İNDİRME BÖLÜMÜ (XLSXWRITER MAGIC) ---
-    st.markdown("#### 4. Kurumsal Dashboard Excel Çıktısı")
-    st.caption("İndireceğiniz dosya sıradan bir liste değil; içine otomatik grafikler çizilmiş, trafik ışıklarıyla formatlanmış ve oto-filtre eklenmiş bir analiz dosyasıdır.")
+    # --- 4. EXCEL ŞOV KISMI ---
+    st.markdown("#### 4. Kapsamlı Yönetici Raporu Çıktısı")
+    st.caption("İndireceğiniz bu Excel dosyası özel olarak tasarlanmıştır. İlk sekmede şık bir kontrol paneli (kokpit), son sekmede ise renklendirilmiş detaylı ürün analizleri bulunur.")
 
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         workbook = writer.book
         
-        # Süslü Formatlar
-        header_format = workbook.add_format({'bold': True, 'bg_color': '#1e293b', 'font_color': '#ffffff', 'border': 1, 'align': 'center', 'valign': 'vcenter'})
-        num_format = workbook.add_format({'num_format': '0.00', 'border': 1, 'align': 'center'})
-        text_format = workbook.add_format({'border': 1, 'align': 'left'})
-        highlight_format = workbook.add_format({'bg_color': '#fef08a', 'bold': True, 'border': 1, 'align': 'center'})
+        # Süslü Formatlar (Premium Görünüm)
+        baslik_format = workbook.add_format({'bold': True, 'bg_color': '#1e293b', 'font_color': '#ffffff', 'border': 1, 'align': 'center', 'valign': 'vcenter'})
+        metin_format = workbook.add_format({'border': 1, 'align': 'left'})
+        sayi_format = workbook.add_format({'num_format': '#,##0.00', 'border': 1, 'align': 'center'})
+        yuzde_format = workbook.add_format({'num_format': '0.00%', 'border': 1, 'align': 'center'})
         
-        # 1. SEKME: YÖNETİCİ ÖZETİ (DASHBOARD)
-        dashboard_df = pd.DataFrame({
-            "Kritik Metrikler": ["Toplam İncelenen Ürün", "Aylık Ortalama Değişim (%)", "Medyan Değişim (%)", "90. Yüzdelik Dilim (P90)", "TÜİK Oranını Aşan Ürün Yüzdesi (%)", "Genel Piyasa Volatilitesi (Std)"],
-            "Değerler": [len(df), mean_fark, df['Fark_Yuzde'].median(), p90, resmi_asan_oran, std_fark]
-        })
-        dashboard_df.to_excel(writer, sheet_name="1_Yonetici_Ozeti", index=False)
-        ws_dash = writer.sheets['1_Yonetici_Ozeti']
-        ws_dash.set_column('A:A', 35, text_format)
-        ws_dash.set_column('B:B', 20, highlight_format)
-        for col_num, value in enumerate(dashboard_df.columns.values):
-            ws_dash.write(0, col_num, value, header_format)
-            
-        # 2. SEKME: SEKTÖREL ANALİZ VE CANLI GRAFİK
-        cat_stats_export = cat_stats.sort_values('Ortalama_Değişim', ascending=False)
-        cat_stats_export.to_excel(writer, sheet_name="2_Sektorel_Analiz", index=False)
-        ws_cat = writer.sheets['2_Sektorel_Analiz']
-        ws_cat.set_column('A:A', 40, text_format)
-        ws_cat.set_column('B:E', 18, num_format)
+        kokpit_baslik = workbook.add_format({'bold': True, 'font_size': 16, 'font_color': '#ffffff', 'bg_color': '#0f172a', 'align': 'center', 'valign': 'vcenter', 'bottom': 2})
+        kutu_etiket = workbook.add_format({'bold': True, 'font_size': 11, 'font_color': '#64748b', 'bg_color': '#f8fafc', 'align': 'left', 'border': 1})
+        kutu_deger = workbook.add_format({'bold': True, 'font_size': 14, 'font_color': '#0f172a', 'bg_color': '#ffffff', 'align': 'right', 'border': 1})
+
+        # 1. SEKME: YÖNETİCİ KOKPİTİ
+        ws_dash = workbook.add_worksheet("1_Yonetici_Kokpiti")
+        ws_dash.hide_gridlines(2) # Kılavuz çizgilerini gizle (Gerçek bir dashboard hissi)
+        ws_dash.set_column('B:B', 35)
+        ws_dash.set_column('C:C', 20)
+        
+        ws_dash.merge_range('B2:C3', f"ENFLASYON MONİTÖRÜ - YÖNETİCİ ÖZETİ ({ctx['son']})", kokpit_baslik)
+        
+        metrikler = [
+            ("Analiz Edilen Ürün Sayısı", len(df)),
+            ("Ortalama Zam Oranı (%)", round(mean_fark, 2)),
+            ("Ortanca Tipik Zam (%)", round(df['Fark_Yuzde'].median(), 2)),
+            ("En Kötü %10'luk Kesim Sınırı (%)", round(p90, 2)),
+            ("TÜİK Ortalamasını Aşan Ürün Oranı (%)", round(resmi_asan_oran, 1)),
+            ("Genel Piyasada Fiyat Oynaklığı", round(std_fark, 2))
+        ]
+        
+        satir = 5
+        for etiket, deger in metrikler:
+            ws_dash.write(satir, 1, etiket, kutu_etiket)
+            ws_dash.write(satir, 2, deger, kutu_deger)
+            satir += 2
+
+        # 2. SEKME: SEKTÖR KARNESİ
+        cat_stats_export = cat_stats.sort_values('Ortalama_Zam', ascending=False)
+        cat_stats_export.rename(columns={'Ortalama_Zam': 'Sektörel Zam (%)', 'Fiyat_İstikrarsızlığı': 'İstikrarsızlık'}, inplace=True)
+        cat_stats_export.to_excel(writer, sheet_name="2_Sektor_Karnesi", index=False)
+        ws_cat = writer.sheets['2_Sektor_Karnesi']
+        ws_cat.set_column('A:A', 40, metin_format)
+        ws_cat.set_column('B:E', 18, sayi_format)
         for col_num, value in enumerate(cat_stats_export.columns.values):
-            ws_cat.write(0, col_num, value, header_format)
+            ws_cat.write(0, col_num, value, baslik_format)
             
-        # Excel'in İÇİNE Grafik Çizdirme!
+        # Sektör Excel İçi Grafik
         chart = workbook.add_chart({'type': 'column'})
         max_row_cat = len(cat_stats_export)
         chart.add_series({
-            'name':       'Sektörel Enflasyon (%)',
-            'categories': f"='2_Sektorel_Analiz'!$A$2:$A${max_row_cat+1}",
-            'values':     f"='2_Sektorel_Analiz'!$C$2:$C${max_row_cat+1}",
-            'fill':       {'color': '#3b82f6'},
+            'name': 'Sektörel Zam (%)',
+            'categories': f"='2_Sektor_Karnesi'!$A$2:$A${max_row_cat+1}",
+            'values': f"='2_Sektor_Karnesi'!$C$2:$C${max_row_cat+1}",
+            'fill': {'color': '#3b82f6'},
             'data_labels': {'value': True, 'num_format': '0.0'}
         })
-        chart.set_title({'name': 'Kategori Bazlı Enflasyon Dağılımı'})
-        chart.set_x_axis({'name': 'Sektörler'})
-        chart.set_y_axis({'name': 'Değişim (%)'})
-        chart.set_style(10) # Excel'in şık stillerinden biri
+        chart.set_title({'name': 'Sektörlerin Zam Şampiyonluğu Sıralaması'})
+        chart.set_legend({'none': True})
+        chart.set_style(11)
         ws_cat.insert_chart('G2', chart, {'x_scale': 1.5, 'y_scale': 1.2})
             
-        # 3. SEKME: HAM VERİ (TRAFİK IŞIKLARI VE OTO FİLTRE)
-        export_df = df[[ctx['ad_col'], 'Grup', ctx['baz_col'], ctx['son'], 'Fark_Yuzde', 'Z_Score', 'Etki_Puani']].copy()
-        export_df = export_df.sort_values('Fark_Yuzde', ascending=False)
-        export_df.to_excel(writer, sheet_name="3_Gelismiş_Veri", index=False)
-        ws_data = writer.sheets['3_Gelismiş_Veri']
+        # 3. SEKME: ÜRÜN RÖNTGENİ (Detaylı Veri)
+        export_df = df[[ctx['ad_col'], 'Grup', ctx['baz_col'], ctx['son'], 'Fark_Yuzde', 'Sok_Skoru', 'Cuzdan_Etkisi']].copy()
+        export_df.rename(columns={
+            ctx['ad_col']: 'Ürün Adı', 'Grup': 'Kategori', ctx['baz_col']: 'Eski Fiyat (TL)', 
+            ctx['son']: 'Yeni Fiyat (TL)', 'Fark_Yuzde': 'Değişim (%)', 
+            'Sok_Skoru': 'Anomali Alarmı', 'Cuzdan_Etkisi': 'Enflasyona Etkisi (Puan)'
+        }, inplace=True)
+        export_df = export_df.sort_values('Değişim (%)', ascending=False)
         
-        ws_data.set_column('A:A', 45, text_format)
-        ws_data.set_column('B:B', 30, text_format)
-        ws_data.set_column('C:D', 15, num_format)
-        ws_data.set_column('E:G', 18, num_format)
+        export_df.to_excel(writer, sheet_name="3_Urun_Rontgeni", index=False)
+        ws_data = writer.sheets['3_Urun_Rontgeni']
+        
+        ws_data.set_column('A:A', 45, metin_format)
+        ws_data.set_column('B:B', 25, metin_format)
+        ws_data.set_column('C:D', 15, sayi_format)
+        ws_data.set_column('E:G', 20, sayi_format)
         
         for col_num, value in enumerate(export_df.columns.values):
-            ws_data.write(0, col_num, value, header_format)
+            ws_data.write(0, col_num, value, baslik_format)
             
         max_row = len(export_df)
-        
-        # Oto Filtre (AutoFilter) Ekleme
         ws_data.autofilter(0, 0, max_row, len(export_df.columns) - 1)
         
-        # Fark_Yuzde (Isı Haritası)
+        # Değişim Yüzdesi (Isı Haritası: Yeşil - Beyaz - Kırmızı)
         ws_data.conditional_format(f'E2:E{max_row+1}', {
             'type': '3_color_scale', 'min_color': '#86efac', 'mid_color': '#ffffff', 'max_color': '#fca5a5'
         })
         
-        # Z-Score (Trafik Işıkları: Yeşil, Sarı, Kırmızı İkonlar)
+        # Anomali Alarmı (İkonlar: Kırmızı Çarpı, Ünlem, Yeşil Tik)
         ws_data.conditional_format(f'F2:F{max_row+1}', {
-            'type': 'icon_set', 'icon_style': '3_traffic_lights', 'reverse_icons': True
+            'type': 'icon_set', 'icon_style': '3_symbols_circled', 'reverse_icons': True
         })
         
-        # Etki Puanı (Mavi Veri Çubukları)
+        # Enflasyona Etki (Veri Çubukları ile görselleştirme)
         ws_data.conditional_format(f'G2:G{max_row+1}', {
             'type': 'data_bar', 'bar_color': '#60a5fa'
         })
@@ -1694,18 +1743,21 @@ def sayfa_rapor_merkezi(ctx):
         box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important;
         height: 50px !important;
         font-size: 16px !important;
+        color: white !important;
+        transition: all 0.3s ease;
     }
     div[data-testid="stDownloadButton"] > button:hover {
         background: linear-gradient(90deg, #059669, #047857) !important;
-        transform: scale(1.02) !important;
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.6) !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
     st.download_button(
-        label="📥 MASTER EXCEL RAPORUNU İNDİR (Grafikli & Filtreli)",
+        label="📥 MASTER EXCEL RAPORUNU İNDİR (Yönetici Özeti İçerir)",
         data=output.getvalue(),
-        file_name=f"Master_Enflasyon_Raporu_{ctx['son']}.xlsx",
+        file_name=f"Enflasyon_Raporu_Kokpit_{ctx['son']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True
     )
@@ -2011,6 +2063,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
