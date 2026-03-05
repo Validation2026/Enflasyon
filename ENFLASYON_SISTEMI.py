@@ -1734,8 +1734,11 @@ def sayfa_rapor_merkezi(ctx):
     # ==========================================
     # 🌟 EXCEL ŞOV KISMI (YENİLENMİŞ EFSANE SÜRÜM)
     # ==========================================
-    st.markdown("#### 📊 Kurumsal Yapay Zeka Excel Çıktısı (Şov Sürümü)")
-    st.caption("İndireceğiniz dosyanın ilk sayfasında interaktif grafikler, son sayfasında ise otomatik hesaplanmış 6 Aylık Gelecek Simülasyonu bulunur.")
+    # ==========================================
+    # 🌟 EXCEL ŞOV KISMI (SİMÜLASYONSUZ, NET KOKPİT)
+    # ==========================================
+    st.markdown("#### 📊 Kurumsal Yapay Zeka Excel Çıktısı")
+    st.caption("İndireceğiniz dosyanın ilk sayfasında interaktif grafikler, devamında ise detaylı sektör ve ürün analizleri bulunur.")
 
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -1839,55 +1842,17 @@ def sayfa_rapor_merkezi(ctx):
         ws_data.conditional_format(f'F2:F{max_row+1}', {'type': 'icon_set', 'icon_style': '3_symbols_circled', 'reverse_icons': True})
         ws_data.conditional_format(f'G2:G{max_row+1}', {'type': 'data_bar', 'bar_color': '#60a5fa'})
 
-        # --- 4. SEKME (YENİ!): 6 AYLIK GELECEK SİMÜLASYONU ---
-        sim_df = df.sort_values('Cuzdan_Etkisi', ascending=False).head(20).copy()
-        proj_data = {
-            'Ürün Adı': sim_df[ctx['ad_col']].tolist(),
-            'Güncel Fiyat (₺)': sim_df[ctx['son']].tolist()
-        }
-        
-        # Bileşik faiz mantığıyla önümüzdeki 6 ayın fiyatlarını hesapla
-        for ay in range(1, 7):
-            proj_data[f'{ay}. Ay Tahmini'] = [
-                row[ctx['son']] * ((1 + (row['Fark_Yuzde'] / 100)) ** ay) 
-                for _, row in sim_df.iterrows()
-            ]
-            
-        proj_export_df = pd.DataFrame(proj_data)
-        proj_export_df.to_excel(writer, sheet_name="4_Gelecek_Projeksiyonu", index=False)
-        ws_proj = writer.sheets['4_Gelecek_Projeksiyonu']
-        ws_proj.set_column('A:A', 40, metin_format)
-        ws_proj.set_column('B:H', 15, sayi_format)
-        
-        for col_num, value in enumerate(proj_export_df.columns.values):
-            ws_proj.write(0, col_num, value, baslik_format)
-            
-        # Simülasyon Çizgi Grafiği Ekleme
-        chart_line = workbook.add_chart({'type': 'line'})
-        for row_num in range(1, min(6, len(proj_export_df) + 1)): # İlk 5 ürünün trendini çizdir
-            chart_line.add_series({
-                'name':       f"='4_Gelecek_Projeksiyonu'!$A${row_num+1}",
-                'categories': f"='4_Gelecek_Projeksiyonu'!$C$1:$H$1",
-                'values':     f"='4_Gelecek_Projeksiyonu'!$C${row_num+1}:$H${row_num+1}",
-                'marker':     {'type': 'circle'}
-            })
-        chart_line.set_title({'name': 'Tehlikeli Ürünlerin 6 Aylık Fiyat Uçuş Simülasyonu'})
-        chart_line.set_x_axis({'name': 'Gelecek Aylar'})
-        chart_line.set_y_axis({'name': 'Tahmini Fiyat (₺)'})
-        chart_line.set_style(12)
-        ws_proj.insert_chart('J2', chart_line, {'x_scale': 1.8, 'y_scale': 1.4})
-
     # Buton Tasarımı
     st.markdown("""<style>div[data-testid="stDownloadButton"] > button { background: linear-gradient(90deg, #10b981, #059669) !important; border: 1px solid #34d399 !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important; height: 50px !important; font-size: 16px !important; color: white !important; transition: all 0.3s ease; } div[data-testid="stDownloadButton"] > button:hover { background: linear-gradient(90deg, #059669, #047857) !important; transform: translateY(-2px) scale(1.02) !important; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.6) !important; }</style>""", unsafe_allow_html=True)
 
     st.download_button(
-        label="📥 İNDİR: MASTER EXCEL (Yapay Zeka Kokpiti + 6 Aylık Simülasyon)",
+        label="📥 İNDİR: MASTER EXCEL (Yapay Zeka Kokpiti)",
         data=output.getvalue(),
         file_name=f"Yapay_Zeka_Enflasyon_Raporu_{ctx['son']}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True
     )
-
+    
 def sayfa_maddeler(ctx):
     df = ctx["df_analiz"]
     agirlik_col = ctx["agirlik_col"]
@@ -2189,6 +2154,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
