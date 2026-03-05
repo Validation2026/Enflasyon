@@ -1652,10 +1652,12 @@ def sayfa_rapor_merkezi(ctx):
     sim_cols = st.columns(3)
     
     for i, (_, r) in enumerate(sim_df.iterrows()):
+        # Değişkeni "i" ile tanımladık
         aylik_artis = r['Fark_Yuzde'] / 100
         suanki_fiyat = r[ctx['son']]
-        # Bileşik faiz mantığıyla 6 ay sonrasını hesaplıyoruz: Fiyat * (1 + aylık_artış)^6
-        alti_ay_sonraki_fiyat = suanki_fiyat * ((1 + aylık_artis) ** 6)
+        
+        # Çağırırken de "i" ile çağırıyoruz: aylik_artis
+        alti_ay_sonraki_fiyat = suanki_fiyat * ((1 + aylik_artis) ** 6)
         
         with sim_cols[i]:
             st.markdown(f"""
@@ -2167,6 +2169,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
