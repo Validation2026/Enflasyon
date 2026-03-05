@@ -1604,8 +1604,8 @@ def sayfa_rapor_merkezi(ctx):
             }
         ))
         fig_gauge.update_layout(height=280, margin=dict(l=20, r=20, t=50, b=20), paper_bgcolor="rgba(0,0,0,0)", font={'family': "Inter"})
-        st.plotly_chart(fig_gauge, use_container_width=True)
-
+        st.plotly_chart(fig_gauge, use_container_width=True, key="gauge_hararet_ibresi")
+        
     with col_bulten:
         # KIRMIZI BÜLTEN (KAYDIRILABİLİR NEON LİSTE)
         asi_urunler_df = df[df['Fark_Yuzde'] > resmi_veri].sort_values('Fark_Yuzde', ascending=False)
@@ -1776,7 +1776,7 @@ def sayfa_rapor_merkezi(ctx):
         totals={"marker": {"color": "#3b82f6"}}
     ))
     fig_waterfall.update_layout(height=400, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#a1a1aa"), margin=dict(t=30, l=10, r=10, b=10))
-    st.plotly_chart(fig_waterfall, use_container_width=True)
+    st.plotly_chart(fig_waterfall, use_container_width=True, key="waterfall_selale_grafik")
 
     st.markdown("---")
 
@@ -2238,6 +2238,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
