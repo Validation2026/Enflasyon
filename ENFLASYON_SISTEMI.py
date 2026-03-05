@@ -1405,10 +1405,35 @@ def sayfa_piyasa_ozeti(ctx):
 
     st.markdown("---")
 
+    st.markdown("---")
     st.subheader("Sektörel Isı Haritası")
-    fig_tree = px.treemap(df, path=[px.Constant("Enflasyon Sepeti"), 'Grup', ctx['ad_col']], values=ctx['agirlik_col'],
-                          color='Fark', color_continuous_scale='RdYlGn_r')
+    
+    # Orijinal veriyi bozmamak için kopyalıyoruz
+    df_tree = df.copy()
+    baz_col = ctx['baz_col']
+    son_col = ctx['son']
+    
+    # Fiyatları sayısal değere çevirip sıfırdan büyük (geçerli) olanları alıyoruz
+    df_tree[baz_col] = pd.to_numeric(df_tree[baz_col], errors='coerce')
+    df_tree[son_col] = pd.to_numeric(df_tree[son_col], errors='coerce')
+    df_tree = df_tree[(df_tree[baz_col] > 0) & (df_tree[son_col] > 0)]
+    
+    # Top 10 listesindeki aynı mantık: Noktadan noktaya saf değişim (Son / Baz) - 1
+    df_tree['Gercek_Fark'] = (df_tree[son_col] / df_tree[baz_col]) - 1
+    
+    # Ağaç haritasını (Treemap) bu net değişime (Gercek_Fark) göre çizdiriyoruz
+    fig_tree = px.treemap(
+        df_tree, 
+        path=[px.Constant("Enflasyon Sepeti"), 'Grup', ctx['ad_col']], 
+        values=ctx['agirlik_col'],
+        color='Gercek_Fark', 
+        color_continuous_scale='RdYlGn_r',
+        color_continuous_midpoint=0  # Sıfır değişim noktasını tam ortaya (nötr sarı tona) sabitler
+    )
+    
+    # Daha önce eklediğimiz şık tasarım dokunuşu (Kutu aralarına lacivert çizgi)
     fig_tree.update_traces(marker=dict(line=dict(color='#0f172a', width=2)))
+    
     st.plotly_chart(style_chart(fig_tree, is_sunburst=True), use_container_width=True)
 
 
@@ -1986,6 +2011,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
