@@ -1640,41 +1640,120 @@ def sayfa_rapor_merkezi(ctx):
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ==========================================
-    # CÜZDAN ERİME SİMÜLASYONU (KELEBEK ETKİSİ)
-    # ==========================================
-    st.markdown("#### 🦋 Kelebek Etkisi: 6 Aylık Cüzdan Erime Simülasyonu")
-    st.caption("Eğer bu ay enflasyon motoru olan ilk 3 ürün, önümüzdeki 6 ay boyunca aynı oranda zamlanmaya devam ederse cüzdandan çıkacak ekstra para.")
-    
-    sim_df = df.sort_values('Cuzdan_Etkisi', ascending=False).head(3)
-    sim_cols = st.columns(3)
-    
-    for i, (_, r) in enumerate(sim_df.iterrows()):
-        # Değişkeni "i" ile tanımladık
-        aylik_artis = r['Fark_Yuzde'] / 100
-        suanki_fiyat = r[ctx['son']]
+    # ... (Yukarıdaki Gauge Chart kısmı aynı kalacak) ...
+
+    with col_bulten:
+        # KIRMIZI BÜLTEN (HTML Kodu Düzeltilmiş Hali)
+        asi_urunler_df = df[df['Fark_Yuzde'] > resmi_veri].sort_values('Fark_Yuzde', ascending=False)
         
-        # Çağırırken de "i" ile çağırıyoruz: aylik_artis
-        alti_ay_sonraki_fiyat = suanki_fiyat * ((1 + aylik_artis) ** 6)
+        bulten_html = f"""<div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 12px; padding: 15px; height: 280px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); display: flex; flex-direction: column;">
+<div style="color: #ef4444; font-weight: 800; font-size: 14px; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;"><span style="animation: pulseGlow 2s infinite;">🚨</span> KIRMIZI BÜLTEN ({len(asi_urunler_df)} Ürün)</div>
+<div style="font-size: 11px; color: #94a3b8; margin-bottom: 10px;">Resmi sınırı (%{resmi_veri:.2f}) aşarak bütçeyi delenler:</div>
+<div style="overflow-y: auto; flex-grow: 1; padding-right: 5px;" class="custom-scrollbar">"""
         
-        with sim_cols[i]:
-            st.markdown(f"""
-            <div style="background: rgba(30, 41, 59, 0.5); border: 1px dashed rgba(96, 165, 250, 0.4); border-radius: 10px; padding: 15px; text-align: center; backdrop-filter: blur(5px); transition: transform 0.3s; cursor: crosshair;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                <div style="font-size: 13px; font-weight: 700; color: #cbd5e1; margin-bottom: 8px; height: 36px; overflow: hidden;">{r[ctx['ad_col']]}</div>
-                <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
-                    <div style="text-align: right;">
-                        <div style="font-size: 10px; color: #94a3b8;">Bugün</div>
-                        <div style="font-size: 16px; font-weight: 800; color: #ffffff; font-family: 'JetBrains Mono';">{suanki_fiyat:.2f} ₺</div>
-                    </div>
-                    <div style="color: #60a5fa; font-size: 18px;">➔</div>
-                    <div style="text-align: left;">
-                        <div style="font-size: 10px; color: #94a3b8;">6 Ay Sonra</div>
-                        <div style="font-size: 18px; font-weight: 900; color: #ef4444; font-family: 'JetBrains Mono'; text-shadow: 0 0 10px rgba(239,68,68,0.5);">{alti_ay_sonraki_fiyat:.2f} ₺</div>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+        for _, r in asi_urunler_df.iterrows():
+            # STREAMLIT HTML BOŞLUK HATASI OLMAMASI İÇİN SOLA DAYALI YAZILDI
+            bulten_html += f"""<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0;">
+<span style="font-size: 12px; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">{r[ctx['ad_col']]}</span>
+<span style="font-size: 12px; font-weight: 800; color: #fca5a5;">%{r['Fark_Yuzde']:.1f}</span>
+</div>"""
             
+        bulten_html += "</div></div>"
+        
+        st.markdown("""<style>.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(239, 68, 68, 0.5); border-radius: 10px; }</style>""", unsafe_allow_html=True)
+        st.markdown(bulten_html, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ==========================================
+    # 🌟 YENİ ŞOV 1: ALIM GÜCÜ ERİME MONİTÖRÜ
+    # ==========================================
+    st.markdown("#### 💸 Reel Alım Gücü Simülasyonu (Cüzdan Erimesi)")
+    st.caption("Piyasadaki bu genel enflasyon fırtınası, cebinizdeki paranın satın alma gücünü fiziksel olarak ne kadar yok etti?")
+    
+    # 1000 TL'nin enflasyon karşısındaki reel değer kaybı hesaplaması
+    # Formül: Reel Değer = Nominal Değer / (1 + Enflasyon)
+    enf_oran = ctx["enf_genel"] / 100
+    if enf_oran > 0:
+        reel_deger = 1000 / (1 + enf_oran)
+        kayip_tutar = 1000 - reel_deger
+    else:
+        reel_deger = 1000
+        kayip_tutar = 0
+        
+    st.markdown(f"""
+    <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.9)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(239, 68, 68, 0.1);">
+        <div style="flex:1;">
+            <div style="font-size:12px; color:#94a3b8; font-weight:800; letter-spacing:2px; margin-bottom:5px;">BAŞLANGIÇ BAKİYESİ</div>
+            <div style="font-size:36px; font-family:'JetBrains Mono'; font-weight:900; color:#10b981;">1,000.00 ₺</div>
+        </div>
+        
+        <div style="flex:1; text-align:center; position:relative;">
+            <div style="font-size:24px; color:#ef4444; animation: pulseGlow 1.5s infinite;">⚡ ENFLASYON VURUŞU ⚡</div>
+            <div style="font-size:14px; color:#fca5a5; font-weight:700; margin-top:5px;">-{kayip_tutar:.2f} ₺ Kayıp</div>
+            <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 15px; border-radius: 2px; overflow: hidden;">
+                <div style="width: {(reel_deger/1000)*100}%; height: 100%; background: #ef4444; box-shadow: 0 0 10px #ef4444;"></div>
+            </div>
+        </div>
+        
+        <div style="flex:1; text-align:right;">
+            <div style="font-size:12px; color:#94a3b8; font-weight:800; letter-spacing:2px; margin-bottom:5px;">REEL SATIN ALMA GÜCÜ</div>
+            <div style="font-size:36px; font-family:'JetBrains Mono'; font-weight:900; color:#ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);">{reel_deger:.2f} ₺</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ==========================================
+    # 🌟 YENİ ŞOV 2: 3D HOLOGRAFİK RİSK MATRİSİ
+    # ==========================================
+    st.markdown("#### 🪐 3D Sektörel Kara Delik (Holografik Risk Radarı)")
+    st.caption("Farenizle grafiği çevirin! X Ekseni: Sektör Zammı | Y Ekseni: Fiyat Oynaklığı | Z Ekseni: Cüzdana Hasar Puanı")
+
+    # 3D Grafik için kategorik verileri hazırlıyoruz
+    cat_stats = df.groupby('Grup').agg(
+        Ürün_Sayısı=(ctx['ad_col'], 'count'),
+        Ortalama_Zam=('Fark_Yuzde', 'mean'),
+        Fiyat_İstikrarsızlığı=('Fark_Yuzde', 'std'),
+        Sektör_Hasarı=('Cuzdan_Etkisi', 'sum')
+    ).reset_index().fillna(0)
+
+    fig_3d = px.scatter_3d(
+        cat_stats, 
+        x='Ortalama_Zam', 
+        y='Fiyat_İstikrarsızlığı', 
+        z='Sektör_Hasarı',
+        size='Ürün_Sayısı', 
+        color='Sektör_Hasarı',
+        hover_name='Grup',
+        color_continuous_scale='Inferno', # Alev gibi görünen çok şık bir tema
+        title="Sektörlerin 3 Boyutlu Enflasyon Uzayı"
+    )
+    
+    fig_3d.update_traces(marker=dict(line=dict(width=2, color='DarkSlateGrey')), opacity=0.85)
+    
+    fig_3d.update_layout(
+        scene=dict(
+            xaxis=dict(title='Ortalama Zam (%)', backgroundcolor="rgba(0,0,0,0)", gridcolor="rgba(255,255,255,0.1)"),
+            yaxis=dict(title='Fiyat Oynaklığı (Risk)', backgroundcolor="rgba(0,0,0,0)", gridcolor="rgba(255,255,255,0.1)"),
+            zaxis=dict(title='Bütçe Hasarı (Etki)', backgroundcolor="rgba(0,0,0,0)", gridcolor="rgba(255,255,255,0.1)"),
+            bgcolor="rgba(0,0,0,0)"
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#e2e8f0"),
+        margin=dict(l=0, r=0, b=0, t=40),
+        height=600
+    )
+    
+    st.plotly_chart(fig_3d, use_container_width=True)
+
+    st.markdown("---")
+
+    # --- 4. ENFLASYON MOTORLARI (Eski kodunun Top 5 Listesi buradan devam edecek) ---
+    st.markdown("#### 🔥 Enflasyonun Ana Motorları (En Yüksek Hasar Veren 5 Ürün)")
+    # ... (Geri kalan kodun Excel kısmına kadar aynen devam edebilir) ...
+    
     st.markdown("<br>", unsafe_allow_html=True)
     # ... (2. Enflasyon Motorları kısmından itibaren kodun aynen devam edebilir) ...
     
@@ -2167,6 +2246,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
