@@ -1577,55 +1577,6 @@ def sayfa_rapor_merkezi(ctx):
     # ==========================================
     # 🌟 ŞOV KISMI BAŞLIYOR: HARARET İBRESİ VE KIRMIZI BÜLTEN
     # ==========================================
-    st.markdown("#### 🚀 Piyasa Harareti ve Tehlike Çanları")
-    col_gauge, col_bulten = st.columns([1.2, 1])
-
-    with col_gauge:
-        # PİYASA HARARET İBRESİ (GAUGE CHART)
-        fig_gauge = go.Figure(go.Indicator(
-            mode="gauge+number+delta",
-            value=mean_fark,
-            domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "Piyasa Hararet Göstergesi<br><span style='font-size:12px;color:#94a3b8'>Ortalama Zam Hızı (%)</span>", 'font': {'size': 16, 'color': '#e2e8f0'}},
-            delta={'reference': resmi_veri, 'increasing': {'color': "#ef4444"}, 'decreasing': {'color': "#22c55e"}},
-            gauge={
-                'axis': {'range': [None, max(10, mean_fark * 1.5)], 'tickwidth': 1, 'tickcolor': "rgba(255,255,255,0.2)"},
-                'bar': {'color': "rgba(255, 255, 255, 0.8)", 'thickness': 0.3},
-                'bgcolor': "rgba(0,0,0,0)",
-                'borderwidth': 0,
-                'steps': [
-                    {'range': [0, resmi_veri], 'color': "rgba(16, 185, 129, 0.3)"},     # Yeşil: TÜİK'in altı (Güvenli)
-                    {'range': [resmi_veri, p90], 'color': "rgba(245, 158, 11, 0.4)"},   # Sarı: TÜİK ile Şok Sınırı arası (Uyarı)
-                    {'range': [p90, max(10, mean_fark * 1.5)], 'color': "rgba(239, 68, 68, 0.5)"}], # Kırmızı: Şok Sınırı üstü (Tehlike)
-                'threshold': {
-                    'line': {'color': "white", 'width': 4},
-                    'thickness': 0.75,
-                    'value': mean_fark}
-            }
-        ))
-        fig_gauge.update_layout(height=280, margin=dict(l=20, r=20, t=50, b=20), paper_bgcolor="rgba(0,0,0,0)", font={'family': "Inter"})
-        st.plotly_chart(fig_gauge, use_container_width=True, key="gauge_hararet_ibresi")
-        
-    with col_bulten:
-        # KIRMIZI BÜLTEN (KAYDIRILABİLİR NEON LİSTE)
-        asi_urunler_df = df[df['Fark_Yuzde'] > resmi_veri].sort_values('Fark_Yuzde', ascending=False)
-        
-        bulten_html = f"""
-        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 12px; padding: 15px; height: 280px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); display: flex; flex-direction: column;">
-            <div style="color: #ef4444; font-weight: 800; font-size: 14px; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                <span style="animation: pulseGlow 2s infinite;">🚨</span> KIRMIZI BÜLTEN ({len(asi_urunler_df)} Ürün)
-            </div>
-            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 10px;">Resmi enflasyon sınırını (%{resmi_veri:.2f}) aşarak bütçeyi delenler:</div>
-            <div style="overflow-y: auto; flex-grow: 1; padding-right: 5px;" class="custom-scrollbar">
-        """
-        
-        for _, r in asi_urunler_df.iterrows():
-            bulten_html += f"""<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0;">
-<span style="font-size: 12px; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">{r[ctx['ad_col']]}</span>
-<span style="font-size: 12px; font-weight: 800; color: #fca5a5;">%{r['Fark_Yuzde']:.1f}</span>
-</div>"""
-            
-        bulten_html += "</div></div>"
         
         # def sayfa_rapor_merkezi(ctx):
     st.markdown("### 📑 Gelişmiş Rapor Merkezi & İçgörüler")
@@ -2238,6 +2189,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
