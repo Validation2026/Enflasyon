@@ -1223,7 +1223,7 @@ def sayfa_piyasa_ozeti(ctx):
             unsafe_allow_html=True)
     with c3:
         st.markdown(
-            '<div class="kpi-card" style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.08), transparent); border-top: 2px solid #a78bfa;"><div class="kpi-title">📅 YILLIK ENFLASYON</div><div class="kpi-value">%29.73</div><div class="kpi-sub" style="color:#c4b5fd; font-size:12px; font-weight:600; margin-top:5px;">Yıllık Projeksiyon</div></div>',
+            '<div class="kpi-card" style="background: linear-gradient(135deg, rgba(167, 139, 250, 0.08), transparent); border-top: 2px solid #a78bfa;"><div class="kpi-title">📅 YILLIK ENFLASYON</div><div class="kpi-value">%30.00</div><div class="kpi-sub" style="color:#c4b5fd; font-size:12px; font-weight:600; margin-top:5px;">Yıllık Projeksiyon</div></div>',
             unsafe_allow_html=True)
     with c4:
         st.markdown(
@@ -1986,6 +1986,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
